@@ -1,5 +1,5 @@
 import { appendFile } from "node:fs/promises";
-import { parseReleaseVersion } from "../src/version";
+import { parseReleaseVersion } from "./release-version";
 
 type Release = {
 	tag_name: string;
@@ -9,11 +9,35 @@ type Release = {
 
 export type GitHubApi = <T>(endpoint: string, paginate?: boolean) => T;
 
+type ReleaseTarget = {
+	version: string;
+	tag: string;
+	commit: string;
+};
+
+function createGitHubApi(repository: string): GitHubApi {
+	return <T>(endpoint: string, paginate = false): T => {
+		const result = Bun.spawnSync(
+			[
+				"gh",
+				"api",
+				`repos/${repository}/${endpoint}`,
+				...(paginate ? ["--paginate", "--slurp"] : []),
+			],
+			{ stderr: "inherit" },
+		);
+		if (result.exitCode !== 0) {
+			throw new Error(`GitHub API の取得に失敗しました: ${endpoint}`);
+		}
+		return JSON.parse(result.stdout.toString()) as T;
+	};
+}
+
 export function checkRelease(
 	input: string,
 	head: string,
 	api: GitHubApi,
-): { version: string; tag: string; commit: string } {
+): ReleaseTarget {
 	const version = parseReleaseVersion(input);
 	const tag = `v${version}`;
 	const master = api<{ object: { sha: string } }>("git/ref/heads/master").object
@@ -60,22 +84,11 @@ if (import.meta.main) {
 	}
 	const git = Bun.spawnSync(["git", "rev-parse", "HEAD"]);
 	if (git.exitCode !== 0) throw new Error("HEAD を取得できません。");
-	const api: GitHubApi = <T>(endpoint: string, paginate = false): T => {
-		const result = Bun.spawnSync(
-			[
-				"gh",
-				"api",
-				`repos/${repository}/${endpoint}`,
-				...(paginate ? ["--paginate", "--slurp"] : []),
-			],
-			{ stderr: "inherit" },
-		);
-		if (result.exitCode !== 0) {
-			throw new Error(`GitHub API の取得に失敗しました: ${endpoint}`);
-		}
-		return JSON.parse(result.stdout.toString()) as T;
-	};
-	const result = checkRelease(input, git.stdout.toString().trim(), api);
+	const result = checkRelease(
+		input,
+		git.stdout.toString().trim(),
+		createGitHubApi(repository),
+	);
 	if (process.env.GITHUB_OUTPUT) {
 		await appendFile(
 			process.env.GITHUB_OUTPUT,

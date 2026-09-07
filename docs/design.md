@@ -2,59 +2,72 @@
 
 ## 目的と範囲
 
-wts（Git Worktree Session）は Apple Silicon macOS 向けの CLI プロジェクトである。提供するコマンドはヘルプ、バージョン表示、実行環境を表示する `doctor` とする。Git worktree の作成・削除やセッション管理は提供しない。
+wts（Git Worktree Session）は、Apple Silicon macOS 向けの CLI と、その検証・配布基盤である。CLI はヘルプ、バージョン表示、実行環境を表示する `doctor` を提供する。配布基盤は固定された開発環境で単体実行ファイルを生成し、GitHub Releases に検証用 Pre-release として公開する。
 
-開発ツールと依存を固定し、ソースからの実行、整形・静的検査、型検査、依存監査、単体実行ファイルの生成を同じ環境で実行できる構成を採る。利用手順は [README](../README.md)、開発手順は [開発資料](development.md)、変更時の規約は [AGENTS.md](../AGENTS.md) に定義する。
+Git worktree 操作、セッション管理、Intel Mac・Linux・Windows への対応、自動更新、インストーラー、署名・公証の自動化、Nix パッケージとしての配布は対象外とする。利用方法は [README](../README.md)、開発・公開操作は [開発資料](development.md)、作業規約は [AGENTS.md](../AGENTS.md) に定義する。
 
-## 責務と依存
+## 構成と責務
 
 | 領域 | 実装・設定 | 責務 |
 | --- | --- | --- |
-| 開発環境 | `flake.nix`、`flake.lock` | `aarch64-darwin` 向けに Bun、Git、OSV-Scanner、Coreutils を提供し、Nixpkgs の入力を固定する |
-| npm 依存 | `package.json`、`bun.lock`、`bunfig.toml` | 直接依存のバージョン、推移的依存の解決結果、npm レジストリを定義する |
-| CLI | `src/cli.ts` | Commander による引数処理と Clack による端末対話を実装する |
-| 整形・lint | `biome.json` | Biome の既定 formatter と recommended lint ルールを定義する |
-| 型・振る舞い | `tsconfig.json`、`tests/cli.test.ts` | 静的型検査とプロセスの出力・終了コードを検証する |
-| 依存検証 | `scripts/verify-dependencies.sh`、`scripts/dependency-inventory.ts` | 固定依存をインストールし、メタデータ一覧と監査結果を生成する |
-| ビルド | `scripts/build.ts` | ARM64 バイナリの生成・起動検証と、チェックサム・ビルド情報の記録を行う |
-| CI | `.github/workflows/ci.yml` | ARM64 macOS ランナーで開発環境から成果物までを検証する |
+| 開発環境 | `flake.nix`、`flake.lock` | `aarch64-darwin` 向けの Bun、Git、OSV-Scanner、Coreutils と Nixpkgs の入力を固定する |
+| パッケージ | `package.json`、`bun.lock`、`bunfig.toml` | 直接依存、推移的依存、npm レジストリを定義する |
+| CLI | `src/cli.ts` | Commander で引数を処理し、Clack で端末対話を行う |
+| バージョン | `src/version.ts` | CLI の表示バージョンを提供する |
+| 配布バージョン | `scripts/release-version.ts` | ビルドと公開判定で共有する SemVer 入力を検証する |
+| 整形・型検査 | `biome.json`、`tsconfig.json` | 表記、lint、型の検査規則を定義する |
+| テスト | `tests/` | CLI、バージョン、公開判定の振る舞いを検証する |
+| 依存監査 | `scripts/verify-dependencies.sh`、`scripts/dependency-inventory.ts` | 固定依存をインストールし、依存一覧と監査結果を生成する |
+| ビルド | `scripts/build.ts` | バイナリの生成・起動検証、チェックサムとビルド情報の記録を行う |
+| 公開判定 | `scripts/check-release.ts` | 入力バージョン、master、公開済み Release、既存タグを検査する |
+| CI | `.github/workflows/ci.yml` | 読み取り権限でソースと生成物を検証する |
+| 公開 | `.github/workflows/release.yml` | 手動入力から対象を確定し、検証済み成果物を Pre-release として公開する |
 
-開発ツールは Nix、JavaScript / TypeScript パッケージは Bun が管理する。役割を分けることで、利用者向けバイナリに開発環境を要求せず、開発時には固定されたツールと依存を使用できる。
+Nix が開発ツール、Bun が JavaScript / TypeScript の依存・実行・テスト・コンパイルを管理する。Bun ランタイムをバイナリへ含め、CLI の利用者には開発環境を要求しない。
 
-UI は Commander と Clack で構成する。追加の文字装飾や長時間処理のスピナーが必要になった場合に限り、Chalk・Ora の導入を検討する。
+## CLI とバージョン
 
-## 整形と静的検査
+CLI は外部コマンド、設定ファイル、追加の環境変数、ネットワーク接続を要求しない。コマンドの出力、対話の TTY 条件、キャンセルとエラーの終了コードは [README](../README.md#使い方) に定義する。
 
-整形と lint は Biome に統一し、複数ツールの設定と規則の調整を避ける。`@biomejs/biome` は開発依存として完全バージョンで固定し、`biome.json` で `src/`、`scripts/`、`tests/` 内の TypeScript・JSON ファイルとルートの JSON ファイルを対象にする。formatter は Biome の既定設定、lint は recommended ルールを使用する。
+ソース実行時は `package.json` のバージョンを表示する。ビルド時は `WTS_RELEASE_VERSION` が指定されていればその SemVer を、未指定なら `package.json` のバージョンを使用する。先頭 `v`、不正な識別子、余分な空白を含む入力は拒否する。
 
-`format` は整形結果を書き込み、`format:check` と `lint` はファイルを変更せずに検査する。整形は表記の統一、lint はコード上の問題の静的検出を担当し、型の整合性は `tsc --noEmit`、実行時の振る舞いはテストで検証する。`check` は整形検査、lint、型検査、テスト、ビルドを順に実行し、開発と CI で共通の検証手順とする。
+ビルドで選んだ値を `WTS_BUILD_VERSION` としてコンパイル時に埋め込み、バイナリの表示と `BUILD_INFO` に同じ値を使用する。実行時の環境変数は配布バイナリのバージョンを変更しない。公開のために `package.json` とロックファイルを書き換える必要はない。
 
-## CLI の契約
+## 検証と依存監査
 
-`--help` はコマンド一覧、`--version` は package.json のバージョンを標準出力へ表示する。`doctor` はバージョン、OS、CPU アーキテクチャを標準出力へ表示する。これらの処理は終了コード 0 で終了する。不明なコマンドは標準エラーへ診断を出力し、終了コード 1 で終了する。
+Biome の既定 formatter と recommended lint、TypeScript の `tsc --noEmit`、Bun のテスト、生成バイナリの起動検証をそれぞれの責務として分ける。`bun run check` は整形検査、lint、型検査、テスト、ビルドを順に実行する。
 
-`doctor --interactive` は標準入力・標準出力の両方が TTY であることを要求する。肯定入力で OS と CPU アーキテクチャを表示し、否定入力や Ctrl-C ではキャンセルを表示して終了コード 0 で終了する。TTY を満たさない入力は、標準エラーへ診断を出力して終了コード 1 で終了する。
+依存は `--frozen-lockfile --ignore-scripts` でインストールする。依存一覧にはロック内の取得先と SHA-512 integrity の有無、取得済みパッケージのバージョン、公開元、ライセンス、インストールスクリプトを記録する。別 OS 向けの optional dependencies など、未インストールの項目は `installed: false` とする。
 
-CLI は実行時に外部コマンド、設定ファイル、追加の環境変数、ネットワーク接続を要求しない。`doctor` が表示するのは実行プロセスの環境情報であり、開発ツールのインストール状態や正式対応 OS への適合性を判定するものではない。
+既知の脆弱性は `bun audit` と OSV-Scanner へ照会し、両方の終了コードが `0` の場合に成功とする。照会日時、ツール、取得先、終了コード、例外、結果、標準エラーを監査資料へ記録する。API が公開しないデータベースのスナップショット日時は推定しない。依存一覧と監査結果は、ソースコード全体の安全性やライセンス適合性の承認を意味しない。
 
-## 依存監査
+## 成果物の契約
 
-通常のインストールは `--frozen-lockfile --ignore-scripts` を使用する。ロックの自動変更とインストール時スクリプトの実行を防ぎ、依存変更をレビュー対象にするためである。
+ビルドと起動検証の実行環境は Apple Silicon macOS、コンパイル先は `bun-darwin-arm64` とする。生成したバイナリのバージョン一致、ヘルプの CLI 名、`doctor` の正常終了を確認してから配布用ディレクトリへコピーする。
 
-依存一覧は bun.lock の取得先と SHA-512 integrity の有無を確認し、取得済み package.json のバージョン、公開元、ライセンス、インストールスクリプトを記録する。未インストールのエントリーは `installed: false` として記録する。別 OS 向けの optional dependencies もこの対象になる。一覧の生成はソースコード全体の安全性やライセンス適合性の承認を意味しない。
+配布単位はバイナリ、SHA-256、`BUILD_INFO` の組とする。チェックサムの対象名にはバイナリの basename を用い、取得先の同じディレクトリで照合できる形式にする。成果物のパスと照合操作は [開発資料](development.md#ビルド成果物) に記載する。
 
-既知の脆弱性は Bun audit と OSV-Scanner で照会する。両方の終了コードが 0 の場合に監査処理を成功とする。照会日時、ツールのバージョン、データベースの取得先、終了コード、例外の有無を `AUDIT_INFO` に記録し、詳細な結果と標準エラーを別ファイルに保存する。リモート API が公開しないスナップショット日時は推定しない。
+`BUILD_INFO` は生成日時、バージョン、Git コミット、作業ツリーの状態、Bun・Nix・OS・Xcode Command Line Tools、ターゲット、ロックファイルの SHA-256、最低対応 macOS、署名・公証、外部要件を記録する。変更のある作業ツリーから生成した場合は `git_worktree=dirty` とし、コミットだけで生成元を特定できるとは扱わない。
 
-## ビルドと成果物
+成果物は常に `build_kind=verification_only` とする。最低対応 macOS は未確定で、Developer ID 署名・公証は行わない。GitHub Actions での起動検証と、ダウンロードしたファイルの Gatekeeper を含む検証は別の証拠として扱う。正式公開の条件は [開発資料](development.md#正式リリースの条件) に定義する。
 
-ビルドは Apple Silicon macOS 上で `bun-darwin-arm64` を指定して行う。生成したバイナリのバージョン一致、ヘルプの CLI 名、doctor の正常終了を確認してから `release/` へコピーする。チェックサムにはバイナリの basename を使用し、同じディレクトリで照合できる形式とする。
+## 公開判定
 
-`BUILD_INFO` はビルド日時、アプリのバージョン、Git コミットと作業ツリーの状態、Bun・Nix・OS の情報、選択された開発ツールのパス、ターゲット、ロックファイルの SHA-256、対応 OS・署名・外部要件の状態を記録する。未コミットの変更を含むビルドは `git_worktree=dirty` とし、コミットだけで生成元を再現できるとは扱わない。
+Release ワークフローは `master` を選択した手動実行だけを受け付ける。入力は先頭 `v` なしの SemVer とし、タグ名を `v<version>` とする。入力にプレリリース識別子があるかどうかによらず、GitHub 上の公開状態は Pre-release に固定する。
 
-ビルドスクリプトの成果物は常に `build_kind=verification_only` である。最低対応 macOS は未確定で、Developer ID 署名と公証は行わない。検証用バイナリの生成成功は正式配布の承認を意味しない。
+対象コミットはチェックアウトした最新 `master` の HEAD とする。ビルド前後に GitHub API で次を検査する。
 
-## CI と配布
+- リモートの `master` と HEAD が一致する。`master` が進んでいる場合はエラーにする。
+- Release 一覧の全ページから、下書きを除き `published_at` が最大の Release を選ぶ。Pre-release も含み、GitHub の「Latest」ラベルやバージョン番号順は使用しない。
+- 最新公開 Release のタグをコミット SHA に解決し、`master` と一致すればエラーにする。注釈付きタグも同じ比較を行う。公開済み Release がない場合は初回公開を許可する。
+- 入力から生成したタグ、または同じタグ名の Release が存在すればエラーにする。Release の重複判定には下書きも含める。
 
-CI は `macos-15` 上で ARM64 を確認し、クリーンなチェックアウトから Flake の評価、依存監査、`bun run check`、チェックサム照合を行う。GitHub Actions の参照はコミット SHA に固定し、リポジトリ権限は読み取りに限定する。リリースの公開は CI の責務に含めない。
+API の認証・通信・タグ解決の失敗は判定失敗として扱い、公開へ進めない。
 
-配布先は GitHub Releases、導入と更新はチェックサム照合後の手動配置とする。正式配布には最低対応 macOS と署名・公証の方針を確定し、対象 OS とダウンロードした成果物で検証する必要がある。未確定の対応範囲を実機検証の代わりに推定しない。Intel Mac、Linux、Windows、自動更新、インストーラー、Nix パッケージとしての配布は対象外とする。
+## 公開の境界
+
+通常の CI は `contents: read` で検証を行う。Release ワークフローでは公開ジョブだけに `contents: write` を与え、`GITHUB_TOKEN` でタグと Release を作成する。GitHub Actions の参照はコミット SHA に固定する。
+
+公開処理は確定したコミットにタグを作成し、成果物を下書き Release に添付した後、Pre-release として公開する。GitHub の「Latest」には指定しない。失敗時に残った下書きやタグは自動で削除・上書きせず、次の実行でも重複判定の対象とする。
+
+同じ Release ワークフローの実行は直列化する。公開直前の再検査はビルド中の更新を検出するが、検査と公開を単一のトランザクションにはしない。公開対象には検証したコミット SHA を明示し、その後のブランチ更新によって対象が変わらないようにする。

@@ -1,14 +1,12 @@
 # wts の開発とリリース
 
-wts（Git Worktree Session）は Apple Silicon macOS 向けの TypeScript CLI です。この文書は開発環境、ソースからの実行、検証、ビルド、CI、正式リリースの条件を定義します。利用者向けのコマンドと導入手順は [README](../README.md)、責務と設計方針は [設計書](design.md)、変更時の規約は [AGENTS.md](../AGENTS.md) を参照してください。
+開発者向けに、環境構築、検証、成果物の生成、GitHub Actions からの Pre-release 公開を説明します。利用方法と配布状態は [README](../README.md)、実装の責務と公開判定は [設計書](design.md)、変更時の規約は [AGENTS.md](../AGENTS.md) を参照してください。
 
-開発ツールは Nix Flakes、パッケージの依存管理・実行・テスト・単体実行ファイルの生成は Bun が担当します。コマンド定義には Commander、対話 UI には `@clack/prompts` を使用します。
-
-## 開発を始める
+## 開発環境
 
 Apple Silicon Mac、Xcode Command Line Tools、`nix-command` と `flakes` を有効にした Nix が必要です。依存の取得と監査にはネットワーク接続を使用します。
 
-リポジトリのルートで実行してください。
+リポジトリのルートで devShell を開き、固定依存と開発環境を検証します。
 
 ```bash
 nix develop --no-update-lock-file
@@ -18,44 +16,46 @@ bun run verify:deps
 bun run check
 ```
 
-devShell は Bun、Git、OSV-Scanner、Coreutils を提供します。開発ツールの解決結果は `flake.lock`、npm パッケージの解決結果は `bun.lock` で固定します。通常の開発と CI ではロックファイルを更新せず、devShell の Bun を使用してください。
-
-## ソースから実行する
-
-リポジトリのルートにある devShell 内で、`bun run dev` に CLI の引数を渡します。
-
-```bash
-bun run dev --help
-bun run dev --version
-bun run dev doctor
-bun run dev doctor --interactive
-```
-
-対話モードでは標準入力と標準出力の両方に TTY が必要です。対話を変更した場合は、肯定入力、否定入力、Ctrl-C によるキャンセルを確認してください。各コマンドの出力と終了コードの契約は [README](../README.md) に記載しています。
+Nix Flakes は Bun、Git、OSV-Scanner、Coreutils を提供し、Bun は JavaScript / TypeScript の依存を管理します。ツールは `flake.lock`、パッケージは `bun.lock` で固定します。通常の開発と CI ではロックファイルを更新せず、devShell の Bun を使用してください。インストール時のスクリプトは実行しません。
 
 ## 開発コマンド
 
-以下はリポジトリのルートにある devShell 内で実行します。
+以下のコマンドはリポジトリのルートにある devShell 内で実行します。
 
 | コマンド | 処理 |
 | --- | --- |
-| `bun run dev` | ソースから CLI を起動する |
+| `bun run dev` | ソースから CLI を起動する。後ろに `--help`、`--version`、`doctor` などの引数を渡す |
 | `bun run format` | Biome で整形し、ファイルを更新する |
-| `bun run format:check` | Biome の整形規則に一致するか検査する |
+| `bun run format:check` | ファイルを変更せずに整形規則を検査する |
 | `bun run lint` | Biome の recommended ルールで静的検査する |
 | `bun run typecheck` | `tsc --noEmit` で型を検査する |
-| `bun run test` | CLI の振る舞いをテストする |
+| `bun run test` | CLI、バージョン、公開判定の振る舞いをテストする |
 | `bun run verify:deps` | 固定依存をインストールし、依存一覧と監査結果を生成する |
-| `bun run build` | Apple Silicon 向け検証用バイナリを生成し、起動を検証する |
+| `bun run build` | Apple Silicon 向けバイナリを生成し、起動を検証する |
 | `bun run check` | 整形検査、lint、型チェック、テスト、ビルドを順に実行する |
 
-整形と lint は `biome.json` に定義し、`src/`、`scripts/`、`tests/` 内の TypeScript・JSON ファイルとルートの JSON ファイルを対象にします。整形は Biome の既定設定、lint は recommended ルールを使用します。型検査は TypeScript が担当します。
+整形と lint の対象・規則は `biome.json`、型検査の設定は `tsconfig.json` で定義します。対話を変更した場合は TTY 上で `bun run dev doctor --interactive` を実行し、肯定入力、否定入力、Ctrl-C によるキャンセルを確認してください。出力と終了コードは [README](../README.md#使い方) に記載しています。
 
-`verify:deps` は `bun audit` と `osv-scanner` を実行し、両方の成功を要求します。パッケージのメタデータは `release/DEPENDENCIES.json`、監査結果は `release/bun-audit.json`・`release/osv-audit.json` とそれぞれの `.stderr`、問い合わせ日時・ツール・終了コードは `release/AUDIT_INFO` に記録します。監査 API が公開しないデータベースのスナップショット日時は記録できません。
+`verify:deps` は `bun audit` と `osv-scanner` の両方の成功を要求します。生成する監査資料は次のとおりです。
+
+| ファイル | 内容 |
+| --- | --- |
+| `release/DEPENDENCIES.json` | パッケージのメタデータとインストール状態 |
+| `release/bun-audit.json`、`release/osv-audit.json` | 脆弱性監査結果 |
+| `release/bun-audit.stderr`、`release/osv-audit.stderr` | 監査コマンドの標準エラー |
+| `release/AUDIT_INFO` | 問い合わせ日時、ツール、データベース取得先、終了コード、例外の有無 |
 
 ## ビルド成果物
 
-`bun run build` は Apple Silicon macOS 上で `bun-darwin-arm64` を指定してコンパイルし、生成バイナリの `--help`、`--version`、`doctor` を実行してから以下の成果物を作成します。
+`bun run build` は Apple Silicon macOS 上で `bun-darwin-arm64` 向けにコンパイルし、生成バイナリの `--help`、`--version`、`doctor` を実行します。生成と起動検証を同じ処理で行うため、macOS ARM64 の実行環境が必要です。
+
+通常は `package.json` のバージョンを使用します。配布バージョンを指定する場合は、先頭 `v` なしの SemVer をビルド時に渡します。
+
+```bash
+WTS_RELEASE_VERSION=0.2.0-rc.1 bun run build
+```
+
+成果物は次の構成です。`dist/` と `release/` は Git 管理対象外です。
 
 ```text
 dist/wts-macos-arm64
@@ -64,51 +64,45 @@ release/wts-macos-arm64.sha256
 release/BUILD_INFO
 ```
 
-`BUILD_INFO` にはバージョン、Git コミットと作業ツリーの状態、ビルド日時、Bun・Nix・OS、ターゲット、ロックファイルの SHA-256、最低対応 macOS、署名・公証、外部要件を記録します。`dist/` と `release/` は Git 管理対象外です。
-
-チェックサムを照合するには `release/` で実行してください。
+`BUILD_INFO` は生成元コミット、作業ツリーの状態、バージョン、ツール・OS、ロックファイルのハッシュ、対応環境と署名・公証の状態を記録します。`release/` でチェックサムを照合できます。
 
 ```bash
 shasum -a 256 -c wts-macos-arm64.sha256
 ```
 
-ビルドスクリプトが生成する成果物は `build_kind=verification_only` の検証用です。最低対応 macOS は未確定で、Developer ID 署名と公証は行いません。ビルドの成功だけでは正式リリースの条件を満たしません。
+成果物の種別は `build_kind=verification_only` です。Pre-release として公開する場合も同じ種別を使用します。
 
-## CI
+## GitHub Actions
 
-[GitHub Actions](../.github/workflows/ci.yml) は push、pull request、手動実行で検証します。`macos-15` ランナー上で ARM64 とクリーンな作業ツリーを確認し、固定した Nix 環境で依存監査、整形検査、lint、型チェック、テスト、ビルド、チェックサム照合、追跡ファイルに差分がないことを検証します。整形検査からビルドまでは `bun run check` で実行します。
+両ワークフローは `macos-15` ランナーで ARM64 とクリーンなチェックアウトを確認し、固定 Nix 環境で Flake の検査、依存監査、`bun run check`、チェックサム照合を実行します。使用するアクションはコミット SHA に固定します。
 
-アクションはコミット SHA に固定し、権限は `contents: read` とします。CI はリリース公開を行いません。
+| ワークフロー | 起動 | 権限と成果 |
+| --- | --- | --- |
+| [CI](../.github/workflows/ci.yml) | push、pull request、手動 | `contents: read` で検証し、追跡ファイルの差分がないことを確認する |
+| [Release](../.github/workflows/release.yml) | `master` を選択した手動実行 | 公開ジョブに `contents: write` を付与し、検証済み成果物を Pre-release として公開する |
 
-## GitHub Actions から Pre-release を公開する
+Release はさらに、Nix 環境外でのバージョン一致・起動と、作業ツリーに変更がないことを確認します。Release ワークフローの同時実行は直列化し、進行中の実行を自動キャンセルしません。
 
-[Release ワークフロー](../.github/workflows/release.yml) を master に取り込んだ後、GitHub の **Actions → Release → Run workflow** でブランチ `master` を選び、`version` に `0.2.0` や `0.2.0-rc.1` のような先頭 `v` なしの SemVer を入力してください。master 以外を選んだ実行では公開ジョブをスキップします。
+## Pre-release の公開手順
 
-ワークフロー開始時に取得した最新 master を対象に、固定 Nix 環境で依存監査、整形検査、lint、型チェック、テスト、Apple Silicon 向けビルド、チェックサム照合、Nix 環境外での起動を検証します。入力バージョンはビルド時の `WTS_RELEASE_VERSION` としてバイナリと `BUILD_INFO` に埋め込み、`package.json` とロックファイルは変更しません。通常のビルドでは `package.json` のバージョンを使用します。配布バイナリのバージョンは実行時の環境変数では変更されません。
+リポジトリの Actions 設定とタグルールで、自動発行される `GITHUB_TOKEN` による Release・タグ作成が許可されている必要があります。
 
-公開前に次の条件を検査します。
+1. GitHub の **Actions → Release → Run workflow** を開きます。
+2. ブランチに `master`、`version` に先頭 `v` なしの SemVer（例: `0.2.0`、`0.2.0-rc.1`）を入力して実行します。`master` 以外では公開ジョブがスキップされます。
+3. ジョブの成功後、GitHub Releases で `v<version>` の Pre-release と、`wts-macos-arm64`、`wts-macos-arm64.sha256`、`BUILD_INFO` の添付を確認します。
 
-- 全ページの Release 一覧から、下書きを除き `published_at` が最も新しいものを選びます。Pre-release も含み、GitHub の「Latest」ラベルやバージョン番号順とは区別します。
-- 最新 Release のタグが指すコミット SHA と最新 master の SHA が一致する場合は、入力バージョンが違ってもエラーにします。注釈付きタグもコミットへ解決して比較します。Release が存在しなければ初回公開を許可します。
-- 入力から生成する `v<version>` のタグ、または同じタグ名の Release（下書きを含む）が既に存在する場合はエラーにします。
-- API の認証・通信・タグ解決の失敗はエラーにします。ビルド後にも再検査し、master が進んでいれば公開せず再実行を求めます。
+チェックアウト時点の最新 `master` を公開対象とし、ビルド前後に [公開判定](design.md#公開判定) を実行します。最新公開 Release と同じコミット、使用済みバージョン、処理中の `master` 更新、API エラーは公開を止めます。入力バージョンにプレリリース識別子がなくても、公開状態は必ず Pre-release です。
 
-タグのコミット解決は [GitHub の Get a commit API](https://docs.github.com/en/rest/commits/commits#get-a-commit)、公開日時の判定は [Release API](https://docs.github.com/en/rest/releases/releases#list-releases) に基づきます。
+全ファイルのアップロード完了後に下書きを公開します。途中で失敗した場合は GitHub Releases とタグの状態を確認してください。既存の下書きやタグは再実行で上書き・削除されず、使用済みバージョンとして拒否されます。`master` 更新で停止した場合は、最新 `master` を対象に再実行してください。
 
-成功時は対象コミットに `v<version>` タグを作成し、`wts-macos-arm64`、`wts-macos-arm64.sha256`、`BUILD_INFO` を添付して Pre-release として公開します。全ファイルのアップロードが終わるまでは下書きのままとし、途中で失敗した場合は残った下書きやタグを確認してください。再実行時に既存の Release やタグを自動で上書き・削除することはありません。
-
-公開処理は通常の CI と分離し、Release ジョブだけに `contents: write` を付与します。認証には自動発行される `GITHUB_TOKEN` を使用します。リポジトリの Actions 設定・タグルールがこのトークンによる Release とタグの作成を許可している必要があります。Release ワークフローの同時実行は直列化します。
-
-生成物は引き続き `build_kind=verification_only` です。最低対応 macOS は未確定、Developer ID 署名・公証は未実施であり、制約を Release 本文に記載します。正式リリースへ移行する場合は以下の条件を別途満たしてください。
+Release 本文には、検証環境、最低対応 macOS の未確定、Developer ID 署名・公証の未実施、Gatekeeper 許可手順の未検証、チェックサム照合手順を記載します。
 
 ## 正式リリースの条件
 
-正式公開には以下を満たす必要があります。
+このワークフローが公開するのは検証用 Pre-release です。正式公開には次の条件を満たす必要があります。
 
 - 最低対応 macOS を決定し、対象環境で起動、コマンド、対話入力、キャンセル、終了を検証する。
 - Nix 環境外で実行し、GitHub Releases から取得したファイルのインストールと更新を検証する。
-- Developer ID 署名・公証の採否を決定する。採用する場合は最終バイナリへ適用・検証してからチェックサムを生成する。採用しない場合は対象 macOS の Gatekeeper の挙動と許可手順を検証し、制約と手順をリリース本文へ記載する。チェックサム照合は Gatekeeper の制約を解消しない。
+- Developer ID 署名・公証の採否を決定する。採用する場合は最終バイナリへ適用・検証してからチェックサムを生成する。採用しない場合は対象 macOS の Gatekeeper の挙動と許可手順を検証し、制約と手順をリリース本文へ記載する。
 - レビュー済みコミットとクリーンな作業ツリーから生成し、依存監査、CI の ARM64 実行結果、成果物と `BUILD_INFO` の整合、最終バイナリのチェックサムを確認する。
 - 公開先の権限とリリース承認を確認し、バイナリ、チェックサム、ビルド情報を一組で公開する。
-
-Intel Mac、Linux、Windows、自動更新、インストーラー、署名・公証の自動化、`nix build` による配布物生成は対象外です。

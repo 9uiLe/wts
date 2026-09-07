@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { mkdir, copyFile, readFile, writeFile } from "node:fs/promises";
 import { version as packageVersion } from "../package.json";
-import { parseReleaseVersion } from "../src/version";
+import { parseReleaseVersion } from "./release-version";
 
 const version =
 	process.env.WTS_RELEASE_VERSION === undefined

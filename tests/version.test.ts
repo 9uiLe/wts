@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { parseReleaseVersion } from "../src/version";
+import { parseReleaseVersion } from "../scripts/release-version";
 
 test.each(["1.2.3", "0.0.0", "2.0.0-rc.1", "1.2.3+build.01"])(
 	"release builds accept SemVer %s",
