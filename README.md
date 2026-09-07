@@ -1,0 +1,2 @@
+# wts
+Git Worktree Session
