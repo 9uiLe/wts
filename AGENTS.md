@@ -32,7 +32,7 @@
 - Nix Flakes が開発ツール、Bun が JavaScript / TypeScript 依存を管理する。devShell 内の固定された Bun を使用する。
 - `flake.lock` と `bun.lock` を Git 管理する。通常のインストールは `bun install --frozen-lockfile --ignore-scripts` とし、未レビューの依存更新、ロックファイル差し替え、インストールスクリプト実行を行わない。
 - 依存追加・更新時は公開元、ライセンス、リリース履歴、既知の脆弱性、スクリプト、推移的依存、予期しない通信を確認し、更新理由を記録する。`bun audit` と `osv-scanner` の監査結果を確認する。
-- 型の検証には `tsc --noEmit` を使用する。Bun による TypeScript 実行を型検査の代わりにしない。
+- TypeScript・JSON の整形と lint には `biome.json` の Biome 設定を使用する。整形は既定設定、lint は recommended ルールとし、型の検証には `tsc --noEmit` を使用する。Bun による実行や lint を型検査の代わりにしない。
 - 外部入力をシェル文字列へ連結しない。引数配列または安全な API を使う。対話のキャンセルは正常終了として扱う。
 - CLI は実行時に外部コマンド・ファイルを要求しない。外部要件を追加する場合は README とビルド情報を更新し、欠落時の振る舞いを検証する。
 
@@ -46,6 +46,6 @@
 
 ## 検証の選択
 
-README の開発コマンドから、変更の達成を証明するために必要な検証を選ぶ。型チェック、CLI テスト、依存監査、ビルドとチェックサム照合はそれぞれ別の証拠として扱う。
+README の開発コマンドから、変更の達成を証明するために必要な検証を選ぶ。整形検査、lint、型チェック、CLI テスト、依存監査、ビルドとチェックサム照合はそれぞれ別の証拠として扱う。整形の修正には `bun run format`、変更しない検査には `bun run format:check` と `bun run lint` を使用する。CI は `bun run check` で整形検査、lint、型チェック、テスト、ビルドを実行する。
 
 対話を変更した場合は、TTY 上で `bun run dev doctor --interactive` の肯定入力、否定入力、Ctrl-C によるキャンセルを確認する。実行結果と未検証事項を区別して報告する。

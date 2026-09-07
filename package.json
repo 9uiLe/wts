@@ -1,27 +1,31 @@
 {
-  "name": "wts",
-  "version": "0.1.0",
-  "description": "Git Worktree Session CLI",
-  "private": true,
-  "type": "module",
-  "bin": {
-    "wts": "src/cli.ts"
-  },
-  "scripts": {
-    "dev": "bun src/cli.ts",
-    "typecheck": "bun run --bun tsc --noEmit",
-    "test": "bun test",
-    "verify:deps": "bash scripts/verify-dependencies.sh",
-    "build": "bun scripts/build.ts",
-    "check": "bun run typecheck && bun test && bun run build"
-  },
-  "trustedDependencies": [],
-  "dependencies": {
-    "@clack/prompts": "1.7.0",
-    "commander": "15.0.0"
-  },
-  "devDependencies": {
-    "@types/bun": "1.4.1",
-    "typescript": "7.0.2"
-  }
+	"name": "wts",
+	"version": "0.1.0",
+	"description": "Git Worktree Session CLI",
+	"private": true,
+	"type": "module",
+	"bin": {
+		"wts": "src/cli.ts"
+	},
+	"scripts": {
+		"dev": "bun src/cli.ts",
+		"format": "biome format --write .",
+		"format:check": "biome format .",
+		"lint": "biome lint .",
+		"typecheck": "bun run --bun tsc --noEmit",
+		"test": "bun test",
+		"verify:deps": "bash scripts/verify-dependencies.sh",
+		"build": "bun scripts/build.ts",
+		"check": "bun run format:check && bun run lint && bun run typecheck && bun test && bun run build"
+	},
+	"trustedDependencies": [],
+	"dependencies": {
+		"@clack/prompts": "1.7.0",
+		"commander": "15.0.0"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.5.12",
+		"@types/bun": "1.4.1",
+		"typescript": "7.0.2"
+	}
 }

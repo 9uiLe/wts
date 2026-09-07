@@ -4,7 +4,7 @@
 
 wts（Git Worktree Session）は Apple Silicon macOS 向けの CLI プロジェクトである。提供するコマンドはヘルプ、バージョン表示、実行環境を表示する `doctor` とする。Git worktree の作成・削除やセッション管理は提供しない。
 
-開発ツールと依存を固定し、ソースからの実行、型検査、依存監査、単体実行ファイルの生成を同じ環境で実行できる構成を採る。利用・開発手順は [README](../README.md)、変更時の規約は [AGENTS.md](../AGENTS.md) に定義する。
+開発ツールと依存を固定し、ソースからの実行、整形・静的検査、型検査、依存監査、単体実行ファイルの生成を同じ環境で実行できる構成を採る。利用・開発手順は [README](../README.md)、変更時の規約は [AGENTS.md](../AGENTS.md) に定義する。
 
 ## 責務と依存
 
@@ -13,6 +13,7 @@ wts（Git Worktree Session）は Apple Silicon macOS 向けの CLI プロジェ�
 | 開発環境 | `flake.nix`、`flake.lock` | `aarch64-darwin` 向けに Bun、Git、OSV-Scanner、Coreutils を提供し、Nixpkgs の入力を固定する |
 | npm 依存 | `package.json`、`bun.lock`、`bunfig.toml` | 直接依存のバージョン、推移的依存の解決結果、npm レジストリを定義する |
 | CLI | `src/cli.ts` | Commander による引数処理と Clack による端末対話を実装する |
+| 整形・lint | `biome.json` | Biome の既定 formatter と recommended lint ルールを定義する |
 | 型・振る舞い | `tsconfig.json`、`tests/cli.test.ts` | 静的型検査とプロセスの出力・終了コードを検証する |
 | 依存検証 | `scripts/verify-dependencies.sh`、`scripts/dependency-inventory.ts` | 固定依存をインストールし、メタデータ一覧と監査結果を生成する |
 | ビルド | `scripts/build.ts` | ARM64 バイナリの生成・起動検証と、チェックサム・ビルド情報の記録を行う |
@@ -21,6 +22,12 @@ wts（Git Worktree Session）は Apple Silicon macOS 向けの CLI プロジェ�
 開発ツールは Nix、JavaScript / TypeScript パッケージは Bun が管理する。役割を分けることで、利用者向けバイナリに開発環境を要求せず、開発時には固定されたツールと依存を使用できる。
 
 UI は Commander と Clack で構成する。追加の文字装飾や長時間処理のスピナーが必要になった場合に限り、Chalk・Ora の導入を検討する。
+
+## 整形と静的検査
+
+整形と lint は Biome に統一し、複数ツールの設定と規則の調整を避ける。`@biomejs/biome` は開発依存として完全バージョンで固定し、`biome.json` で `src/`、`scripts/`、`tests/` 内の TypeScript・JSON ファイルとルートの JSON ファイルを対象にする。formatter は Biome の既定設定、lint は recommended ルールを使用する。
+
+`format` は整形結果を書き込み、`format:check` と `lint` はファイルを変更せずに検査する。整形は表記の統一、lint はコード上の問題の静的検出を担当し、型の整合性は `tsc --noEmit`、実行時の振る舞いはテストで検証する。`check` は整形検査、lint、型検査、テスト、ビルドを順に実行し、開発と CI で共通の検証手順とする。
 
 ## CLI の契約
 
@@ -48,6 +55,6 @@ CLI は実行時に外部コマンド、設定ファイル、追加の環境変�
 
 ## CI と配布
 
-CI は `macos-15` 上で ARM64 を確認し、クリーンなチェックアウトから Flake の評価、依存監査、型検査、テスト、ビルド、チェックサム照合を行う。GitHub Actions の参照はコミット SHA に固定し、リポジトリ権限は読み取りに限定する。リリースの公開は CI の責務に含めない。
+CI は `macos-15` 上で ARM64 を確認し、クリーンなチェックアウトから Flake の評価、依存監査、`bun run check`、チェックサム照合を行う。GitHub Actions の参照はコミット SHA に固定し、リポジトリ権限は読み取りに限定する。リリースの公開は CI の責務に含めない。
 
 配布先は GitHub Releases、導入と更新はチェックサム照合後の手動配置とする。正式配布には最低対応 macOS と署名・公証の方針を確定し、対象 OS とダウンロードした成果物で検証する必要がある。未確定の対応範囲を実機検証の代わりに推定しない。Intel Mac、Linux、Windows、自動更新、インストーラー、Nix パッケージとしての配布は対象外とする。

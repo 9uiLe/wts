@@ -49,11 +49,16 @@ CLI の実行に外部コマンド、設定ファイル、追加の環境変数�
 | コマンド | 処理 |
 | --- | --- |
 | `bun run dev` | ソースから CLI を起動する |
+| `bun run format` | Biome で整形し、ファイルを更新する |
+| `bun run format:check` | Biome の整形規則に一致するか検査する |
+| `bun run lint` | Biome の recommended ルールで静的検査する |
 | `bun run typecheck` | `tsc --noEmit` で型を検査する |
 | `bun run test` | CLI の振る舞いをテストする |
 | `bun run verify:deps` | 固定依存をインストールし、依存一覧と監査結果を生成する |
 | `bun run build` | Apple Silicon 向け検証用バイナリを生成し、起動を検証する |
-| `bun run check` | 型チェック、テスト、ビルドを順に実行する |
+| `bun run check` | 整形検査、lint、型チェック、テスト、ビルドを順に実行する |
+
+整形と lint は `biome.json` に定義し、`src/`、`scripts/`、`tests/` 内の TypeScript・JSON ファイルとルートの JSON ファイルを対象にします。整形は Biome の既定設定、lint は recommended ルールを使用します。型検査は TypeScript が担当します。
 
 `verify:deps` は `bun audit` と `osv-scanner` を実行し、両方の成功を要求します。パッケージのメタデータは `release/DEPENDENCIES.json`、監査結果は `release/bun-audit.json`・`release/osv-audit.json` とそれぞれの `.stderr`、問い合わせ日時・ツール・終了コードは `release/AUDIT_INFO` に記録します。監査 API が公開しないデータベースのスナップショット日時は記録できません。
 
@@ -80,7 +85,7 @@ shasum -a 256 -c wts-macos-arm64.sha256
 
 ## CI
 
-[GitHub Actions](.github/workflows/ci.yml) は push、pull request、手動実行で検証します。`macos-15` ランナー上で ARM64 とクリーンな作業ツリーを確認し、固定した Nix 環境で依存監査、型チェック、テスト、ビルド、チェックサム照合、追跡ファイルに差分がないことを検証します。
+[GitHub Actions](.github/workflows/ci.yml) は push、pull request、手動実行で検証します。`macos-15` ランナー上で ARM64 とクリーンな作業ツリーを確認し、固定した Nix 環境で依存監査、整形検査、lint、型チェック、テスト、ビルド、チェックサム照合、追跡ファイルに差分がないことを検証します。整形検査からビルドまでは `bun run check` で実行します。
 
 アクションはコミット SHA に固定し、権限は `contents: read` とします。CI はリリース公開を行いません。
 
