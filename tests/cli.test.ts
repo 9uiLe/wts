@@ -40,3 +40,36 @@ test("interactive doctor rejects pipes without hanging", () => {
 	expect(result.code).toBe(1);
 	expect(result.err).toContain("TTY");
 });
+
+test("session commands are available through the CLI", () => {
+	for (const name of [
+		"start-worktree-session",
+		"cleanup-session-branches",
+		"start-stack-branch",
+		"restack",
+	]) {
+		const result = run(name, "--help");
+		expect(result.code).toBe(0);
+		expect(result.out).toContain("--dry-run");
+	}
+});
+
+test("session commands report missing Git while doctor remains standalone", () => {
+	const cli = `${process.cwd()}/src/cli.ts`;
+	for (const name of [
+		"start-worktree-session",
+		"cleanup-session-branches",
+		"start-stack-branch",
+		"restack",
+	]) {
+		const result = Bun.spawnSync([process.execPath, cli, name, "--dry-run"], {
+			env: { ...process.env, PATH: "" },
+		});
+		expect(result.exitCode).toBe(1);
+		expect(result.stderr.toString()).toContain("git コマンドが見つかりません");
+	}
+	const result = Bun.spawnSync([process.execPath, cli, "doctor"], {
+		env: { ...process.env, PATH: "" },
+	});
+	expect(result.exitCode).toBe(0);
+});

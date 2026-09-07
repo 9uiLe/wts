@@ -1,6 +1,6 @@
 # wts
 
-`wts`（Git Worktree Session）は、Apple Silicon macOS 向けのコマンドラインツールです。ヘルプ、バージョン表示、実行環境を表示する `doctor` コマンドを提供します。Git worktree の作成・切り替え・削除やセッション管理は提供していません。
+`wts`（Git Worktree Session）は、Apple Silicon macOS 向けのコマンドラインツールです。作業セッションの worktree 作成、スタックブランチ作成、マージ済みブランチの整理、スタックの rebase と push を提供します。
 
 ## 対応環境と配布
 
@@ -8,7 +8,7 @@
 
 Developer ID 署名・公証は行っていません。ダウンロードしたバイナリは Gatekeeper によって起動が制限される場合があり、その許可手順は未検証です。チェックサムの一致は起動制限を解消しません。利用前に各 Release の説明と `BUILD_INFO` で検証範囲を確認してください。
 
-CLI の実行に外部コマンド、設定ファイル、追加の環境変数、ネットワーク接続は必要ありません。単体実行ファイルに Bun ランタイムを含むため、Nix、Bun、Node.js のインストールも不要です。
+セッション操作には Git、`cleanup-session-branches` には認証済み GitHub CLI（`gh`）が必要です。`restack` には `rebase --update-refs` を使える Git 2.38 以降が必要です。作業内容からの名前生成は任意の `claude` CLI（haiku）を使用します。未導入・生成失敗時は日本時間の日時で命名します。fetch・PR 照会・push にはリモートへの接続が必要です。ヘルプ、バージョン、`doctor` にこれらの外部要件はありません。単体実行ファイルに Bun ランタイムを含むため、Nix、Bun、Node.js のインストールも不要です。
 
 ## リポジトリの取得
 
@@ -86,6 +86,55 @@ wts doctor --interactive
 対話モードでは標準入力と標準出力の両方に TTY が必要です。否定回答と Ctrl-C によるキャンセルは終了コード `0` で終了します。TTY がない場合と未知のコマンドは標準エラーへエラーを表示し、終了コード `1` で終了します。
 
 `doctor` は実行プロセスの環境を表示するコマンドです。開発ツールのインストール状態や、対応 OS の条件を満たしているかどうかは判定しません。
+
+## セッション操作
+
+対象の Git リポジトリ内で実行します。サブディレクトリからも利用できます。
+
+```bash
+wts start-worktree-session
+wts start-stack-branch
+wts cleanup-session-branches --dry-run
+wts cleanup-session-branches
+wts restack
+```
+
+| コマンド | 処理・オプション |
+| --- | --- |
+| `start-worktree-session` | `<メインチェックアウト>-worktrees/YYYYMMDD-<slug>` に worktree を作成。`--task <内容>`、`--base-branch <ref>`、`--copy-from <directory>` |
+| `start-stack-branch` | セッション worktree の先端から `<root>-pr<n>-<slug>` を作成し切り替え。`--task <内容>`、`--pr-number <n>` |
+| `cleanup-session-branches` | 同一リポジトリのマージ済み PR を調べ、削除を証明できるブランチと worktree を確認後に削除。`--yes` で確認を省略 |
+| `restack` | スタック先端を `rebase --update-refs` し、必要なブランチを `--atomic` と明示的な `--force-with-lease` で push。`--base-branch <ref>`、`--push`、`--push-only` |
+
+全コマンドで `--dry-run` または `DRY_RUN=1` を指定できます。fetch、ブランチ・worktree の変更、コピー、lease の書き込み、push を行いません。削除判定の GitHub 照会や restack のリモート参照取得、作業内容の名前生成は行います。
+
+`BASE_BRANCH`、`COPY_FROM`、`PR_NUMBER`、`PUSH=1`、`PUSH_ONLY=1` も対応するオプションの代わりに使用できます。オプションを優先します。ベースの既定は `origin/main`、スタック番号の既定は使用済み番号の最大値 + 1（最初は 2）です。番号は GitHub の PR 番号ではなくスタック内の順番です。
+
+作業内容とベース・番号を省略すると対話で入力します。非対話実行では、必要な値を指定してください。名前生成を省略するには `--task ''` を指定します。セッションの日時名は `YYYYMMDD-HHMMSS`、スタックの代替 slug は `HHMMSS` です。同名ブランチを上書きしません。
+
+```bash
+wts start-worktree-session --task '' --base-branch origin/main --dry-run
+wts start-stack-branch --task '認証画面を追加' --pr-number 2
+wts restack --base-branch origin/main --push
+```
+
+実行元 worktree の `.worktree-copy` があれば、記載した相対パス・glob を新しい worktree にコピーします。空行、`#` 以降のコメントは無視します。コピー元はベースブランチの worktree、存在しなければメインチェックアウトです。`--copy-from` で変更できます。存在しないパスはスキップし、コピー失敗は警告します。worktree の外や Git 管理情報へのコピー、シンボリックリンクのコピーは拒否します。
+
+```text
+.env.local
+.claude/skills/*/skills/
+```
+
+整理対象から `main`、実行中のブランチ、セッション用ディレクトリ外の worktree で使用中のブランチを除外します。マージ済み PR の head と一致するか、`origin/main` に到達可能か、元スクリプトのリモート存在確認と厳密なパッチ比較で取り込みを証明できる場合に削除します。証明できない候補は理由と手動コマンドを表示します。対象 worktree は強制削除するため、未コミット・管理外ファイルも削除対象になります。ロックされた worktree は削除せず失敗を報告します。
+
+スタック操作はクリーンな作業ツリーを要求します。restack は非線形スタックと、別 worktree で使用中のスタックブランチを拒否します。rebase 開始時の origin の OID を worktree 専用の Git ディレクトリに `restack-lease` として保存します。コンフリクト時はそこで停止するため、解消後に次を実行します。
+
+```bash
+git rebase --continue
+wts restack --push-only --base-branch origin/main --push
+```
+
+`--push-only` は保存済み lease を再利用します。途中で他者が push した場合は上書きを拒否します。リモート確認失敗や不足した lease はエラーにします。push の否定・Ctrl-C は正常終了し、保存済み lease を残します。通常終了時は元のブランチへ戻ります。
 
 ## 開発資料
 

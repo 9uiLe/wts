@@ -2,9 +2,9 @@
 
 ## 目的と範囲
 
-wts（Git Worktree Session）は、Apple Silicon macOS 向けの CLI と、その検証・配布基盤である。CLI はヘルプ、バージョン表示、実行環境を表示する `doctor` を提供する。配布基盤は固定された開発環境で単体実行ファイルを生成し、GitHub Releases に検証用 Pre-release として公開する。
+wts（Git Worktree Session）は、Apple Silicon macOS 向けの CLI と、その検証・配布基盤である。CLI はヘルプ、バージョン表示、`doctor` と Git worktree セッション・スタック操作を提供する。配布基盤は固定された開発環境で単体実行ファイルを生成し、GitHub Releases に検証用 Pre-release として公開する。
 
-Git worktree 操作、セッション管理、Intel Mac・Linux・Windows への対応、自動更新、OS 向けインストーラーパッケージ、署名・公証の自動化、Nix パッケージとしての配布は対象外とする。利用方法は [README](../README.md)、開発・公開操作は [開発資料](development.md)、作業規約は [AGENTS.md](../AGENTS.md) に定義する。
+Intel Mac・Linux・Windows への対応、自動更新、OS 向けインストーラーパッケージ、署名・公証の自動化、Nix パッケージとしての配布は対象外とする。利用方法は [README](../README.md)、開発・公開操作は [開発資料](development.md)、作業規約は [AGENTS.md](../AGENTS.md) に定義する。
 
 ## 実行の階層
 
@@ -44,13 +44,17 @@ Nix は開発ツール、Bun は JavaScript / TypeScript の依存・実行・�
 | 実装 | 責務 |
 | --- | --- |
 | `src/cli.ts` | Commander で引数を処理し、Clack で端末対話を行う |
+| `src/session.ts` | Git 実行、リポジトリ・スタック探索、対話の共通処理 |
+| `src/start.ts` | セッションとスタックブランチの作成、管理外ファイルのコピー |
+| `src/cleanup.ts` | マージ済み PR とローカル変更の証明に基づく整理 |
+| `src/restack.ts` | スタックの rebase と lease を保持した atomic push |
 | `src/version.ts` | CLI の表示バージョンを提供する |
 | `.github/workflows/ci.yml` | 読み取り権限でソースと生成物を検証する |
 | `.github/workflows/release.yml` | 手動入力から対象を確定し、検証済み成果物を Pre-release として公開する |
 
 ## CLI とバージョン
 
-CLI は外部コマンド、設定ファイル、追加の環境変数、ネットワーク接続を要求しない。コマンドの出力、対話の TTY 条件、キャンセルとエラーの終了コードは [README](../README.md#使い方) に定義する。
+ヘルプ、バージョン、doctor は外部要件を持たない。セッション操作は Git、整理は gh、任意の名前生成は claude を引数配列で実行する。外部要件と通信、環境変数、コピー設定は README に定義する。コマンドの出力、対話の TTY 条件、キャンセルとエラーの終了コードは [README](../README.md#使い方) に定義する。
 
 ソース実行時は `package.json` のバージョンを表示する。ビルド時は `WTS_RELEASE_VERSION` が指定されていればその SemVer を、未指定なら `package.json` のバージョンを使用する。先頭 `v`、不正な識別子、余分な空白を含む入力は拒否する。
 

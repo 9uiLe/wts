@@ -53,8 +53,10 @@ async function writeBuildInfo(): Promise<void> {
 		minimum_macos_version: "TO_BE_DETERMINED",
 		developer_id_signing: "not_performed",
 		notarization_status: "not_performed",
-		external_file_requirements: "none",
-		external_command_requirements: "none",
+		external_file_requirements:
+			"Git repository for session commands; optional .worktree-copy",
+		external_command_requirements:
+			"git (restack: >=2.38); gh authenticated for cleanup-session-branches; claude optional for slug generation",
 		flake_lock_sha256: await hashFile("flake.lock"),
 		bun_lock_sha256: await hashFile("bun.lock"),
 	};

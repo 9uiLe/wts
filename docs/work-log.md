@@ -25,3 +25,11 @@
 ## ライセンスの設計根拠
 
 wts は、個人・組織が商用利用、改変、再配布を行いやすい条件で公開する。派生版のソース公開を義務付けず、著作権表示と許諾文の保持を条件とする MIT License を採用する。利用条件と無保証・責任制限の正式な本文は [LICENSE](../LICENSE) に置く。
+
+## 2026-09-08: セッション操作の CLI 移植
+
+usapo-native の start-worktree-session、cleanup-session-branches、start-stack-branch、restack を、対象リポジトリにスクリプトを置かずに利用できるよう TypeScript のコマンドとして移植した。元の環境変数とブランチ命名、コピー元の選択、マージ済み変更の証明、保存 lease と atomic push を維持し、Commander のオプションと Clack の対話を追加した。
+
+コピーによる worktree 外・Git 管理情報の書き換えを防ぐため、シンボリックリンクはスキップする。dry-run は cleanup の fetch も含め変更しない。キャンセルは CLI 規約に従い正常終了する。lease 取得失敗と保存記録の不足は上書き防止のため拒否する。Git と gh を必要なコマンドでのみ要求し、任意の claude がない場合は日時へフォールバックする。README と BUILD_INFO に外部要件を明記した。
+
+実 Git の一時リポジトリと bare origin、GitHub CLI のテスト用応答で、作成・コピー・削除判定・rebase・競合復旧・古い lease の拒否を検証した。実際の GitHub と Claude サービスへの接続は検証対象に含めない。
