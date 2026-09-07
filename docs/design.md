@@ -1,84 +1,78 @@
 # wts の設計
 
-## 目的と範囲
+wts は、プロジェクト設定で作業場所と命名を決め、Git worktree 上のセッションを管理する CLI である。配布対象は Apple Silicon macOS の単体実行ファイルとする。利用の入口と用語は [README](../README.md)、設定と命名スクリプトの契約は [設定資料](configuration.md)、開発・公開手順は [開発資料](development.md)、選択理由は [設計判断](decisions.md)に置く。
 
-wts（Git Worktree Session）は、Apple Silicon macOS 向けの CLI と、その検証・配布基盤である。CLI はヘルプ、バージョン表示、`init`、`doctor`、`config check` と Git worktree セッション・スタック操作を提供する。配布基盤は固定された開発環境で単体実行ファイルを生成し、GitHub Releases に検証用 Pre-release として公開する。
+## ドメインと永続状態
 
-Intel Mac・Linux・Windows への対応、自動更新、OS 向けインストーラーパッケージ、署名・公証の自動化、Nix パッケージとしての配布は対象外とする。利用方法は [README](../README.md)、開発・公開操作は [開発資料](development.md)、作業規約は [AGENTS.md](../AGENTS.md) に定義する。
+セッションは一つの worktree、ルートブランチ、そのルートに属するスタックブランチを持つ。ルートを番号 1 とし、`<root>-pr<n>-<名前>` 形式のローカルブランチを番号順に列挙する。番号は GitHub の PR 番号とは独立している。
 
-## 実行の階層
+| 状態 | 保存場所 | 用途 |
+| --- | --- | --- |
+| プロジェクト設定 | `.wts.json` | worktree の作成先と命名規則 |
+| セッション識別情報 | worktree 専用の Git ディレクトリの `wts-session.json` | `rootBranch` によるセッションの識別 |
+| リモート参照のスナップショット | 同じ Git ディレクトリの `restack-lease` | rebase 後の push で照合する OID |
+| 管理外ファイルの指定 | 実行元 worktree の `.worktree-copy` | start 時のコピー対象 |
 
-操作の入口、開発処理、配布 CLI を分ける。利用者と CI は独立したシェルスクリプトを呼び出し、開発処理は固定 Nix 環境の Bun で実行する。生成バイナリは Bun ランタイムを含み、CLI の利用者には開発環境を要求しない。
+worktree 名からルートブランチを推測しない。stack と restack はセッション識別情報と設定の管理範囲を検査する。cleanup は独自に PR とローカル変更を調査し、セッション識別情報の存在だけを削除根拠にはしない。
 
-### 操作の入口
+## 実装の責務
+
+CLI の入口は引数をコマンドへ渡す。各コマンドは操作の順序を決め、Git・設定・命名・対話などの共通処理を利用する。
 
 | 実装 | 責務 |
 | --- | --- |
-| `scripts/setup.sh` | Apple Silicon macOS、Nix、Xcode Command Line Tools と Flake を確認し、依存取得を呼び出す |
-| `scripts/install-deps.sh` | ロックを更新せず、インストールスクリプトを無効にして依存を取得する |
-| `scripts/dev.sh` | CLI 引数をソース実行へ渡す |
-| `scripts/check-config.sh` | 呼び出し元ディレクトリを保ってプロジェクト設定を検査する |
-| `scripts/build.sh` | ビルド処理を呼び出し、配布する成果物を検証する |
-| `scripts/check.sh` | 整形・lint・型・テスト・ビルドを呼び出し、配布する成果物を検証する |
-| `scripts/install.sh` | 成果物を検証し、任意の --with-deps で Git・gh を導入してから指定ディレクトリへ実行ファイルを配置する |
-| `scripts/lib/artifacts.sh` | 各入口から source して使う内部共通処理として、成果物の検証を提供する（直接実行しない） |
+| `src/cli.ts` | Commander のコマンド定義、引数と環境変数の受け取り、エラー終了 |
+| `src/commands/start.ts` | 名前とベースの確定、worktree 作成、セッションの記録、コピーの実行 |
+| `src/commands/stack.ts` | 先端とクリーン状態の確認、番号と名前の確定、ブランチ作成 |
+| `src/commands/restack.ts` | スタックの検証、rebase、lease の保存と atomic push |
+| `src/commands/cleanup.ts` | PR とコミットの照合、削除候補の提示、worktree とブランチの整理 |
+| `src/commands/init.ts`、`src/commands/config.ts` | 設定初期化と検査の操作 |
+| `src/commands/doctor.ts` | 実行情報の表示、OS・依存・GitHub 認証の検査 |
+| `src/git.ts` | 引数配列による外部実行、Git 参照と worktree の取得・検査 |
+| `src/project.ts` | 実行元とメインチェックアウトの特定、プロジェクト設定の読み込み |
+| `src/session.ts` | セッション識別情報とスタックの列挙 |
+| `src/config.ts` | 設定データ、パス、実行権限の検証 |
+| `src/naming.ts` | 日付＋UUID の生成、命名スクリプトとの入出力、名前の検証 |
+| `src/prompts.ts` | Clack による入力・確認、キャンセルの扱い |
+| `src/copy.ts` | 管理外ファイルの列挙と境界を検査したコピー |
+| `src/version.ts` | ソースとバイナリの表示バージョン |
 
-開発用の入口は wts リポジトリの Flake を選び、`nix develop --no-update-lock-file` で固定環境を使用する。設定検査は対象プロジェクトを探すため呼び出し元ディレクトリを保持する。配置用の入口は macOS の標準コマンドを使用し、相対パスの引数を呼び出し時のディレクトリから解釈する。引数・既定値と操作手順は [開発資料](development.md#開発コマンド)に定義する。
+## 操作の不変条件
 
-### 開発処理と環境
+設定を必要とする操作は `.wts.json` を検証してから進む。設定ファイルの探索順・パス基準・既定値・命名プロトコルは [設定資料](configuration.md)を正本とする。
+
+start は名前と既存ブランチ・パスの衝突を検査してから作成する。命名スクリプトが失敗した場合は中止し、別の名前へ置き換えない。コピーは worktree と Git 管理情報の境界を検査し、シンボリックリンクを持ち込まない。
+
+stack はクリーンな作業ツリーとスタック先端での実行を要求する。restack は線形で、他の worktree で使用されていないスタックを要求する。push は rebase 開始時に保存した origin の OID を明示的な lease とし、atomic に行う。リモート確認や lease が不足する場合は push しない。
+
+cleanup はマージ済み PR とローカル変更の取り込みを証明できるブランチを削除候補にする。`main`、実行中のブランチ、管理範囲外の worktree で使用中のブランチは除外する。削除候補の worktree は強制削除の対象であり、未コミット・管理外ファイルの保持は保証しない。
+
+対話の否定・Ctrl-C は正常終了する。必要な入力を受け取れない非対話環境ではエラーにする。外部コマンドは引数配列で実行し、入力をシェル式として解釈しない。
+
+`--dry-run` は wts による fetch、ブランチ・worktree・ファイル・セッション情報・lease の変更と push を抑制する。PR 情報とリモート参照の取得、命名スクリプトの実行は行う。
+
+## 環境検査とインストール
+
+doctor の実行情報表示は外部コマンドを要求しない。`doctor --check` は OS・Git・gh と認証、任意の Claude CLI を検査する。`config check` は設定を検証し、命名スクリプトは実行しない。両検査とも環境の導入・変更は行わず、認証情報を表示しない。
+
+`install.sh` は成果物を検証し、`--with-deps` 指定時に Homebrew へ Git・gh の導入を委ねてから wts を配置する。Homebrew、任意の命名環境、認証は利用者が用意する。
+
+## 開発・配布基盤
 
 | 実装・設定 | 責務 |
 | --- | --- |
-| `flake.nix`、`flake.lock` | `aarch64-darwin` 向けの Bun、Git、OSV-Scanner、Coreutils と Nixpkgs の入力を固定する |
-| `package.json`、`bun.lock`、`bunfig.toml` | 開発コマンド、直接依存、推移的依存、npm レジストリを定義する |
-| `biome.json`、`tsconfig.json` | 整形、lint、型の検査規則を定義する |
-| `tests/` | CLI、バージョン、公開判定、インストールの振る舞いを検証する |
-| `scripts/verify-dependencies.sh`、`scripts/dependency-inventory.ts` | 固定依存の取得、依存一覧と監査結果の生成を行う |
-| `scripts/build.ts` | バイナリの生成・起動検証、チェックサムとビルド情報の記録を行う |
-| `scripts/release-version.ts` | ビルドと公開判定で共有する SemVer 入力を検証する |
-| `scripts/check-release.ts` | 入力バージョン、master、公開済み Release、既存タグを検査する |
+| `flake.nix`、`flake.lock` | `aarch64-darwin` 向け開発ツールと Nixpkgs の固定 |
+| `package.json`、`bun.lock`、`bunfig.toml` | Bun のコマンド、依存とレジストリ |
+| `biome.json`、`tsconfig.json` | 整形・lint・型の規則 |
+| `tests/` | CLI、セッション、設定、配布処理の観測可能な振る舞いの検証 |
+| `scripts/*.sh` | 固定 Nix 環境での開発操作と、macOS 上の配置操作の入口 |
+| `scripts/lib/artifacts.sh` | ビルド・検査・配置に共通の成果物検証 |
+| `scripts/verify-dependencies.sh`、`scripts/dependency-inventory.ts` | 固定依存の取得・棚卸し・監査 |
+| `scripts/build.ts` | コンパイル、起動検証、チェックサム・ビルド情報の生成 |
+| `scripts/release-version.ts`、`scripts/check-release.ts` | 公開バージョンと公開対象の検証 |
+| `.github/workflows/ci.yml`、`.github/workflows/release.yml` | 通常検証と Pre-release 公開 |
 
-Nix は開発ツール、Bun は JavaScript / TypeScript の依存・実行・テスト・コンパイルを管理する。開発処理の依存は配布 CLI の実行要件には含めない。
-
-### CLI とワークフロー
-
-| 実装 | 責務 |
-| --- | --- |
-| `src/cli.ts` | Commander で引数を処理し、Clack で端末対話を行う |
-| `src/doctor.ts` | 対応 OS・依存コマンド・GitHub 認証の検査と不足時の案内 |
-| `src/session.ts` | Git 実行、リポジトリ・スタック探索、セッション識別情報、対話の共通処理 |
-| `src/config.ts` | 設定ファイルの初期化と探索、項目とパスの検証、作成先の解決 |
-| `src/naming.ts` | 日付＋UUID の生成、設定済みスクリプトとの入出力、名前の検証 |
-| `src/start.ts` | セッションとスタックブランチの作成、管理外ファイルのコピー |
-| `src/cleanup.ts` | マージ済み PR とローカル変更の証明に基づく整理 |
-| `src/restack.ts` | スタックの rebase と lease を保持した atomic push |
-| `src/version.ts` | CLI の表示バージョンを提供する |
-| `.github/workflows/ci.yml` | 読み取り権限でソースと生成物を検証する |
-| `.github/workflows/release.yml` | 手動入力から対象を確定し、検証済み成果物を Pre-release として公開する |
-
-## セッションと設定の不変条件
-
-公開するセッション操作は `start`、`stack`、`cleanup`、`restack` とする。対話の否定とキャンセルは正常終了し、非対話環境で必要な入力がない場合はエラーにする。外部コマンドは引数配列で実行する。
-
-セッションは一つの worktree とルートブランチを持つ。`start` は worktree 専用の Git ディレクトリに `wts-session.json` を保存し、`rootBranch` を記録する。`stack`・`restack` は設定された作成先の範囲とこの情報を使ってセッションを識別する。ディレクトリ名からブランチ名を推測せず、手作業で作成した worktree をセッションとして扱わない。スタックの枝は `<root>-pr<n>-<名前>` で識別し、番号順に扱う。
-
-`init` は実行中の worktree ルートに `.wts.json` を作成し、既存ファイルを上書きしない。初期設定は `worktreeDirectory` に `../<メインチェックアウトのディレクトリ名>-worktrees`、`naming` に空オブジェクトを記録する。
-
-セッション操作とファイル指定なしの `config check` は `.wts.json` を必須とする。実行中の worktree、メインチェックアウトの順に探索し、最初の一つを使用する。両方にない場合はエラーにする。設定項目の省略には既定値を使い、複数ファイルのマージは行わない。相対の作成先はメインチェックアウト基準、相対のスクリプトパスは設定ファイル基準とする。項目、型、パス、実行権限の不正は操作を中止する。詳細なスキーマと入出力は [設定資料](configuration.md) に定義する。
-
-既定の名前は日本時間の日付と UUID から生成する。命名スクリプトは設定した種類だけ実行し、作業内容・プロンプト・命名コンテキストを JSON 標準入力で渡す。プロンプト省略時は空文字を渡す。終了失敗や不正な出力は作成前のエラーとし、既定名への置換は行わない。ブランチ名と worktree 名は別々に検証し、衝突時は上書きしない。
-
-`--dry-run` は wts による fetch、ブランチ・worktree・コピー・セッション情報・lease の変更と push を行わない。リモート参照、PR 情報の読み取り、予定名の生成は実行する。命名スクリプト自身の副作用は wts の制御範囲に含めない。
-
-コピーは worktree と Git 管理情報の境界を検査し、シンボリックリンクを持ち込まない。cleanup はマージ済み PR とローカル変更の取り込みを証明できる候補だけを削除する。restack は線形かつ他の worktree で使用していないスタックを要求し、rebase 開始時のリモート OID を保存する。push は保存した OID を明示的な lease として使用し、atomic に実行する。
-
-## 検査と導入の境界
-
-`init`、`doctor`、ヘルプ、バージョン表示は設定ファイルを必要としない。ヘルプ、バージョン、オプションなしの `doctor` は外部コマンドも必要としない。`doctor --check` は対応 OS・Git・gh の実行と認証、任意の Claude CLI の有無を検査する。認証情報は表示せず、必須項目の失敗を終了コードに反映する。任意の命名スクリプトが利用する依存の検査は、そのスクリプト側で扱う。
-
-`config check` は設定と実行権限を検証するが、命名スクリプトは実行しない。ファイルを明示した場合は Git リポジトリ外でも検査できる。いずれの検査も環境変更や認証操作は行わない。
-
-`install.sh` は OS と成果物を検証した後、`--with-deps` 指定時だけ Homebrew に Git・gh の導入を委ねる。依存導入に失敗した場合は wts を配置しない。Homebrew 自体、命名スクリプト用の依存、認証の用意は利用者の責務とする。
+開発用スクリプトはリポジトリの Flake を `nix develop --no-update-lock-file` で使用する。設定検査は呼び出し元ディレクトリを保持する。配布バイナリと配置スクリプトは Nix を要求しない。具体的なコマンドは [開発資料](development.md#開発コマンド)に定義する。
 
 ## バージョン
 

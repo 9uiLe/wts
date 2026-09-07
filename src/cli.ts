@@ -1,51 +1,19 @@
 #!/usr/bin/env bun
-import { confirm, intro, isCancel, outro, cancel } from "@clack/prompts";
 import { Command, Option } from "commander";
+import { cleanupSessionBranches } from "./commands/cleanup";
+import { checkConfig } from "./commands/config";
+import { doctor } from "./commands/doctor";
+import { init } from "./commands/init";
+import { restack } from "./commands/restack";
+import { startStackBranch } from "./commands/stack";
+import { startWorktreeSession } from "./commands/start";
+import { Cancelled } from "./prompts";
 import { version } from "./version";
-import { startStackBranch, startWorktreeSession } from "./start";
-import { cleanupSessionBranches } from "./cleanup";
-import { restack } from "./restack";
-import { Cancelled, repository, repositoryLocation } from "./session";
-import { checkEnvironment } from "./doctor";
-import { initializeConfig, loadConfigFile } from "./config";
-import { resolve } from "node:path";
 
 const program = new Command()
 	.name("wts")
 	.description("Git Worktree Session")
 	.version(version);
-
-async function doctor({
-	interactive,
-	check,
-}: {
-	interactive?: boolean;
-	check?: boolean;
-}): Promise<void> {
-	if (check) {
-		await checkEnvironment();
-		return;
-	}
-	if (!interactive) {
-		console.log(
-			`wts ${version}\nplatform=${process.platform}\narch=${process.arch}`,
-		);
-		return;
-	}
-
-	if (!process.stdin.isTTY || !process.stdout.isTTY) {
-		program.error("対話モードは TTY 端末で実行してください。");
-	}
-
-	intro("wts doctor");
-	const proceed = await confirm({ message: "起動環境を表示しますか？" });
-	if (isCancel(proceed) || !proceed) {
-		cancel("キャンセルしました。");
-		return;
-	}
-
-	outro(`${process.platform} / ${process.arch}`);
-}
 
 program
 	.command("doctor")
@@ -66,22 +34,14 @@ program
 program
 	.command("init")
 	.description("プロジェクトの .wts.json を生成します")
-	.action(() => {
-		const { root, main } = repositoryLocation();
-		console.log(`設定を生成しました: ${initializeConfig(root, main)}`);
-	});
+	.action(init);
 
 program
 	.command("config")
 	.description("プロジェクト設定を確認します")
 	.command("check [file]")
 	.description("設定の項目・値・パスを検査します（スクリプトは実行しません）")
-	.action(async (file?: string) => {
-		const loaded = file
-			? loadConfigFile(resolve(file))
-			: (await repository()).config;
-		console.log(`設定 OK: ${loaded.path}\nWorktrees  ${loaded.worktreesBase}`);
-	});
+	.action(checkConfig);
 
 function dryRun(command: Command): Command {
 	return command.addOption(

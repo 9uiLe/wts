@@ -1,15 +1,9 @@
 import { existsSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import {
-	askText,
-	confirmAction,
-	ensureClean,
-	fetchBase,
-	repository,
-	sessionRootBranch,
-	stackBranches,
-	worktrees,
-} from "./session";
+import { ensureClean, fetchBase, worktrees } from "../git";
+import { repository } from "../project";
+import { askText, confirmAction } from "../prompts";
+import { sessionRootBranch, stackBranches } from "../session";
 
 export async function restack(options: {
 	dryRun?: boolean;

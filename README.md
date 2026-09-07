@@ -1,18 +1,12 @@
 # wts
 
-`wts`（Git Worktree Session）は、Apple Silicon macOS 向けの CLI です。`start` で作業用 worktree を作成し、`stack` でブランチを積み重ね、`restack` で rebase・push、`cleanup` でマージ済みブランチを整理します。
+wts（Git Worktree Session）は、作業用の Git worktree と、依存関係のあるブランチの列を管理する Apple Silicon macOS 向け CLI です。
 
-## 対応環境と配布
-
-対象は Apple Silicon macOS です。[GitHub Releases](https://github.com/9uiLe/wts/releases) で検証用 Pre-release を配布します。最低対応 macOS は未確定で、GitHub Actions の macOS 15 ARM64 上で起動を検証します。Intel Mac、Linux、Windows は対象外です。
-
-Developer ID 署名・公証は行っていません。ダウンロードしたバイナリは Gatekeeper によって起動が制限される場合があり、その許可手順は未検証です。チェックサムの一致は起動制限を解消しません。各 Release の説明と `BUILD_INFO` で検証範囲を確認してください。
-
-セッション操作には Git、`restack` には Git 2.38 以上、`cleanup` には認証済み GitHub CLI（`gh`）が必要です。fetch・PR 照会・push にはリモートへの接続が必要です。既定の命名は日付＋UUID で、AI や命名用の外部コマンドを使用しません。命名スクリプトを設定する場合は、そのスクリプトが使う環境も用意してください。
-
-配布バイナリは Bun ランタイムを含み、Nix、Bun、Node.js は不要です。ヘルプ、バージョン、オプションなしの `doctor` には外部コマンドの要件もありません。
+`init` でプロジェクト設定を用意し、`start` で作業場所を作ります。作業を分けてレビューしたいときは `stack` でブランチを積み重ね、`restack` でベースの更新を取り込みます。マージ後は `cleanup` でブランチと worktree を整理します。
 
 ## インストール
+
+配布バイナリには Bun ランタイムを含み、利用時に Nix・Bun・Node.js は不要です。Git を使用し、`restack` は Git 2.38 以上、`cleanup` は認証済み GitHub CLI（`gh`）を必要とします。fetch・PR 照会・push にはリモートへの接続が必要です。既定の命名には AI や外部の命名コマンドを使用しません。
 
 配布バイナリの配置にはリポジトリのスクリプトを使用します。以下はリポジトリのルートで実行します。
 
@@ -54,6 +48,12 @@ export PATH="$HOME/.local/bin:$PATH"
 ./scripts/install.sh
 ```
 
+## 対応環境と配布状態
+
+対象は Apple Silicon macOS です。[GitHub Releases](https://github.com/9uiLe/wts/releases) では検証用 Pre-release を配布します。最低対応 macOS は未確定で、GitHub Actions の macOS 15 ARM64 上で起動を検証します。Intel Mac、Linux、Windows は対象外です。
+
+Developer ID 署名・公証は行っていません。ダウンロードしたバイナリは Gatekeeper によって起動が制限される場合があり、その許可手順は未検証です。チェックサムの一致は起動制限を解消しません。各 Release の説明と `BUILD_INFO` で検証範囲を確認してください。
+
 ## 環境の検査
 
 ```bash
@@ -73,63 +73,78 @@ Git リポジトリ外や非対話環境でも実行できます。認証確認�
 
 対話には標準入力・標準出力の両方に TTY が必要です。否定回答と Ctrl-C によるキャンセルは終了コード `0`、TTY の不足と未知のコマンドは `1` です。`--check` と `--interactive` は併用できません。
 
-## プロジェクトの初期化と設定
+## 作業の単位
 
-対象の Git リポジトリのルートで設定ファイルを作成し、コミットします。
+| 用語 | 意味 |
+| --- | --- |
+| メインチェックアウト | `git clone` などで用意した元の作業ディレクトリ。そこでチェックアウト中のブランチ名とは無関係 |
+| セッション | `wts start` が作る一つの worktree と、その中で扱うスタック |
+| ルートブランチ（`root`） | セッション作成時の最初のブランチ。スタックの番号 1 に相当 |
+| スタック | ルートブランチと `<root>-pr<n>-<名前>` 形式のブランチの列。番号順に扱う |
+| スタック番号（`n`） | セッション内の順番。`--pr-number` で指定する 2 以上の整数で、GitHub の PR 番号とは別 |
+| 管理範囲 | 設定の `worktreeDirectory` で指定するディレクトリ。セッションの配置と cleanup の対象判定に使用 |
+
+ベースブランチの対話入力の既定値は `origin/main` です。これは Git の参照名であり、メインチェックアウトのパスを表しません。リポジトリのブランチに応じて `--base-branch origin/master` などを指定してください。cleanup の判定では `main` と `origin/main` を使用します。
+
+## プロジェクトを初期化する
+
+対象リポジトリのメインチェックアウトで実行します。
 
 ```bash
+cd /path/to/project
 wts init
 wts config check
 git add .wts.json
 git commit -m "Configure wts sessions"
 ```
 
-`wts init` は実行中の worktree ルートに `.wts.json` を作成します。作成先には `../<メインチェックアウトのディレクトリ名>-worktrees`、命名には空の設定を記録します。既存の設定ファイルは上書きしません。設定をコミットしてベースブランチに含めることで、新しい worktree に設定を引き継げます。
+`init` は `.wts.json` を生成し、既存ファイルは上書きしません。既定の作成先はメインチェックアウトと同じ親ディレクトリの `<プロジェクト名>-worktrees`、命名は日本時間の日付＋UUID です。設定をセッションのベースブランチへコミットして共有してください。
 
-`start`・`stack`・`cleanup`・`restack` とファイル指定なしの `config check` には `.wts.json` が必要です。実行中の worktree ルート、メインチェックアウトの順に探し、見つかった一つを読み込みます。両方にない場合はエラーになります。`init`、`doctor`、ヘルプ、バージョン表示は設定ファイルなしで利用できます。
+`start`・`stack`・`restack`・`cleanup` は設定ファイルがないとエラーになります。作成先・命名スクリプト・プロンプトの設定方法と検査は [設定資料](docs/configuration.md)にまとめています。
 
-命名項目を省略すると、ブランチ名は日本時間の `YYYYMMDD-<UUID>`、worktree 名はブランチ名と同じです。作成先や命名を編集した後は検査してください。
+## セッションで作業する
 
 ```bash
-wts config check
-wts config check /path/to/project/.wts.json
+wts start --base-branch origin/main
 ```
 
-設定検査は JSON、項目、型、パス、実行権限を確認し、命名スクリプトを実行しません。設定が有効なら終了コード `0`、エラーなら `1` です。ファイルを明示すればリポジトリ外でも検査できます。
-
-`worktreeDirectory` と `naming.branch`・`naming.worktree` による命名、JSON 標準入力の契約、Claude CLI を使う例は [設定資料](docs/configuration.md)を参照してください。スクリプトは設定した場合だけ実行し、失敗時は作成を中止します。
-
-## セッションの作成とスタック
-
-対象の Git リポジトリ内で実行します。サブディレクトリからも利用できます。
+表示された `Path` へ移動してください。wts は呼び出し元シェルのディレクトリを変更しません。
 
 ```bash
-wts start
-# 表示された Path のディレクトリへ移動して作業・コミットする
-wts stack
-wts restack
-```
-
-| コマンド | 処理・オプション |
-| --- | --- |
-| `start` | worktree とセッションのルートブランチを作成。`--task <内容>`、`--base-branch <ref>`、`--copy-from <directory>` |
-| `stack` | 同じセッション worktree の先端から `<root>-pr<n>-<名前>` を作成して切り替え。`--task <内容>`、`--pr-number <n>` |
-| `restack` | スタックを `rebase --update-refs` し、`--atomic` と明示的な `--force-with-lease` で push。`--base-branch <ref>`、`--push`、`--push-only` |
-| `cleanup` | マージ済み PR とローカル変更を調べ、削除可能なブランチ・worktree を確認後に削除。`--yes` で確認を省略 |
-
-ベース・番号を省略すると対話で入力します。命名スクリプトを設定した場合は、作業内容も省略時に対話で入力します。ベースの既定は `origin/main`、スタック番号の既定は使用済み番号の最大値＋1（最初は 2）です。番号はスタック内の順番を表します。命名スクリプトがなければ作業内容にかかわらず日付＋UUID を使用します。既存のブランチ・パスを上書きしません。
-
-非対話環境では入力値を明示してください。`--task ''` は空の作業内容を渡します。設定済みの命名スクリプトは作業内容が空でも実行します。
-
-```bash
-wts start --task '' --base-branch origin/main
-wts stack --task '' --pr-number 2
+cd /path/printed/by/wts
+# ファイルを編集して、作業をコミットする
+wts stack --pr-number 2
+# 次の作業を編集・コミットする
 wts restack --base-branch origin/main --push
 ```
 
-`BASE_BRANCH`、`COPY_FROM`、`PR_NUMBER`、`PUSH=1`、`PUSH_ONLY=1` を対応するオプションの代わりに使用できます。オプションを優先します。
+`stack` は同じ worktree 内で新しいブランチへ切り替えます。現在のブランチがスタックの先端で、未コミット変更がないことが必要です。番号省略時は、使用済みの最大番号＋1 を対話で提示します。
 
-`stack`・`restack` は `wts start` で作成したセッション内で実行します。worktree 名とブランチ名は独立して設定でき、セッションの識別情報は worktree 専用の Git ディレクトリに保存します。手作業で作成した worktree は wts のセッションとして扱いません。
+`restack` はスタックを rebase し、確認後に origin へ push します。`--push` は push の確認を省略します。PR の作成・マージは GitHub または gh で行ってください。
+
+マージ後はメインチェックアウトなど、削除対象以外の場所から整理します。
+
+```bash
+cd /path/to/project
+wts cleanup
+```
+
+`stack`・`restack` は `start` が作成したセッションで使用します。手作業で作成した worktree は対象になりません。cleanup の対象と削除条件は [マージ済みブランチの整理](#マージ済みブランチの整理)を確認してください。
+
+## コマンドと入力
+
+| コマンド | 主なオプション |
+| --- | --- |
+| `wts start` | `--task <内容>`、`--base-branch <ref>`、`--copy-from <directory>` |
+| `wts stack` | `--task <内容>`、`--pr-number <n>` |
+| `wts restack` | `--base-branch <ref>`、`--push`、`--push-only` |
+| `wts cleanup` | `--yes`（削除確認を省略） |
+
+4 コマンドは `--dry-run` に対応します。全オプションは `wts <コマンド> --help` で確認できます。
+
+ベースとスタック番号は省略時に対話で入力します。命名スクリプトを設定した場合は作業内容も対話で入力します。非対話環境では必要な入力をオプションで渡してください。`--task ''` は空の作業内容を明示し、命名スクリプトがあれば空の内容でも実行します。
+
+`BASE_BRANCH`、`COPY_FROM`、`PR_NUMBER`、`PUSH=1`、`PUSH_ONLY=1`、`DRY_RUN=1` を対応するオプションの代わりに使用できます。オプションを優先します。
 
 ### 実行予定の確認
 
@@ -172,11 +187,12 @@ wts restack --push-only --base-branch origin/main --push
 
 `--push-only` は保存した lease を使い、他者が push した変更の上書きを拒否します。リモート確認失敗や不足した lease はエラーになります。push の否定・Ctrl-C は正常終了し、lease を残します。通常終了時は元のブランチへ戻ります。
 
-## 開発資料
+## 資料
 
+- [設定項目・命名スクリプト・サンプル](docs/configuration.md)
 - [開発環境・検証・ビルド・公開手順](docs/development.md)
 - [責務と不変条件](docs/design.md)
-- [設計判断の記録](docs/work-log.md)
+- [設計判断の記録](docs/decisions.md)
 - [作業規約](AGENTS.md)
 
 ## ライセンス

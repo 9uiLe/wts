@@ -1,14 +1,16 @@
 # wts の開発とリリース
 
-開発者向けに、環境構築、検証、成果物の生成、GitHub Actions からの Pre-release 公開を説明します。利用方法と配布状態は [README](../README.md)、実装の責務と公開判定は [設計書](design.md)、変更時の規約は [AGENTS.md](../AGENTS.md) を参照してください。
+開発者向けに、環境構築、検証、成果物の生成、GitHub Actions からの Pre-release 公開を説明します。利用方法と配布状態は [README](../README.md)、実装の責務と公開判定は [設計書](design.md)、選択理由は [設計判断](decisions.md)、変更時の規約は [AGENTS.md](../AGENTS.md) を参照してください。
 
 ## 開発環境
 
 Apple Silicon Mac、Xcode Command Line Tools、`nix-command` と `flakes` を有効にした Nix が必要です。依存の取得と監査にはネットワーク接続を使用します。
 
-[リポジトリを取得](../README.md#インストール)し、ルートディレクトリでセットアップと検証を実行します。
+リポジトリを取得し、ルートディレクトリでセットアップと検証を実行します。
 
 ```bash
+git clone https://github.com/9uiLe/wts.git
+cd wts
 ./scripts/setup.sh
 nix develop --no-update-lock-file --command bun run verify:deps
 ./scripts/check.sh
@@ -32,7 +34,7 @@ Nix Flakes は Bun、Git、OSV-Scanner、Coreutils を提供し、Bun は JavaSc
 | `./scripts/check.sh` | 整形・lint・型・テスト・ビルドと成果物検証。引数なし |
 | `./scripts/install.sh [--with-deps] [成果物ディレクトリ] [配置先ディレクトリ]` | 配布バイナリを配置 |
 
-`check-config.sh` は命名スクリプトを実行しません。任意のプロジェクトから絶対パスで呼び出せます。対象プロジェクトには `wts init` で作成・コミットした `.wts.json` が必要です。ファイルを指定した場合はそのファイルを検査します。初期化と設定の契約は [設定資料](configuration.md) を参照してください。`install.sh` は Nix を必要とせず、macOS の標準コマンドを使用します。引数の既定値は [ビルド成果物](#ビルド成果物)に記載しています。
+`check-config.sh` は任意のプロジェクトから絶対パスで呼び出せます。検査対象・設定の必須条件・検査範囲は [設定資料](configuration.md#設定の検査)を参照してください。`install.sh` は Nix を必要とせず、macOS の標準コマンドを使用します。引数の既定値は [ビルド成果物](#ビルド成果物)に記載しています。
 
 スクリプトから呼び出す処理と個別の検査は `package.json` に定義しています。個別に実行する場合は `nix develop --no-update-lock-file` で devShell を開き、以下のコマンドを使用します。
 
@@ -48,9 +50,15 @@ Nix Flakes は Bun、Git、OSV-Scanner、Coreutils を提供し、Bun は JavaSc
 | `bun run build` | Apple Silicon 向けバイナリを生成し、起動を検証する |
 | `bun run check` | 整形検査、lint、型チェック、テスト、ビルドを順に実行する |
 
+## 検証を実行する
+
 整形と lint の対象・規則は `biome.json`、型検査の設定は `tsconfig.json` で定義します。対話を変更した場合は TTY 上で `bun run dev doctor --interactive` を実行し、肯定入力、否定入力、Ctrl-C によるキャンセルを確認してください。出力と終了コードは [README](../README.md#環境の検査) に記載しています。
 
 設定・命名は一時ディレクトリとテスト用スクリプトで、セッション操作は一時 Git リポジトリと bare origin で検証します。外部サービスの応答や Homebrew はテスト用コマンドを使い、通常の自動テストで実サービスへの認証やシステムへの依存導入を行いません。実サービスへの接続やダウンロード後の起動を検証した場合は、自動テストとは分けて結果を記録してください。
+
+### 依存の検証
+
+依存追加・更新時は公開元、ライセンス、リリース履歴、既知の脆弱性、スクリプト、推移的依存、予期しない通信を確認し、更新理由を記録します。通常の取得は `bun install --frozen-lockfile --ignore-scripts` とし、未レビューの更新やインストールスクリプトの実行は行いません。
 
 `verify:deps` は `bun audit` と `osv-scanner` の両方の成功を要求します。生成する監査資料は次のとおりです。
 

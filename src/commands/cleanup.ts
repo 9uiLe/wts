@@ -1,13 +1,8 @@
 import { existsSync } from "node:fs";
 import { sep } from "node:path";
-import {
-	command,
-	confirmAction,
-	type Git,
-	repository,
-	requireCommand,
-	worktrees,
-} from "./session";
+import { command, type Git, requireCommand, worktrees } from "../git";
+import { repository } from "../project";
+import { confirmAction } from "../prompts";
 
 function patchIds(git: Git, range: string): Set<string> {
 	// 差分末尾の空白も patch-id --verbatim の比較対象なので出力を trim しない。

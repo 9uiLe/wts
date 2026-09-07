@@ -57,7 +57,7 @@ function fixture() {
 	const runner = join(dir, "run.ts");
 	writeFileSync(
 		runner,
-		`import {cleanupSessionBranches} from ${JSON.stringify(resolve("src/cleanup.ts"))}; await cleanupSessionBranches(JSON.parse(process.env.OPTIONS!));`,
+		`import {cleanupSessionBranches} from ${JSON.stringify(resolve("src/commands/cleanup.ts"))}; await cleanupSessionBranches(JSON.parse(process.env.OPTIONS!));`,
 	);
 	function run(
 		options: { dryRun?: boolean; yes?: boolean },

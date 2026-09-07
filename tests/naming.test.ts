@@ -17,7 +17,7 @@ import {
 	validateBranchName,
 	validateWorktreeName,
 } from "../src/naming";
-import { Git } from "../src/session";
+import { Git } from "../src/git";
 
 const dirs: string[] = [];
 afterEach(() => {

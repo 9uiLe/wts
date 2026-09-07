@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { LoadedConfig } from "./config";
-import type { Git } from "./session";
+import type { Git } from "./git";
 
 export type NamingContext = {
 	kind: "branch" | "worktree";

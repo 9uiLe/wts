@@ -3,7 +3,7 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
-const doctor = resolve(import.meta.dir, "../src/doctor.ts");
+const doctor = resolve(import.meta.dir, "../src/commands/doctor.ts");
 
 function check({
 	git = "2.38.0",

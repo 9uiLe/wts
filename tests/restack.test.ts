@@ -10,7 +10,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
 const temporary: string[] = [];
-const modulePath = resolve(import.meta.dir, "../src/restack.ts");
+const modulePath = resolve(import.meta.dir, "../src/commands/restack.ts");
 const env = {
 	...process.env,
 	GIT_CONFIG_NOSYSTEM: "1",

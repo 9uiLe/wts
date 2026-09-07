@@ -1,3 +1,38 @@
+import { cancel, confirm, intro, isCancel, outro } from "@clack/prompts";
+import { version } from "../version";
+
+export async function doctor({
+	interactive,
+	check,
+}: {
+	interactive?: boolean;
+	check?: boolean;
+}): Promise<void> {
+	if (check) {
+		await checkEnvironment();
+		return;
+	}
+	if (!interactive) {
+		console.log(
+			`wts ${version}\nplatform=${process.platform}\narch=${process.arch}`,
+		);
+		return;
+	}
+
+	if (!process.stdin.isTTY || !process.stdout.isTTY) {
+		throw new Error("対話モードは TTY 端末で実行してください。");
+	}
+
+	intro("wts doctor");
+	const proceed = await confirm({ message: "起動環境を表示しますか？" });
+	if (isCancel(proceed) || !proceed) {
+		cancel("キャンセルしました。");
+		return;
+	}
+
+	outro(`${process.platform} / ${process.arch}`);
+}
+
 function run(executable: string, args: string[]) {
 	try {
 		return Bun.spawnSync([executable, ...args], {
