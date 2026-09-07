@@ -1,6 +1,12 @@
 import { createHash } from "node:crypto";
 import { mkdir, copyFile, readFile, writeFile } from "node:fs/promises";
-import { version } from "../package.json";
+import { version as packageVersion } from "../package.json";
+import { parseReleaseVersion } from "../src/version";
+
+const version =
+	process.env.WTS_RELEASE_VERSION === undefined
+		? packageVersion
+		: parseReleaseVersion(process.env.WTS_RELEASE_VERSION);
 
 const target = "bun-darwin-arm64";
 const binaryName = "wts-macos-arm64";
@@ -69,6 +75,8 @@ runCommand([
 	"build",
 	"src/cli.ts",
 	"--compile",
+	"--define",
+	`WTS_BUILD_VERSION=${JSON.stringify(version)}`,
 	`--target=${target}`,
 	"--outfile",
 	buildPath,

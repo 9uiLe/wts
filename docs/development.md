@@ -80,6 +80,27 @@ shasum -a 256 -c wts-macos-arm64.sha256
 
 アクションはコミット SHA に固定し、権限は `contents: read` とします。CI はリリース公開を行いません。
 
+## GitHub Actions から Pre-release を公開する
+
+[Release ワークフロー](../.github/workflows/release.yml) を master に取り込んだ後、GitHub の **Actions → Release → Run workflow** でブランチ `master` を選び、`version` に `0.2.0` や `0.2.0-rc.1` のような先頭 `v` なしの SemVer を入力してください。master 以外を選んだ実行では公開ジョブをスキップします。
+
+ワークフロー開始時に取得した最新 master を対象に、固定 Nix 環境で依存監査、整形検査、lint、型チェック、テスト、Apple Silicon 向けビルド、チェックサム照合、Nix 環境外での起動を検証します。入力バージョンはビルド時の `WTS_RELEASE_VERSION` としてバイナリと `BUILD_INFO` に埋め込み、`package.json` とロックファイルは変更しません。通常のビルドでは `package.json` のバージョンを使用します。配布バイナリのバージョンは実行時の環境変数では変更されません。
+
+公開前に次の条件を検査します。
+
+- 全ページの Release 一覧から、下書きを除き `published_at` が最も新しいものを選びます。Pre-release も含み、GitHub の「Latest」ラベルやバージョン番号順とは区別します。
+- 最新 Release のタグが指すコミット SHA と最新 master の SHA が一致する場合は、入力バージョンが違ってもエラーにします。注釈付きタグもコミットへ解決して比較します。Release が存在しなければ初回公開を許可します。
+- 入力から生成する `v<version>` のタグ、または同じタグ名の Release（下書きを含む）が既に存在する場合はエラーにします。
+- API の認証・通信・タグ解決の失敗はエラーにします。ビルド後にも再検査し、master が進んでいれば公開せず再実行を求めます。
+
+タグのコミット解決は [GitHub の Get a commit API](https://docs.github.com/en/rest/commits/commits#get-a-commit)、公開日時の判定は [Release API](https://docs.github.com/en/rest/releases/releases#list-releases) に基づきます。
+
+成功時は対象コミットに `v<version>` タグを作成し、`wts-macos-arm64`、`wts-macos-arm64.sha256`、`BUILD_INFO` を添付して Pre-release として公開します。全ファイルのアップロードが終わるまでは下書きのままとし、途中で失敗した場合は残った下書きやタグを確認してください。再実行時に既存の Release やタグを自動で上書き・削除することはありません。
+
+公開処理は通常の CI と分離し、Release ジョブだけに `contents: write` を付与します。認証には自動発行される `GITHUB_TOKEN` を使用します。リポジトリの Actions 設定・タグルールがこのトークンによる Release とタグの作成を許可している必要があります。Release ワークフローの同時実行は直列化します。
+
+生成物は引き続き `build_kind=verification_only` です。最低対応 macOS は未確定、Developer ID 署名・公証は未実施であり、制約を Release 本文に記載します。正式リリースへ移行する場合は以下の条件を別途満たしてください。
+
 ## 正式リリースの条件
 
 正式公開には以下を満たす必要があります。

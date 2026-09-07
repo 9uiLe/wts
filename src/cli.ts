@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 import { confirm, intro, isCancel, outro, cancel } from "@clack/prompts";
 import { Command } from "commander";
-import { version } from "../package.json";
+import { version } from "./version";
 
 const program = new Command()
 	.name("wts")

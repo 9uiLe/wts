@@ -1,0 +1,77 @@
+name: Release
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version (SemVer without v, e.g. 0.2.0 or 0.2.0-rc.1)"
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: release
+  cancel-in-progress: false
+jobs:
+  release:
+    if: github.ref == 'refs/heads/master'
+    runs-on: macos-15
+    permissions:
+      contents: write
+    env:
+      WTS_RELEASE_VERSION: ${{ inputs.version }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: master
+          persist-credentials: false
+      - uses: cachix/install-nix-action@b85815f71a6de0ddee80b8a80a98d43f4bcc66c7 # v31
+      - name: Check release eligibility
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: nix develop --no-update-lock-file --command bun scripts/check-release.ts
+      - name: Verify and build release assets
+        run: |
+          test "$(uname -m)" = arm64
+          test -z "$(git status --porcelain)"
+          nix flake check --no-update-lock-file
+          nix develop --no-update-lock-file --command bash -euo pipefail -c '
+            bun install --frozen-lockfile --ignore-scripts
+            bun run verify:deps
+            bun run check
+            cd release
+            shasum -a 256 -c wts-macos-arm64.sha256
+          '
+          test "$(./release/wts-macos-arm64 --version)" = "$WTS_RELEASE_VERSION"
+          ./release/wts-macos-arm64 --help
+          ./release/wts-macos-arm64 doctor
+          test -z "$(git status --porcelain)"
+      - name: Recheck master and latest release before publishing
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: nix develop --no-update-lock-file --command bun scripts/check-release.ts
+      - name: Publish pre-release with verified assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+          RELEASE_COMMIT: ${{ steps.release.outputs.commit }}
+        run: |
+          cat > "$RUNNER_TEMP/release-notes.md" <<'EOF'
+          Apple Silicon macOS 向けの検証用 Pre-release です。
+          最低対応 macOS は未確定です。macOS 15 ARM64 の GitHub Actions で起動検証しています。
+          Developer ID 署名・公証は行っていません。Gatekeeper によって起動が制限される場合があります。
+          正式配布およびダウンロード後の Gatekeeper 許可手順の検証は完了していません。
+
+          同じ Release のバイナリ・SHA-256・BUILD_INFO を取得し、以下で整合性を確認してください。
+          `shasum -a 256 -c wts-macos-arm64.sha256`
+          EOF
+          gh release create "$RELEASE_TAG" \
+            release/wts-macos-arm64 \
+            release/wts-macos-arm64.sha256 \
+            release/BUILD_INFO \
+            --target "$RELEASE_COMMIT" \
+            --title "$RELEASE_TAG" \
+            --notes-file "$RUNNER_TEMP/release-notes.md" \
+            --draft --prerelease
+          gh release edit "$RELEASE_TAG" --draft=false --prerelease --latest=false
