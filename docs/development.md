@@ -6,7 +6,7 @@
 
 Apple Silicon Mac、Xcode Command Line Tools、`nix-command` と `flakes` を有効にした Nix が必要です。依存の取得と監査にはネットワーク接続を使用します。
 
-リポジトリのルートでセットアップと検証を実行します。
+[リポジトリを取得](../README.md#リポジトリの取得)し、ルートディレクトリでセットアップと検証を実行します。
 
 ```bash
 ./scripts/setup.sh
@@ -20,9 +20,9 @@ Nix Flakes は Bun、Git、OSV-Scanner、Coreutils を提供し、Bun は JavaSc
 
 ## 開発コマンド
 
-日常操作の入口は [README のスクリプト一覧](../README.md#よく使うスクリプト)に記載しています。`setup.sh`、`install-deps.sh`、`build.sh`、`check.sh` は引数を取らず、`dev.sh` は CLI 引数をそのまま渡します。
+日常操作には [README の独立スクリプト](../README.md#よく使うスクリプト)を使用します。各スクリプトは自身の位置からリポジトリを特定するため、実行時のディレクトリに依存しません。`setup.sh`、`install-deps.sh`、`build.sh`、`check.sh` は引数を取らず、`dev.sh` は CLI 引数をそのまま渡します。`install.sh` の引数は [ビルド成果物](#ビルド成果物)に記載しています。
 
-個別の検査は `nix develop --no-update-lock-file` で devShell を開き、以下のコマンドで実行できます。
+スクリプトから呼び出す処理と個別の検査は `package.json` に定義しています。個別に実行する場合は `nix develop --no-update-lock-file` で devShell を開き、以下のコマンドを使用します。
 
 | コマンド | 処理 |
 | --- | --- |
@@ -31,7 +31,7 @@ Nix Flakes は Bun、Git、OSV-Scanner、Coreutils を提供し、Bun は JavaSc
 | `bun run format:check` | ファイルを変更せずに整形規則を検査する |
 | `bun run lint` | Biome の recommended ルールで静的検査する |
 | `bun run typecheck` | `tsc --noEmit` で型を検査する |
-| `bun run test` | CLI、バージョン、公開判定の振る舞いをテストする |
+| `bun run test` | CLI、バージョン、公開判定、インストールの振る舞いをテストする |
 | `bun run verify:deps` | 固定依存をインストールし、依存一覧と監査結果を生成する |
 | `bun run build` | Apple Silicon 向けバイナリを生成し、起動を検証する |
 | `bun run check` | 整形検査、lint、型チェック、テスト、ビルドを順に実行する |
@@ -49,7 +49,7 @@ Nix Flakes は Bun、Git、OSV-Scanner、Coreutils を提供し、Bun は JavaSc
 
 ## ビルド成果物
 
-`./scripts/build.sh` は固定 Nix 環境で `bun run build` を実行し、チェックサムを照合します。ビルドは Apple Silicon macOS 上で `bun-darwin-arm64` 向けにコンパイルし、生成バイナリの `--help`、`--version`、`doctor` を実行します。生成と起動検証を同じ処理で行うため、macOS ARM64 の実行環境が必要です。
+`./scripts/build.sh` は固定 Nix 環境で `bun run build` を実行し、バイナリ・SHA-256・`BUILD_INFO` の存在とバイナリのチェックサムを確認します。`./scripts/check.sh` も全検査とビルドの後に同じ成果物検証を行います。ビルドは Apple Silicon macOS 上で `bun-darwin-arm64` 向けにコンパイルし、生成バイナリの `--help`、`--version`、`doctor` を実行します。生成と起動検証を同じ処理で行うため、macOS ARM64 の実行環境が必要です。
 
 通常は `package.json` のバージョンを使用します。配布バージョンを指定する場合は、先頭 `v` なしの SemVer をビルド時に渡します。
 
@@ -66,7 +66,7 @@ release/wts-macos-arm64.sha256
 release/BUILD_INFO
 ```
 
-`BUILD_INFO` は生成元コミット、作業ツリーの状態、バージョン、ツール・OS、ロックファイルのハッシュ、対応環境と署名・公証の状態を記録します。`release/` でチェックサムを照合できます。
+`BUILD_INFO` は生成元コミット、作業ツリーの状態、バージョン、ツール・OS、ロックファイルのハッシュ、対応環境と署名・公証の状態を記録します。手動でチェックサムを照合する場合は、`release/` 内で次を実行します。
 
 ```bash
 shasum -a 256 -c wts-macos-arm64.sha256

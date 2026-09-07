@@ -7,6 +7,8 @@ if [[ $# -ne 0 ]]; then
 fi
 
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.."
+source scripts/lib/artifacts.sh
+
 nix develop --no-update-lock-file --command bun run check
-cd release
-shasum -a 256 -c wts-macos-arm64.sha256
+verify_artifacts release
+echo "wts-macos-arm64: OK"

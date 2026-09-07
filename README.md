@@ -10,16 +10,18 @@ Developer ID 署名・公証は行っていません。ダウンロードした�
 
 CLI の実行に外部コマンド、設定ファイル、追加の環境変数、ネットワーク接続は必要ありません。単体実行ファイルに Bun ランタイムを含むため、Nix、Bun、Node.js のインストールも不要です。
 
-## 検証用バイナリの導入・更新
+## リポジトリの取得
 
-リポジトリのスクリプトを使って導入・更新できます。まずリポジトリを取得します。
+配布バイナリのインストールとソースからのビルドには、リポジトリにある独立したスクリプトを使用します。まず Git でリポジトリを取得してください。以降のコマンド例は、そのルートディレクトリで実行します。
 
 ```bash
 git clone https://github.com/9uiLe/wts.git
 cd wts
 ```
 
-同じ Pre-release の `wts-macos-arm64`、`wts-macos-arm64.sha256`、`BUILD_INFO` を同じディレクトリへダウンロードし、その場所を指定してください。
+## 配布バイナリのインストール・更新
+
+同じ [Pre-release](https://github.com/9uiLe/wts/releases) の `wts-macos-arm64`、`wts-macos-arm64.sha256`、`BUILD_INFO` を同じディレクトリへダウンロードし、その場所を指定します。
 
 ```bash
 ./scripts/install.sh /path/to/downloads
@@ -27,30 +29,43 @@ cd wts
 "$HOME/.local/bin/wts" --help
 ```
 
-`install.sh` は必要ファイルとチェックサムを確認し、成功した場合に `~/.local/bin/wts` へ配置します。Nix は不要です。第2引数で配置先ディレクトリを指定できます。更新にも同じコマンドを使用します。
+スクリプトは Apple Silicon macOS と成果物の存在、バイナリの SHA-256 を確認し、成功した場合に `~/.local/bin/wts` へ配置します。Nix は不要です。配置先を変更する場合は第2引数でディレクトリを指定します。
 
-`~/.local/bin` が PATH にない場合は `~/.zshrc` に次を追加し、シェルを再起動してください。
+更新時は実行中の `wts` を終了し、更新先の Pre-release から取得した成果物に対して同じコマンドを実行します。
+
+## ソースからのビルド・インストール
+
+Apple Silicon Mac に Nix と Xcode Command Line Tools を用意し、[開発環境の前提](docs/development.md#開発環境)を満たしたうえで実行します。
+
+```bash
+./scripts/setup.sh
+./scripts/build.sh
+./scripts/install.sh
+"$HOME/.local/bin/wts" --version
+```
+
+セットアップで固定された開発環境と依存を確認し、ビルドで `release/` に成果物を生成・検証します。引数なしの `install.sh` はこの成果物を配置します。バージョン指定や成果物の内容は [ビルド資料](docs/development.md#ビルド成果物)を参照してください。
+
+## PATH の設定
+
+`~/.local/bin` が PATH にない場合は `~/.zshrc` に次を追加し、シェルを再起動してください。別の配置先を指定した場合は、そのディレクトリを追加します。
 
 ```bash
 export PATH="$HOME/.local/bin:$PATH"
 ```
 
-更新時は実行中の `wts` を終了し、更新先の Pre-release に対して同じ取得・照合・配置手順を実行します。
-
 ## よく使うスクリプト
-
-ソースから実行・ビルドする場合は、Apple Silicon Mac に Nix と Xcode Command Line Tools を用意してください。[開発環境の前提](docs/development.md#開発環境)を満たしたうえで、リポジトリのルートから次のスクリプトを実行します。開発操作は固定された Nix 環境を自動で使用します。
 
 | 操作 | コマンド |
 | --- | --- |
 | 初回セットアップ（環境確認・依存取得） | `./scripts/setup.sh` |
 | 依存のインストール | `./scripts/install-deps.sh` |
 | ソースから実行 | `./scripts/dev.sh --help` |
-| 成果物のビルド・チェックサム照合 | `./scripts/build.sh` |
-| 整形・lint・型・テスト・ビルドの検証 | `./scripts/check.sh` |
-| ビルドした成果物をローカルへ配置 | `./scripts/install.sh` |
+| 成果物のビルド・検証 | `./scripts/build.sh` |
+| 整形・lint・型・テスト・ビルドと成果物の検証 | `./scripts/check.sh` |
+| 成果物のインストール・更新 | `./scripts/install.sh [成果物ディレクトリ] [配置先ディレクトリ]` |
 
-初回は `setup.sh`、`build.sh`、`install.sh` の順に実行します。バージョンを指定するビルドは `WTS_RELEASE_VERSION=0.2.0-rc.1 ./scripts/build.sh` です。成果物は `release/` に生成します。スクリプトのパスを指定すれば別のディレクトリからも実行できます。
+開発用スクリプトは固定された Nix 環境を使用します。`install.sh` は macOS の標準コマンドで実行します。どのスクリプトも、そのパスを指定すれば別のディレクトリから実行できます。引数と個別の検査方法は [開発コマンド](docs/development.md#開発コマンド)に記載しています。
 
 ## 使い方
 

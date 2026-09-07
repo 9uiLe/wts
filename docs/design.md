@@ -6,26 +6,47 @@ wts（Git Worktree Session）は、Apple Silicon macOS 向けの CLI と、そ�
 
 Git worktree 操作、セッション管理、Intel Mac・Linux・Windows への対応、自動更新、OS 向けインストーラーパッケージ、署名・公証の自動化、Nix パッケージとしての配布は対象外とする。利用方法は [README](../README.md)、開発・公開操作は [開発資料](development.md)、作業規約は [AGENTS.md](../AGENTS.md) に定義する。
 
-## 構成と責務
+## 実行の階層
 
-| 領域 | 実装・設定 | 責務 |
-| --- | --- | --- |
-| 開発環境 | `flake.nix`、`flake.lock` | `aarch64-darwin` 向けの Bun、Git、OSV-Scanner、Coreutils と Nixpkgs の入力を固定する |
-| 定型操作 | `scripts/setup.sh`、`install-deps.sh`、`dev.sh`、`build.sh`、`check.sh` | 実行ディレクトリを揃え、固定 Nix 環境で開発操作を実行する |
-| ローカル配置 | `scripts/install.sh` | 成果物とチェックサムを確認し、指定ディレクトリへ実行ファイルを配置する |
-| パッケージ | `package.json`、`bun.lock`、`bunfig.toml` | 直接依存、推移的依存、npm レジストリを定義する |
-| CLI | `src/cli.ts` | Commander で引数を処理し、Clack で端末対話を行う |
-| バージョン | `src/version.ts` | CLI の表示バージョンを提供する |
-| 配布バージョン | `scripts/release-version.ts` | ビルドと公開判定で共有する SemVer 入力を検証する |
-| 整形・型検査 | `biome.json`、`tsconfig.json` | 表記、lint、型の検査規則を定義する |
-| テスト | `tests/` | CLI、バージョン、公開判定の振る舞いを検証する |
-| 依存監査 | `scripts/verify-dependencies.sh`、`scripts/dependency-inventory.ts` | 固定依存をインストールし、依存一覧と監査結果を生成する |
-| ビルド | `scripts/build.ts` | バイナリの生成・起動検証、チェックサムとビルド情報の記録を行う |
-| 公開判定 | `scripts/check-release.ts` | 入力バージョン、master、公開済み Release、既存タグを検査する |
-| CI | `.github/workflows/ci.yml` | 読み取り権限でソースと生成物を検証する |
-| 公開 | `.github/workflows/release.yml` | 手動入力から対象を確定し、検証済み成果物を Pre-release として公開する |
+操作の入口、開発処理、配布 CLI を分ける。利用者と CI は独立したシェルスクリプトを呼び出し、開発処理は固定 Nix 環境の Bun で実行する。生成バイナリは Bun ランタイムを含み、CLI の利用者には開発環境を要求しない。
 
-Nix が開発ツール、Bun が JavaScript / TypeScript の依存・実行・テスト・コンパイルを管理する。Bun ランタイムをバイナリへ含め、CLI の利用者には開発環境を要求しない。
+### 操作の入口
+
+| 実装 | 責務 |
+| --- | --- |
+| `scripts/setup.sh` | Apple Silicon macOS、Nix、Xcode Command Line Tools と Flake を確認し、依存取得を呼び出す |
+| `scripts/install-deps.sh` | ロックを更新せず、インストールスクリプトを無効にして依存を取得する |
+| `scripts/dev.sh` | CLI 引数をソース実行へ渡す |
+| `scripts/build.sh` | ビルド処理を呼び出し、配布する成果物を検証する |
+| `scripts/check.sh` | 整形・lint・型・テスト・ビルドを呼び出し、配布する成果物を検証する |
+| `scripts/install.sh` | 成果物を検証し、指定ディレクトリへ実行ファイルを配置する |
+| `scripts/lib/artifacts.sh` | 各入口から source して使う内部共通処理として、成果物の検証を提供する（直接実行しない） |
+
+開発用の入口はリポジトリを基準に処理し、`nix develop --no-update-lock-file` で固定環境を使用する。配置用の入口は macOS の標準コマンドを使用し、相対パスの引数を呼び出し時のディレクトリから解釈する。引数・既定値と操作手順は [開発資料](development.md#開発コマンド)に定義する。
+
+### 開発処理と環境
+
+| 実装・設定 | 責務 |
+| --- | --- |
+| `flake.nix`、`flake.lock` | `aarch64-darwin` 向けの Bun、Git、OSV-Scanner、Coreutils と Nixpkgs の入力を固定する |
+| `package.json`、`bun.lock`、`bunfig.toml` | 開発コマンド、直接依存、推移的依存、npm レジストリを定義する |
+| `biome.json`、`tsconfig.json` | 整形、lint、型の検査規則を定義する |
+| `tests/` | CLI、バージョン、公開判定、インストールの振る舞いを検証する |
+| `scripts/verify-dependencies.sh`、`scripts/dependency-inventory.ts` | 固定依存の取得、依存一覧と監査結果の生成を行う |
+| `scripts/build.ts` | バイナリの生成・起動検証、チェックサムとビルド情報の記録を行う |
+| `scripts/release-version.ts` | ビルドと公開判定で共有する SemVer 入力を検証する |
+| `scripts/check-release.ts` | 入力バージョン、master、公開済み Release、既存タグを検査する |
+
+Nix は開発ツール、Bun は JavaScript / TypeScript の依存・実行・テスト・コンパイルを管理する。開発処理の依存は配布 CLI の実行要件には含めない。
+
+### CLI とワークフロー
+
+| 実装 | 責務 |
+| --- | --- |
+| `src/cli.ts` | Commander で引数を処理し、Clack で端末対話を行う |
+| `src/version.ts` | CLI の表示バージョンを提供する |
+| `.github/workflows/ci.yml` | 読み取り権限でソースと生成物を検証する |
+| `.github/workflows/release.yml` | 手動入力から対象を確定し、検証済み成果物を Pre-release として公開する |
 
 ## CLI とバージョン
 
@@ -47,7 +68,7 @@ Biome の既定 formatter と recommended lint、TypeScript の `tsc --noEmit`�
 
 ビルドと起動検証の実行環境は Apple Silicon macOS、コンパイル先は `bun-darwin-arm64` とする。生成したバイナリのバージョン一致、ヘルプの CLI 名、`doctor` の正常終了を確認してから配布用ディレクトリへコピーする。
 
-配布単位はバイナリ、SHA-256、`BUILD_INFO` の組とする。チェックサムの対象名にはバイナリの basename を用い、取得先の同じディレクトリで照合できる形式にする。成果物のパスと照合操作は [開発資料](development.md#ビルド成果物) に記載する。
+配布単位はバイナリ、SHA-256、`BUILD_INFO` の組とする。`scripts/lib/artifacts.sh` は各ファイルの存在とバイナリの SHA-256 を検証し、ビルド・検査・配置の入口が同じ条件を使用する。チェックサムの対象名にはバイナリの basename を用い、取得先の同じディレクトリで照合できる形式にする。成果物のパスと照合操作は [開発資料](development.md#ビルド成果物) に記載する。
 
 `BUILD_INFO` は生成日時、バージョン、Git コミット、作業ツリーの状態、Bun・Nix・OS・Xcode Command Line Tools、ターゲット、ロックファイルの SHA-256、最低対応 macOS、署名・公証、外部要件を記録する。変更のある作業ツリーから生成した場合は `git_worktree=dirty` とし、コミットだけで生成元を特定できるとは扱わない。
 
