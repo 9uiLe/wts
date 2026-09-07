@@ -6,21 +6,23 @@
 
 Apple Silicon Mac、Xcode Command Line Tools、`nix-command` と `flakes` を有効にした Nix が必要です。依存の取得と監査にはネットワーク接続を使用します。
 
-リポジトリのルートで devShell を開き、固定依存と開発環境を検証します。
+リポジトリのルートでセットアップと検証を実行します。
 
 ```bash
-nix develop --no-update-lock-file
-nix flake check --no-update-lock-file
-bun install --frozen-lockfile --ignore-scripts
-bun run verify:deps
-bun run check
+./scripts/setup.sh
+nix develop --no-update-lock-file --command bun run verify:deps
+./scripts/check.sh
 ```
 
 Nix Flakes は Bun、Git、OSV-Scanner、Coreutils を提供し、Bun は JavaScript / TypeScript の依存を管理します。ツールは `flake.lock`、パッケージは `bun.lock` で固定します。通常の開発と CI ではロックファイルを更新せず、devShell の Bun を使用してください。インストール時のスクリプトは実行しません。
 
+`setup.sh` は Apple Silicon macOS、Nix、Xcode Command Line Tools の存在を確認し、Flake を検査してから `install-deps.sh` で依存を取得します。Nix や Xcode Command Line Tools 自体のインストールは行いません。依存取得だけを再実行する場合は `./scripts/install-deps.sh` を使用します。
+
 ## 開発コマンド
 
-以下のコマンドはリポジトリのルートにある devShell 内で実行します。
+日常操作の入口は [README のスクリプト一覧](../README.md#よく使うスクリプト)に記載しています。`setup.sh`、`install-deps.sh`、`build.sh`、`check.sh` は引数を取らず、`dev.sh` は CLI 引数をそのまま渡します。
+
+個別の検査は `nix develop --no-update-lock-file` で devShell を開き、以下のコマンドで実行できます。
 
 | コマンド | 処理 |
 | --- | --- |
@@ -47,12 +49,12 @@ Nix Flakes は Bun、Git、OSV-Scanner、Coreutils を提供し、Bun は JavaSc
 
 ## ビルド成果物
 
-`bun run build` は Apple Silicon macOS 上で `bun-darwin-arm64` 向けにコンパイルし、生成バイナリの `--help`、`--version`、`doctor` を実行します。生成と起動検証を同じ処理で行うため、macOS ARM64 の実行環境が必要です。
+`./scripts/build.sh` は固定 Nix 環境で `bun run build` を実行し、チェックサムを照合します。ビルドは Apple Silicon macOS 上で `bun-darwin-arm64` 向けにコンパイルし、生成バイナリの `--help`、`--version`、`doctor` を実行します。生成と起動検証を同じ処理で行うため、macOS ARM64 の実行環境が必要です。
 
 通常は `package.json` のバージョンを使用します。配布バージョンを指定する場合は、先頭 `v` なしの SemVer をビルド時に渡します。
 
 ```bash
-WTS_RELEASE_VERSION=0.2.0-rc.1 bun run build
+WTS_RELEASE_VERSION=0.2.0-rc.1 ./scripts/build.sh
 ```
 
 成果物は次の構成です。`dist/` と `release/` は Git 管理対象外です。
@@ -72,9 +74,11 @@ shasum -a 256 -c wts-macos-arm64.sha256
 
 成果物の種別は `build_kind=verification_only` です。Pre-release として公開する場合も同じ種別を使用します。
 
+ローカル配置には `./scripts/install.sh [成果物ディレクトリ] [配置先ディレクトリ]` を使用します。既定の成果物はリポジトリの `release/`、配置先は `~/.local/bin` です。指定した相対パスは呼び出し時のディレクトリを基準に解釈します。バイナリ・チェックサム・`BUILD_INFO` の存在とチェックサムを確認してから配置します。署名・公証や Gatekeeper 許可は行いません。
+
 ## GitHub Actions
 
-両ワークフローは `macos-15` ランナーで ARM64 とクリーンなチェックアウトを確認し、固定 Nix 環境で Flake の検査、依存監査、`bun run check`、チェックサム照合を実行します。使用するアクションはコミット SHA に固定します。
+両ワークフローは `macos-15` ランナーでクリーンなチェックアウトを確認し、`setup.sh`、依存監査、`check.sh` を実行します。ローカルと同じ入口で ARM64、Flake、依存、整形・lint・型・テスト・ビルド、チェックサムを検証します。使用するアクションはコミット SHA に固定します。
 
 | ワークフロー | 起動 | 権限と成果 |
 | --- | --- | --- |

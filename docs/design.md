@@ -4,13 +4,15 @@
 
 wts（Git Worktree Session）は、Apple Silicon macOS 向けの CLI と、その検証・配布基盤である。CLI はヘルプ、バージョン表示、実行環境を表示する `doctor` を提供する。配布基盤は固定された開発環境で単体実行ファイルを生成し、GitHub Releases に検証用 Pre-release として公開する。
 
-Git worktree 操作、セッション管理、Intel Mac・Linux・Windows への対応、自動更新、インストーラー、署名・公証の自動化、Nix パッケージとしての配布は対象外とする。利用方法は [README](../README.md)、開発・公開操作は [開発資料](development.md)、作業規約は [AGENTS.md](../AGENTS.md) に定義する。
+Git worktree 操作、セッション管理、Intel Mac・Linux・Windows への対応、自動更新、OS 向けインストーラーパッケージ、署名・公証の自動化、Nix パッケージとしての配布は対象外とする。利用方法は [README](../README.md)、開発・公開操作は [開発資料](development.md)、作業規約は [AGENTS.md](../AGENTS.md) に定義する。
 
 ## 構成と責務
 
 | 領域 | 実装・設定 | 責務 |
 | --- | --- | --- |
 | 開発環境 | `flake.nix`、`flake.lock` | `aarch64-darwin` 向けの Bun、Git、OSV-Scanner、Coreutils と Nixpkgs の入力を固定する |
+| 定型操作 | `scripts/setup.sh`、`install-deps.sh`、`dev.sh`、`build.sh`、`check.sh` | 実行ディレクトリを揃え、固定 Nix 環境で開発操作を実行する |
+| ローカル配置 | `scripts/install.sh` | 成果物とチェックサムを確認し、指定ディレクトリへ実行ファイルを配置する |
 | パッケージ | `package.json`、`bun.lock`、`bunfig.toml` | 直接依存、推移的依存、npm レジストリを定義する |
 | CLI | `src/cli.ts` | Commander で引数を処理し、Clack で端末対話を行う |
 | バージョン | `src/version.ts` | CLI の表示バージョンを提供する |

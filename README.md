@@ -12,20 +12,22 @@ CLI の実行に外部コマンド、設定ファイル、追加の環境変数�
 
 ## 検証用バイナリの導入・更新
 
-同じ Pre-release の `wts-macos-arm64`、`wts-macos-arm64.sha256`、`BUILD_INFO` を同じディレクトリへダウンロードし、そのディレクトリでチェックサムを照合します。
+リポジトリのスクリプトを使って導入・更新できます。まずリポジトリを取得します。
 
 ```bash
-shasum -a 256 -c ./wts-macos-arm64.sha256
+git clone https://github.com/9uiLe/wts.git
+cd wts
 ```
 
-照合に成功した場合に配置してください。失敗した場合は導入・更新を中止します。
+同じ Pre-release の `wts-macos-arm64`、`wts-macos-arm64.sha256`、`BUILD_INFO` を同じディレクトリへダウンロードし、その場所を指定してください。
 
 ```bash
-mkdir -p "$HOME/.local/bin"
-install -m 755 ./wts-macos-arm64 "$HOME/.local/bin/wts"
+./scripts/install.sh /path/to/downloads
 "$HOME/.local/bin/wts" --version
 "$HOME/.local/bin/wts" --help
 ```
+
+`install.sh` は必要ファイルとチェックサムを確認し、成功した場合に `~/.local/bin/wts` へ配置します。Nix は不要です。第2引数で配置先ディレクトリを指定できます。更新にも同じコマンドを使用します。
 
 `~/.local/bin` が PATH にない場合は `~/.zshrc` に次を追加し、シェルを再起動してください。
 
@@ -34,6 +36,21 @@ export PATH="$HOME/.local/bin:$PATH"
 ```
 
 更新時は実行中の `wts` を終了し、更新先の Pre-release に対して同じ取得・照合・配置手順を実行します。
+
+## よく使うスクリプト
+
+ソースから実行・ビルドする場合は、Apple Silicon Mac に Nix と Xcode Command Line Tools を用意してください。[開発環境の前提](docs/development.md#開発環境)を満たしたうえで、リポジトリのルートから次のスクリプトを実行します。開発操作は固定された Nix 環境を自動で使用します。
+
+| 操作 | コマンド |
+| --- | --- |
+| 初回セットアップ（環境確認・依存取得） | `./scripts/setup.sh` |
+| 依存のインストール | `./scripts/install-deps.sh` |
+| ソースから実行 | `./scripts/dev.sh --help` |
+| 成果物のビルド・チェックサム照合 | `./scripts/build.sh` |
+| 整形・lint・型・テスト・ビルドの検証 | `./scripts/check.sh` |
+| ビルドした成果物をローカルへ配置 | `./scripts/install.sh` |
+
+初回は `setup.sh`、`build.sh`、`install.sh` の順に実行します。バージョンを指定するビルドは `WTS_RELEASE_VERSION=0.2.0-rc.1 ./scripts/build.sh` です。成果物は `release/` に生成します。スクリプトのパスを指定すれば別のディレクトリからも実行できます。
 
 ## 使い方
 
@@ -60,3 +77,7 @@ wts doctor --interactive
 - [開発環境・検証・ビルド・公開手順](docs/development.md)
 - [責務・バージョン・公開判定の設計](docs/design.md)
 - [変更時の作業規約](AGENTS.md)
+
+## ライセンス
+
+wts は [MIT License](LICENSE) で提供します。著作権者は 9uiLe です。依存ソフトウェアには、それぞれのライセンスが適用されます。
