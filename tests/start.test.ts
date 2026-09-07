@@ -41,9 +41,7 @@ function run(cwd: string, method: string, options: object) {
 		[
 			process.execPath,
 			modulePath,
-			method === "startWorktreeSession"
-				? "start-worktree-session"
-				: "start-stack-branch",
+			method === "startWorktreeSession" ? "start" : "stack",
 			...Object.entries(options).flatMap(([key, value]) => {
 				const flag = `--${key.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)}`;
 				return typeof value === "boolean"

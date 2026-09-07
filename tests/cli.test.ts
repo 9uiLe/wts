@@ -42,26 +42,28 @@ test("interactive doctor rejects pipes without hanging", () => {
 });
 
 test("session commands are available through the CLI", () => {
+	for (const name of ["start", "cleanup", "stack", "restack"]) {
+		const result = run(name, "--help");
+		expect(result.code).toBe(0);
+		expect(result.out).toMatch(new RegExp(`^Usage: wts ${name}(?:[ |])`));
+		expect(result.out).toContain("--dry-run");
+	}
+});
+
+test("unreleased long command names are not exposed", () => {
 	for (const name of [
 		"start-worktree-session",
 		"cleanup-session-branches",
 		"start-stack-branch",
-		"restack",
 	]) {
-		const result = run(name, "--help");
-		expect(result.code).toBe(0);
-		expect(result.out).toContain("--dry-run");
+		expect(run(name).code).toBe(1);
+		expect(run("--help").out).not.toContain(name);
 	}
 });
 
 test("session commands report missing Git while doctor remains standalone", () => {
 	const cli = `${process.cwd()}/src/cli.ts`;
-	for (const name of [
-		"start-worktree-session",
-		"cleanup-session-branches",
-		"start-stack-branch",
-		"restack",
-	]) {
+	for (const name of ["start", "cleanup", "stack", "restack"]) {
 		const result = Bun.spawnSync([process.execPath, cli, name, "--dry-run"], {
 			env: { ...process.env, PATH: "" },
 		});

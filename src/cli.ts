@@ -55,7 +55,7 @@ function dryRun(command: Command): Command {
 
 dryRun(
 	program
-		.command("start-worktree-session")
+		.command("start")
 		.description("作業セッションの worktree を作成します"),
 )
 	.option("--task <text>", "作業内容（空文字なら日時による命名）")
@@ -74,7 +74,7 @@ dryRun(
 
 dryRun(
 	program
-		.command("start-stack-branch")
+		.command("stack")
 		.description("現在の worktree に次のスタックブランチを作成します"),
 )
 	.option("--task <text>", "作業内容（空文字なら日時による命名）")
@@ -87,7 +87,7 @@ dryRun(
 
 dryRun(
 	program
-		.command("cleanup-session-branches")
+		.command("cleanup")
 		.description("マージ済みのローカルブランチと worktree を整理します"),
 )
 	.option("--yes", "表示した削除対象の確認を省略します")

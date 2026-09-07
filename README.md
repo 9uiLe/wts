@@ -8,7 +8,7 @@
 
 Developer ID 署名・公証は行っていません。ダウンロードしたバイナリは Gatekeeper によって起動が制限される場合があり、その許可手順は未検証です。チェックサムの一致は起動制限を解消しません。利用前に各 Release の説明と `BUILD_INFO` で検証範囲を確認してください。
 
-セッション操作には Git、`cleanup-session-branches` には認証済み GitHub CLI（`gh`）が必要です。`restack` には `rebase --update-refs` を使える Git 2.38 以降が必要です。作業内容からの名前生成は任意の `claude` CLI（haiku）を使用します。未導入・生成失敗時は日本時間の日時で命名します。fetch・PR 照会・push にはリモートへの接続が必要です。ヘルプ、バージョン、`doctor` にこれらの外部要件はありません。単体実行ファイルに Bun ランタイムを含むため、Nix、Bun、Node.js のインストールも不要です。
+セッション操作には Git、`cleanup` には認証済み GitHub CLI（`gh`）が必要です。`restack` には `rebase --update-refs` を使える Git 2.38 以降が必要です。作業内容からの名前生成は任意の `claude` CLI（haiku）を使用します。未導入・生成失敗時は日本時間の日時で命名します。fetch・PR 照会・push にはリモートへの接続が必要です。ヘルプ、バージョン、`doctor` にこれらの外部要件はありません。単体実行ファイルに Bun ランタイムを含むため、Nix、Bun、Node.js のインストールも不要です。
 
 ## リポジトリの取得
 
@@ -92,18 +92,18 @@ wts doctor --interactive
 対象の Git リポジトリ内で実行します。サブディレクトリからも利用できます。
 
 ```bash
-wts start-worktree-session
-wts start-stack-branch
-wts cleanup-session-branches --dry-run
-wts cleanup-session-branches
+wts start
+wts stack
+wts cleanup --dry-run
+wts cleanup
 wts restack
 ```
 
 | コマンド | 処理・オプション |
 | --- | --- |
-| `start-worktree-session` | `<メインチェックアウト>-worktrees/YYYYMMDD-<slug>` に worktree を作成。`--task <内容>`、`--base-branch <ref>`、`--copy-from <directory>` |
-| `start-stack-branch` | セッション worktree の先端から `<root>-pr<n>-<slug>` を作成し切り替え。`--task <内容>`、`--pr-number <n>` |
-| `cleanup-session-branches` | 同一リポジトリのマージ済み PR を調べ、削除を証明できるブランチと worktree を確認後に削除。`--yes` で確認を省略 |
+| `start` | `<メインチェックアウト>-worktrees/YYYYMMDD-<slug>` に worktree を作成。`--task <内容>`、`--base-branch <ref>`、`--copy-from <directory>` |
+| `stack` | セッション worktree の先端から `<root>-pr<n>-<slug>` を作成し切り替え。`--task <内容>`、`--pr-number <n>` |
+| `cleanup` | 同一リポジトリのマージ済み PR を調べ、削除を証明できるブランチと worktree を確認後に削除。`--yes` で確認を省略 |
 | `restack` | スタック先端を `rebase --update-refs` し、必要なブランチを `--atomic` と明示的な `--force-with-lease` で push。`--base-branch <ref>`、`--push`、`--push-only` |
 
 全コマンドで `--dry-run` または `DRY_RUN=1` を指定できます。fetch、ブランチ・worktree の変更、コピー、lease の書き込み、push を行いません。削除判定の GitHub 照会や restack のリモート参照取得、作業内容の名前生成は行います。
@@ -113,8 +113,8 @@ wts restack
 作業内容とベース・番号を省略すると対話で入力します。非対話実行では、必要な値を指定してください。名前生成を省略するには `--task ''` を指定します。セッションの日時名は `YYYYMMDD-HHMMSS`、スタックの代替 slug は `HHMMSS` です。同名ブランチを上書きしません。
 
 ```bash
-wts start-worktree-session --task '' --base-branch origin/main --dry-run
-wts start-stack-branch --task '認証画面を追加' --pr-number 2
+wts start --task '' --base-branch origin/main --dry-run
+wts stack --task '認証画面を追加' --pr-number 2
 wts restack --base-branch origin/main --push
 ```
 

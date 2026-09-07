@@ -33,3 +33,7 @@ usapo-native の start-worktree-session、cleanup-session-branches、start-stack
 コピーによる worktree 外・Git 管理情報の書き換えを防ぐため、シンボリックリンクはスキップする。dry-run は cleanup の fetch も含め変更しない。キャンセルは CLI 規約に従い正常終了する。lease 取得失敗と保存記録の不足は上書き防止のため拒否する。Git と gh を必要なコマンドでのみ要求し、任意の claude がない場合は日時へフォールバックする。README と BUILD_INFO に外部要件を明記した。
 
 実 Git の一時リポジトリと bare origin、GitHub CLI のテスト用応答で、作成・コピー・削除判定・rebase・競合復旧・古い lease の拒否を検証した。実際の GitHub と Claude サービスへの接続は検証対象に含めない。
+
+## 2026-09-08: 日常操作向けのコマンド名短縮
+
+入力の負担を減らすため、公開するコマンド名を start・cleanup・stack・restack に統一した。リリース前のため長い名前は残さず、README・ビルド情報・CLI 経由の検証も短縮名を使用する。
