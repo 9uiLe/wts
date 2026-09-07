@@ -91,7 +91,7 @@ test("authentication failure gives guidance without exposing auth output", () =>
 test("missing optional Claude CLI keeps the check successful", () => {
 	const result = check({ claude: false });
 	expect(result.code).toBe(0);
-	expect(result.out).toContain("日時によるブランチ命名");
+	expect(result.out).toContain("日付＋UUID によるブランチ命名");
 });
 
 test("unsupported operating system or architecture fails", () => {

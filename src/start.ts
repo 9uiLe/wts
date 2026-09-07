@@ -3,78 +3,28 @@ import {
 	existsSync,
 	lstatSync,
 	mkdirSync,
-	readFileSync,
 	readdirSync,
+	readFileSync,
 	realpathSync,
 } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import {
+	defaultNaming,
+	generateName,
+	validateBranchName,
+	validateWorktreeName,
+} from "./naming";
+import {
 	askText,
-	command,
 	ensureClean,
 	fetchBase,
+	recordSession,
 	repository,
-	sessionRoot,
+	sessionRootBranch,
 	stackBranches,
 	validateRef,
 	worktrees,
 } from "./session";
-
-function timestamp(): { date: string; time: string } {
-	const parts = new Intl.DateTimeFormat("en-GB", {
-		timeZone: "Asia/Tokyo",
-		year: "numeric",
-		month: "2-digit",
-		day: "2-digit",
-		hour: "2-digit",
-		minute: "2-digit",
-		second: "2-digit",
-		hourCycle: "h23",
-	}).formatToParts(new Date());
-	const value = (type: string) =>
-		parts.find((part) => part.type === type)?.value;
-	return {
-		date: `${value("year")}${value("month")}${value("day")}`,
-		time: `${value("hour")}${value("minute")}${value("second")}`,
-	};
-}
-
-function slug(task: string, cwd: string): string {
-	if (!task) return "";
-	try {
-		const result = command(
-			"claude",
-			[
-				"-p",
-				"--model",
-				"haiku",
-				`以下のタスク説明から、git ブランチ名に適した英語のスラッグを生成してください。
-ルール:
-- 英小文字とハイフンのみ使用
-- 50文字以内
-- スラッグのみを出力（説明や装飾は不要）
-- 情報が不足していても質問や確認をせず、与えられた文字列だけから推測して出力する
-- 例: add-notification-banner, fix-login-crash, refactor-auth-module
-
-タスク: ${task}`,
-			],
-			cwd,
-		);
-		if (result.code !== 0) return "";
-		const candidate = (
-			result.out.split(/\r?\n/).find((line) => line.trim()) ?? ""
-		)
-			.trim()
-			.replace(/[`"']/g, "")
-			.toLowerCase()
-			.replace(/[.。]+$/, "");
-		return candidate.length <= 50 && /^[a-z0-9]+(-[a-z0-9]+)*$/.test(candidate)
-			? candidate
-			: "";
-	} catch {
-		return "";
-	}
-}
 
 function inside(root: string, path: string): boolean {
 	const rel = relative(root, path);
@@ -180,13 +130,34 @@ export async function startWorktreeSession(options: {
 	copyFrom?: string;
 }): Promise<void> {
 	const repo = await repository();
-	const { date, time } = timestamp();
-	const task = options.task ?? (await askText("作業内容 (Enter でスキップ)"));
+	const task =
+		options.task ??
+		(repo.config.config.naming?.branch || repo.config.config.naming?.worktree
+			? await askText("作業内容 (Enter でスキップ)")
+			: "");
 	const base =
 		options.baseBranch || (await askText("ベースブランチ", "origin/main"));
 	validateRef(base);
-	const branch = `${date}-${slug(task, repo.root) || time}`;
-	const target = join(repo.worktreesBase, branch);
+	const naming = defaultNaming();
+	const branch = generateName(repo.config, { ...naming, kind: "branch", task });
+	validateBranchName(repo.git, branch);
+	const worktree = generateName(repo.config, {
+		...naming,
+		kind: "worktree",
+		task,
+		branch,
+		defaultName: branch.replaceAll("/", "-"),
+	});
+	validateWorktreeName(worktree);
+	const target = join(repo.worktreesBase, worktree);
+	try {
+		lstatSync(target);
+		throw new Error(`Worktree の作成先は既に存在します: ${target}`);
+	} catch (error) {
+		if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+	}
+	if (worktrees(repo.git).some((wt) => wt.path === target))
+		throw new Error(`Worktree は既に登録されています: ${target}`);
 	const dryRun = options.dryRun ?? false;
 	fetchBase(repo.git, base, dryRun);
 	const source = options.copyFrom
@@ -199,6 +170,7 @@ export async function startWorktreeSession(options: {
 	} else {
 		mkdirSync(repo.worktreesBase, { recursive: true });
 		repo.git.run(["worktree", "add", "-b", branch, target, base]);
+		recordSession(repo.git, target, branch);
 	}
 	copyUnmanaged(join(repo.root, ".worktree-copy"), source, target, dryRun);
 	console.log(
@@ -212,7 +184,7 @@ export async function startStackBranch(options: {
 	prNumber?: string;
 }): Promise<void> {
 	const repo = await repository();
-	const root = sessionRoot(repo);
+	const root = sessionRootBranch(repo);
 	ensureClean(repo.git);
 	const branches = stackBranches(repo.git, root);
 	const tip = branches.at(-1);
@@ -223,8 +195,11 @@ export async function startStackBranch(options: {
 			`現在のブランチ ${current} はスタックの先端ではありません。${tip.branch} に切り替えてください`,
 		);
 	}
-	const task = options.task ?? (await askText("作業内容 (Enter でスキップ)"));
-	const suffix = slug(task, repo.root) || timestamp().time;
+	const task =
+		options.task ??
+		(repo.config.config.naming?.branch
+			? await askText("作業内容 (Enter でスキップ)")
+			: "");
 	const number =
 		options.prNumber || (await askText("PR 番号", String(tip.number + 1n)));
 	if (!/^\d+$/.test(number) || BigInt(number) < 2n) {
@@ -235,7 +210,15 @@ export async function startStackBranch(options: {
 	if (branches.some((branch) => branch.number === BigInt(number))) {
 		throw new Error(`PR 番号 ${number} は既に使われています`);
 	}
+	const suffix = generateName(repo.config, {
+		...defaultNaming(),
+		kind: "branch",
+		task,
+		rootBranch: root,
+		prNumber: number,
+	});
 	const branch = `${root}-pr${number}-${suffix}`;
+	validateBranchName(repo.git, branch);
 	if (options.dryRun) {
 		console.log(`dry-run: git checkout -b ${branch}`);
 	} else {

@@ -1,6 +1,7 @@
-import { realpathSync } from "node:fs";
-import { dirname, relative, resolve, sep } from "node:path";
+import { existsSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
+import { dirname, join, relative, resolve, sep } from "node:path";
 import { cancel, confirm, isCancel, text } from "@clack/prompts";
+import { loadProjectConfig } from "./config";
 
 export class Cancelled extends Error {}
 
@@ -44,7 +45,7 @@ export class Git {
 	}
 }
 
-export async function repository() {
+export function repositoryLocation() {
 	const initial = new Git();
 	const root = realpathSync(initial.run(["rev-parse", "--show-toplevel"]));
 	const git = new Git(root);
@@ -55,7 +56,17 @@ export async function repository() {
 	const gitDir = realpathSync(
 		resolve(root, git.run(["rev-parse", "--git-dir"])),
 	);
-	return { git, root, main, worktreesBase: `${main}-worktrees`, gitDir };
+	return { git, root, main, gitDir };
+}
+
+export async function repository() {
+	const location = repositoryLocation();
+	const config = loadProjectConfig(location.root, location.main);
+	return {
+		...location,
+		worktreesBase: config.worktreesBase,
+		config,
+	};
 }
 
 export function worktrees(git: Git): { path: string; branch: string }[] {
@@ -76,9 +87,10 @@ export function worktrees(git: Git): { path: string; branch: string }[] {
 		});
 }
 
-export function sessionRoot(repo: {
+export function sessionRootBranch(repo: {
 	root: string;
 	worktreesBase: string;
+	gitDir: string;
 }): string {
 	const path = relative(repo.worktreesBase, repo.root);
 	if (
@@ -86,11 +98,52 @@ export function sessionRoot(repo: {
 		path === ".." ||
 		path.startsWith(`..${sep}`) ||
 		path.startsWith(sep)
-	)
+	) {
 		throw new Error(
 			`この worktree は ${repo.worktreesBase} 配下ではありません。`,
 		);
-	return path.split(sep)[0] as string;
+	}
+	const file = join(repo.gitDir, "wts-session.json");
+	if (!existsSync(file)) {
+		throw new Error(
+			"wts のセッション情報がありません。wts start で作成した worktree 内で実行してください。",
+		);
+	}
+	let data: unknown;
+	try {
+		data = JSON.parse(readFileSync(file, "utf8"));
+	} catch {
+		throw new Error(`セッション情報を読み込めません: ${file}`);
+	}
+	if (
+		!data ||
+		typeof data !== "object" ||
+		!("rootBranch" in data) ||
+		typeof data.rootBranch !== "string"
+	) {
+		throw new Error(`セッション情報が不正です: ${file}`);
+	}
+	const git = new Git(repo.root);
+	if (
+		data.rootBranch.startsWith("@{") ||
+		git.tryRun(["check-ref-format", "--branch", data.rootBranch]).code !== 0
+	) {
+		throw new Error(`セッションのブランチ名が不正です: ${file}`);
+	}
+	return data.rootBranch;
+}
+
+export function recordSession(
+	git: Git,
+	target: string,
+	rootBranch: string,
+): void {
+	const gitDir = git.run(["-C", target, "rev-parse", "--absolute-git-dir"]);
+	writeFileSync(
+		join(gitDir, "wts-session.json"),
+		`${JSON.stringify({ rootBranch })}\n`,
+		{ flag: "wx" },
+	);
 }
 
 export function stackBranches(

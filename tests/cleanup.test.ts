@@ -34,6 +34,7 @@ function fixture() {
 	}
 	git("init", "-b", "main");
 	git("init", "--bare", remote);
+	writeFileSync(join(root, ".wts.json"), JSON.stringify({ naming: {} }));
 	writeFileSync(join(root, "file"), "base\n");
 	git("add", ".");
 	git("commit", "-m", "base");

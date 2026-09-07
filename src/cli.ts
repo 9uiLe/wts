@@ -1,13 +1,14 @@
 #!/usr/bin/env bun
 import { confirm, intro, isCancel, outro, cancel } from "@clack/prompts";
-import { Command } from "commander";
+import { Command, Option } from "commander";
 import { version } from "./version";
-import { Option } from "commander";
 import { startStackBranch, startWorktreeSession } from "./start";
 import { cleanupSessionBranches } from "./cleanup";
 import { restack } from "./restack";
-import { Cancelled } from "./session";
+import { Cancelled, repository, repositoryLocation } from "./session";
 import { checkEnvironment } from "./doctor";
+import { initializeConfig, loadConfigFile } from "./config";
+import { resolve } from "node:path";
 
 const program = new Command()
 	.name("wts")
@@ -62,6 +63,26 @@ program
 	)
 	.action(doctor);
 
+program
+	.command("init")
+	.description("プロジェクトの .wts.json を生成します")
+	.action(() => {
+		const { root, main } = repositoryLocation();
+		console.log(`設定を生成しました: ${initializeConfig(root, main)}`);
+	});
+
+program
+	.command("config")
+	.description("プロジェクト設定を確認します")
+	.command("check [file]")
+	.description("設定の項目・値・パスを検査します（スクリプトは実行しません）")
+	.action(async (file?: string) => {
+		const loaded = file
+			? loadConfigFile(resolve(file))
+			: (await repository()).config;
+		console.log(`設定 OK: ${loaded.path}\nWorktrees  ${loaded.worktreesBase}`);
+	});
+
 function dryRun(command: Command): Command {
 	return command.addOption(
 		new Option("--dry-run", "変更せず実行予定を表示します").default(
@@ -75,7 +96,10 @@ dryRun(
 		.command("start")
 		.description("作業セッションの worktree を作成します"),
 )
-	.option("--task <text>", "作業内容（空文字なら日時による命名）")
+	.option(
+		"--task <text>",
+		"命名スクリプトへ渡す作業内容（既定の命名は日付＋UUID）",
+	)
 	.addOption(
 		new Option(
 			"--base-branch <branch>",
@@ -94,7 +118,10 @@ dryRun(
 		.command("stack")
 		.description("現在の worktree に次のスタックブランチを作成します"),
 )
-	.option("--task <text>", "作業内容（空文字なら日時による命名）")
+	.option(
+		"--task <text>",
+		"命名スクリプトへ渡す作業内容（既定の命名は日付＋UUID）",
+	)
 	.addOption(
 		new Option("--pr-number <number>", "スタック内の番号（2 以上）").env(
 			"PR_NUMBER",

@@ -6,7 +6,7 @@ import {
 	ensureClean,
 	fetchBase,
 	repository,
-	sessionRoot,
+	sessionRootBranch,
 	stackBranches,
 	worktrees,
 } from "./session";
@@ -19,7 +19,7 @@ export async function restack(options: {
 }): Promise<void> {
 	const repo = await repository();
 	const { git, gitDir } = repo;
-	const root = sessionRoot(repo);
+	const root = sessionRootBranch(repo);
 	ensureClean(git);
 	const rebasing = () =>
 		existsSync(join(gitDir, "rebase-merge")) ||

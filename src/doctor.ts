@@ -61,8 +61,8 @@ export async function checkEnvironment({
 
 	console.log(
 		Bun.which("claude")
-			? "OK: Claude CLI（任意・作業内容からのブランチ命名に使用）"
-			: "任意: Claude CLI は未導入です。日時によるブランチ命名を利用できます。",
+			? "OK: Claude CLI（任意・Claude 用命名スクリプトを設定した場合に使用）"
+			: "任意: Claude CLI は未導入です。日付＋UUID によるブランチ命名を利用できます。",
 	);
 	process.exitCode = failed ? 1 : 0;
 }

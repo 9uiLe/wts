@@ -54,9 +54,9 @@ async function writeBuildInfo(): Promise<void> {
 		developer_id_signing: "not_performed",
 		notarization_status: "not_performed",
 		external_file_requirements:
-			"Git repository for session commands; optional .worktree-copy",
+			"Git repository and .wts.json for session commands; optional .worktree-copy; executable naming scripts when configured",
 		external_command_requirements:
-			"git (restack: >=2.38); gh authenticated for cleanup; claude optional for slug generation",
+			"git (restack: >=2.38); gh authenticated for cleanup; configured naming scripts and their runtime dependencies",
 		flake_lock_sha256: await hashFile("flake.lock"),
 		bun_lock_sha256: await hashFile("bun.lock"),
 	};

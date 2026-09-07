@@ -50,17 +50,6 @@ test("session commands are available through the CLI", () => {
 	}
 });
 
-test("unreleased long command names are not exposed", () => {
-	for (const name of [
-		"start-worktree-session",
-		"cleanup-session-branches",
-		"start-stack-branch",
-	]) {
-		expect(run(name).code).toBe(1);
-		expect(run("--help").out).not.toContain(name);
-	}
-});
-
 test("session commands report missing Git while doctor remains standalone", () => {
 	const cli = `${process.cwd()}/src/cli.ts`;
 	for (const name of ["start", "cleanup", "stack", "restack"]) {

@@ -40,6 +40,7 @@ function fixture(conflict = false) {
 	const origin = join(dir, "origin.git");
 	git(dir, "init", "--bare", origin);
 	git(dir, "init", "-b", "main", main);
+	writeFileSync(join(main, ".wts.json"), JSON.stringify({ naming: {} }));
 	writeFileSync(join(main, "shared"), "base\n");
 	git(main, "add", ".");
 	git(main, "commit", "-m", "base");
@@ -64,6 +65,10 @@ function fixture(conflict = false) {
 	git(main, "commit", "-m", "upstream");
 	git(main, "push", "origin", "main");
 	const gitDir = git(worktree, "rev-parse", "--absolute-git-dir");
+	writeFileSync(
+		join(gitDir, "wts-session.json"),
+		JSON.stringify({ rootBranch: root }),
+	);
 	return { main, origin, root, next, worktree, gitDir };
 }
 
