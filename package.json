@@ -2,6 +2,7 @@
 	"name": "wts",
 	"version": "0.1.0",
 	"description": "Git Worktree Session CLI",
+	"license": "MIT",
 	"private": true,
 	"type": "module",
 	"bin": {
