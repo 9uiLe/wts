@@ -1,14 +1,16 @@
 # wts の開発とリリース
 
-開発者向けに、環境構築、検証、成果物の生成、GitHub Actions からの Pre-release 公開を説明します。利用方法と配布状態は [README](../README.md)、実装の責務と公開判定は [設計書](design.md)、変更時の規約は [AGENTS.md](../AGENTS.md) を参照してください。
+開発者向けに、環境構築、検証、成果物の生成、GitHub Actions からの Pre-release 公開を説明します。利用方法と配布状態は [README](../README.md)、実装の責務と公開判定は [設計書](design.md)、選択理由は [設計判断](decisions.md)、変更時の規約は [AGENTS.md](../AGENTS.md) を参照してください。
 
 ## 開発環境
 
 Apple Silicon Mac、Xcode Command Line Tools、`nix-command` と `flakes` を有効にした Nix が必要です。依存の取得と監査にはネットワーク接続を使用します。
 
-[リポジトリを取得](../README.md#リポジトリの取得)し、ルートディレクトリでセットアップと検証を実行します。
+リポジトリを取得し、ルートディレクトリでセットアップと検証を実行します。
 
 ```bash
+git clone https://github.com/9uiLe/wts.git
+cd wts
 ./scripts/setup.sh
 nix develop --no-update-lock-file --command bun run verify:deps
 ./scripts/check.sh
@@ -20,7 +22,19 @@ Nix Flakes は Bun、Git、OSV-Scanner、Coreutils を提供し、Bun は JavaSc
 
 ## 開発コマンド
 
-日常操作には [README の独立スクリプト](../README.md#よく使うスクリプト)を使用します。各スクリプトは自身の位置からリポジトリを特定するため、実行時のディレクトリに依存しません。`setup.sh`、`install-deps.sh`、`build.sh`、`check.sh` は引数を取らず、`dev.sh` は CLI 引数をそのまま渡します。`install.sh` の引数は [ビルド成果物](#ビルド成果物)に記載しています。
+各スクリプトは自身の位置から wts リポジトリと固定 Nix 環境を特定します。設定検査は呼び出し元のプロジェクトを対象とするため、現在のディレクトリを保持します。
+
+| スクリプト | 用途・引数 |
+| --- | --- |
+| `./scripts/setup.sh` | 開発環境の確認と依存取得。引数なし |
+| `./scripts/install-deps.sh` | 固定依存の取得。引数なし |
+| `./scripts/dev.sh [CLI引数…]` | ソースから CLI を実行 |
+| `./scripts/check-config.sh [設定ファイル]` | 呼び出し元プロジェクトまたは指定ファイルの設定検査 |
+| `./scripts/build.sh` | ビルドと成果物検証。引数なし |
+| `./scripts/check.sh` | 整形・lint・型・テスト・ビルドと成果物検証。引数なし |
+| `./scripts/install.sh [--with-deps] [成果物ディレクトリ] [配置先ディレクトリ]` | 配布バイナリを配置 |
+
+`check-config.sh` は任意のプロジェクトから絶対パスで呼び出せます。検査対象・設定の必須条件・検査範囲は [設定資料](configuration.md#設定の検査)を参照してください。`install.sh` は Nix を必要とせず、macOS の標準コマンドを使用します。引数の既定値は [ビルド成果物](#ビルド成果物)に記載しています。
 
 スクリプトから呼び出す処理と個別の検査は `package.json` に定義しています。個別に実行する場合は `nix develop --no-update-lock-file` で devShell を開き、以下のコマンドを使用します。
 
@@ -31,12 +45,20 @@ Nix Flakes は Bun、Git、OSV-Scanner、Coreutils を提供し、Bun は JavaSc
 | `bun run format:check` | ファイルを変更せずに整形規則を検査する |
 | `bun run lint` | Biome の recommended ルールで静的検査する |
 | `bun run typecheck` | `tsc --noEmit` で型を検査する |
-| `bun run test` | CLI、バージョン、公開判定、インストールの振る舞いをテストする |
+| `bun run test` | CLI、初期化・設定・命名、セッション操作、環境検査、バージョン、公開判定、インストールの振る舞いをテストする |
 | `bun run verify:deps` | 固定依存をインストールし、依存一覧と監査結果を生成する |
 | `bun run build` | Apple Silicon 向けバイナリを生成し、起動を検証する |
 | `bun run check` | 整形検査、lint、型チェック、テスト、ビルドを順に実行する |
 
-整形と lint の対象・規則は `biome.json`、型検査の設定は `tsconfig.json` で定義します。対話を変更した場合は TTY 上で `bun run dev doctor --interactive` を実行し、肯定入力、否定入力、Ctrl-C によるキャンセルを確認してください。出力と終了コードは [README](../README.md#使い方) に記載しています。
+## 検証を実行する
+
+整形と lint の対象・規則は `biome.json`、型検査の設定は `tsconfig.json` で定義します。対話を変更した場合は TTY 上で `bun run dev doctor --interactive` を実行し、肯定入力、否定入力、Ctrl-C によるキャンセルを確認してください。出力と終了コードは [README](../README.md#環境の検査) に記載しています。
+
+設定・命名は一時ディレクトリとテスト用スクリプトで、セッション操作は一時 Git リポジトリと bare origin で検証します。外部サービスの応答や Homebrew はテスト用コマンドを使い、通常の自動テストで実サービスへの認証やシステムへの依存導入を行いません。実サービスへの接続やダウンロード後の起動を検証した場合は、自動テストとは分けて結果を記録してください。
+
+### 依存の検証
+
+依存追加・更新時は公開元、ライセンス、リリース履歴、既知の脆弱性、スクリプト、推移的依存、予期しない通信を確認し、更新理由を記録します。通常の取得は `bun install --frozen-lockfile --ignore-scripts` とし、未レビューの更新やインストールスクリプトの実行は行いません。
 
 `verify:deps` は `bun audit` と `osv-scanner` の両方の成功を要求します。生成する監査資料は次のとおりです。
 
@@ -74,7 +96,7 @@ shasum -a 256 -c wts-macos-arm64.sha256
 
 成果物の種別は `build_kind=verification_only` です。Pre-release として公開する場合も同じ種別を使用します。
 
-ローカル配置には `./scripts/install.sh [成果物ディレクトリ] [配置先ディレクトリ]` を使用します。既定の成果物はリポジトリの `release/`、配置先は `~/.local/bin` です。指定した相対パスは呼び出し時のディレクトリを基準に解釈します。バイナリ・チェックサム・`BUILD_INFO` の存在とチェックサムを確認してから配置します。署名・公証や Gatekeeper 許可は行いません。
+ローカル配置には `./scripts/install.sh [--with-deps] [成果物ディレクトリ] [配置先ディレクトリ]` を使用します。既定の成果物はリポジトリの `release/`、配置先は `~/.local/bin` です。指定した相対パスは呼び出し時のディレクトリを基準に解釈します。バイナリ・チェックサム・`BUILD_INFO` の存在とチェックサムを確認してから配置します。`--with-deps` 指定時は検証と配置の間に Homebrew の `brew install git gh` を実行します。Homebrew が利用できない場合と導入失敗時は配置を中止します。依存と認証の確認は `wts doctor --check` を使用します。署名・公証や Gatekeeper 許可は行いません。
 
 ## GitHub Actions
 
