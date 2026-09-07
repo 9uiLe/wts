@@ -7,6 +7,7 @@ import { startStackBranch, startWorktreeSession } from "./start";
 import { cleanupSessionBranches } from "./cleanup";
 import { restack } from "./restack";
 import { Cancelled } from "./session";
+import { checkEnvironment } from "./doctor";
 
 const program = new Command()
 	.name("wts")
@@ -15,9 +16,15 @@ const program = new Command()
 
 async function doctor({
 	interactive,
+	check,
 }: {
 	interactive?: boolean;
+	check?: boolean;
 }): Promise<void> {
+	if (check) {
+		await checkEnvironment();
+		return;
+	}
 	if (!interactive) {
 		console.log(
 			`wts ${version}\nplatform=${process.platform}\narch=${process.arch}`,
@@ -42,7 +49,17 @@ async function doctor({
 program
 	.command("doctor")
 	.description("CLI の起動環境を確認します")
-	.option("--interactive", "対話 UI の動作を確認します")
+	.addOption(
+		new Option("--interactive", "対話 UI の動作を確認します").conflicts(
+			"check",
+		),
+	)
+	.addOption(
+		new Option(
+			"--check",
+			"対応環境・依存コマンド・GitHub 認証を検査します",
+		).conflicts("interactive"),
+	)
 	.action(doctor);
 
 function dryRun(command: Command): Command {

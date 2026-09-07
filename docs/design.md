@@ -19,7 +19,7 @@ Intel Mac・Linux・Windows への対応、自動更新、OS 向けインスト�
 | `scripts/dev.sh` | CLI 引数をソース実行へ渡す |
 | `scripts/build.sh` | ビルド処理を呼び出し、配布する成果物を検証する |
 | `scripts/check.sh` | 整形・lint・型・テスト・ビルドを呼び出し、配布する成果物を検証する |
-| `scripts/install.sh` | 成果物を検証し、指定ディレクトリへ実行ファイルを配置する |
+| `scripts/install.sh` | 成果物を検証し、任意の --with-deps で Git・gh を導入してから指定ディレクトリへ実行ファイルを配置する |
 | `scripts/lib/artifacts.sh` | 各入口から source して使う内部共通処理として、成果物の検証を提供する（直接実行しない） |
 
 開発用の入口はリポジトリを基準に処理し、`nix develop --no-update-lock-file` で固定環境を使用する。配置用の入口は macOS の標準コマンドを使用し、相対パスの引数を呼び出し時のディレクトリから解釈する。引数・既定値と操作手順は [開発資料](development.md#開発コマンド)に定義する。
@@ -44,6 +44,7 @@ Nix は開発ツール、Bun は JavaScript / TypeScript の依存・実行・�
 | 実装 | 責務 |
 | --- | --- |
 | `src/cli.ts` | Commander で引数を処理し、Clack で端末対話を行う |
+| `src/doctor.ts` | 対応 OS・依存コマンド・GitHub 認証の検査と不足時の案内 |
 | `src/session.ts` | Git 実行、リポジトリ・スタック探索、対話の共通処理 |
 | `src/start.ts` | セッションとスタックブランチの作成、管理外ファイルのコピー |
 | `src/cleanup.ts` | マージ済み PR とローカル変更の証明に基づく整理 |
@@ -54,7 +55,7 @@ Nix は開発ツール、Bun は JavaScript / TypeScript の依存・実行・�
 
 ## CLI とバージョン
 
-ヘルプ、バージョン、doctor は外部要件を持たない。セッション操作は Git、整理は gh、任意の名前生成は claude を引数配列で実行する。外部要件と通信、環境変数、コピー設定は README に定義する。コマンドの出力、対話の TTY 条件、キャンセルとエラーの終了コードは [README](../README.md#使い方) に定義する。
+ヘルプ、バージョン、オプションなしの doctor は外部要件を持たない。doctor --check は実行時の依存と認証を検査し、不足時には非ゼロで終了する。セッション操作は Git、整理は gh、任意の名前生成は claude を引数配列で実行する。外部要件と通信、環境変数、コピー設定は README に定義する。コマンドの出力、対話の TTY 条件、キャンセルとエラーの終了コードは [README](../README.md#使い方) に定義する。
 
 ソース実行時は `package.json` のバージョンを表示する。ビルド時は `WTS_RELEASE_VERSION` が指定されていればその SemVer を、未指定なら `package.json` のバージョンを使用する。先頭 `v`、不正な識別子、余分な空白を含む入力は拒否する。
 

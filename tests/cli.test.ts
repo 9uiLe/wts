@@ -75,3 +75,20 @@ test("session commands report missing Git while doctor remains standalone", () =
 	});
 	expect(result.exitCode).toBe(0);
 });
+
+test("doctor --check reports missing dependencies without requiring a repository or TTY", () => {
+	const cli = `${process.cwd()}/src/cli.ts`;
+	const result = Bun.spawnSync([process.execPath, cli, "doctor", "--check"], {
+		cwd: "/private/tmp",
+		env: { ...process.env, PATH: "" },
+	});
+	expect(result.exitCode).toBe(1);
+	expect(result.stdout.toString()).toContain("brew install git");
+	expect(result.stdout.toString()).toContain("brew install gh");
+	expect(result.stdout.toString()).toContain("任意");
+	expect(result.stderr.toString()).toBe("");
+});
+
+test("doctor rejects conflicting interactive and check modes", () => {
+	expect(run("doctor", "--interactive", "--check").code).toBe(1);
+});

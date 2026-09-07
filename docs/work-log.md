@@ -37,3 +37,9 @@ usapo-native の start-worktree-session、cleanup-session-branches、start-stack
 ## 2026-09-08: 日常操作向けのコマンド名短縮
 
 入力の負担を減らすため、公開するコマンド名を start・cleanup・stack・restack に統一した。リリース前のため長い名前は残さず、README・ビルド情報・CLI 経由の検証も短縮名を使用する。
+
+## 2026-09-08: 実行時依存の導入と環境検査
+
+利用前に不足を発見できるよう doctor --check を追加し、対応 OS・Git の restack 要件・gh の実行と認証・任意の claude を検査する。認証コマンドの出力は表示せず成否だけを報告する。既存の起動確認やビルド検証が認証に依存しないよう、オプションなしの doctor は維持する。
+
+依存の導入を利用者が選べるよう install.sh に --with-deps を追加した。成果物の検証後、Homebrew の git・gh 導入が成功した場合だけ wts を配置する。Homebrew 自体の導入、任意の claude の導入、gh の認証は利用者が別途実施する。テストでは実システムへパッケージを導入せず、一時ディレクトリとテスト用コマンドで成功・失敗と既存バイナリの保持を検証する。

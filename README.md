@@ -8,7 +8,7 @@
 
 Developer ID 署名・公証は行っていません。ダウンロードしたバイナリは Gatekeeper によって起動が制限される場合があり、その許可手順は未検証です。チェックサムの一致は起動制限を解消しません。利用前に各 Release の説明と `BUILD_INFO` で検証範囲を確認してください。
 
-セッション操作には Git、`cleanup` には認証済み GitHub CLI（`gh`）が必要です。`restack` には `rebase --update-refs` を使える Git 2.38 以降が必要です。作業内容からの名前生成は任意の `claude` CLI（haiku）を使用します。未導入・生成失敗時は日本時間の日時で命名します。fetch・PR 照会・push にはリモートへの接続が必要です。ヘルプ、バージョン、`doctor` にこれらの外部要件はありません。単体実行ファイルに Bun ランタイムを含むため、Nix、Bun、Node.js のインストールも不要です。
+セッション操作には Git、`cleanup` には認証済み GitHub CLI（`gh`）が必要です。`restack` には `rebase --update-refs` を使える Git 2.38 以降が必要です。作業内容からの名前生成は任意の `claude` CLI（haiku）を使用します。未導入・生成失敗時は日本時間の日時で命名します。fetch・PR 照会・push にはリモートへの接続が必要です。ヘルプ、バージョン、オプションなしの `doctor` にこれらの外部要件はありません。単体実行ファイルに Bun ランタイムを含むため、Nix、Bun、Node.js のインストールも不要です。
 
 ## リポジトリの取得
 
@@ -30,6 +30,16 @@ cd wts
 ```
 
 スクリプトは Apple Silicon macOS と成果物の存在、バイナリの SHA-256 を確認し、成功した場合に `~/.local/bin/wts` へ配置します。Nix は不要です。配置先を変更する場合は第2引数でディレクトリを指定します。
+
+Git と gh も導入する場合は、[Homebrew](https://brew.sh/) を用意し、次のように実行します。
+
+```bash
+./scripts/install.sh --with-deps /path/to/downloads
+gh auth login
+"$HOME/.local/bin/wts" doctor --check
+```
+
+`--with-deps` は成果物の検証後に `brew install git gh` を実行し、成功した場合に wts を配置します。Homebrew の通常の install 動作に従って Git・gh とその依存を導入・更新します（[Git](https://formulae.brew.sh/formula/git)、[gh](https://formulae.brew.sh/formula/gh)、[Homebrew の仕様](https://docs.brew.sh/Manpage#install-options-formulacask-)）。Homebrew がない場合や導入に失敗した場合は wts の配置を中止します。Homebrew 自体と任意の claude は自動導入せず、認証は別途実行します。`--with-deps` を付けなければ依存の導入は行いません。
 
 更新時は実行中の `wts` を終了し、更新先の Pre-release から取得した成果物に対して同じコマンドを実行します。
 
@@ -63,7 +73,7 @@ export PATH="$HOME/.local/bin:$PATH"
 | ソースから実行 | `./scripts/dev.sh --help` |
 | 成果物のビルド・検証 | `./scripts/build.sh` |
 | 整形・lint・型・テスト・ビルドと成果物の検証 | `./scripts/check.sh` |
-| 成果物のインストール・更新 | `./scripts/install.sh [成果物ディレクトリ] [配置先ディレクトリ]` |
+| 成果物のインストール・更新 | `./scripts/install.sh [--with-deps] [成果物ディレクトリ] [配置先ディレクトリ]` |
 
 開発用スクリプトは固定された Nix 環境を使用します。`install.sh` は macOS の標準コマンドで実行します。どのスクリプトも、そのパスを指定すれば別のディレクトリから実行できます。引数と個別の検査方法は [開発コマンド](docs/development.md#開発コマンド)に記載しています。
 
@@ -73,6 +83,7 @@ export PATH="$HOME/.local/bin:$PATH"
 wts --help
 wts --version
 wts doctor
+wts doctor --check
 wts doctor --interactive
 ```
 
@@ -81,11 +92,14 @@ wts doctor --interactive
 | `--help` | コマンドとオプションを表示する |
 | `--version` | wts のバージョンを表示する |
 | `doctor` | バージョン、OS、CPU アーキテクチャを標準出力へ表示する |
+| `doctor --check` | Apple Silicon macOS、Git 2.38 以上、gh の実行・認証、任意の claude の有無を検査する |
 | `doctor --interactive` | 確認を求め、肯定された場合に OS と CPU アーキテクチャを表示する |
 
 対話モードでは標準入力と標準出力の両方に TTY が必要です。否定回答と Ctrl-C によるキャンセルは終了コード `0` で終了します。TTY がない場合と未知のコマンドは標準エラーへエラーを表示し、終了コード `1` で終了します。
 
-`doctor` は実行プロセスの環境を表示するコマンドです。開発ツールのインストール状態や、対応 OS の条件を満たしているかどうかは判定しません。
+`doctor` は実行プロセスの環境を表示します。`doctor --check` は Git リポジトリ外や非対話環境でも実行でき、各項目の OK・NG と不足時の対処を標準出力に表示します。必須項目をすべて満たせば終了コード `0`、不足・実行失敗・認証確認失敗があれば `1` です。claude は任意なので、未導入でも失敗にはしません。
+
+認証検査には [`gh auth status`](https://cli.github.com/manual/gh_auth_status) を使用するためネットワーク接続が必要です。認証情報そのものは表示しません。検査によるインストールやログイン、設定変更は行いません。`--check` と `--interactive` は同時に指定できません。Nix・Bun は開発用なので、配布 CLI の環境検査には含めません。
 
 ## セッション操作
 

@@ -74,7 +74,7 @@ shasum -a 256 -c wts-macos-arm64.sha256
 
 成果物の種別は `build_kind=verification_only` です。Pre-release として公開する場合も同じ種別を使用します。
 
-ローカル配置には `./scripts/install.sh [成果物ディレクトリ] [配置先ディレクトリ]` を使用します。既定の成果物はリポジトリの `release/`、配置先は `~/.local/bin` です。指定した相対パスは呼び出し時のディレクトリを基準に解釈します。バイナリ・チェックサム・`BUILD_INFO` の存在とチェックサムを確認してから配置します。署名・公証や Gatekeeper 許可は行いません。
+ローカル配置には `./scripts/install.sh [--with-deps] [成果物ディレクトリ] [配置先ディレクトリ]` を使用します。既定の成果物はリポジトリの `release/`、配置先は `~/.local/bin` です。指定した相対パスは呼び出し時のディレクトリを基準に解釈します。バイナリ・チェックサム・`BUILD_INFO` の存在とチェックサムを確認してから配置します。`--with-deps` 指定時は検証と配置の間に Homebrew の `brew install git gh` を実行します。Homebrew が利用できない場合と導入失敗時は配置を中止します。依存と認証の確認は `wts doctor --check` を使用します。署名・公証や Gatekeeper 許可は行いません。
 
 ## GitHub Actions
 
