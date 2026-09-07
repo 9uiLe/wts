@@ -1,0 +1,28 @@
+name: CI
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: cachix/install-nix-action@b85815f71a6de0ddee80b8a80a98d43f4bcc66c7 # v31
+      - name: Verify environment and build
+        run: |
+          test "$(uname -m)" = arm64
+          test -z "$(git status --porcelain)"
+          nix flake check --no-update-lock-file
+          nix develop --no-update-lock-file --command bash -euo pipefail -c '
+            bun install --frozen-lockfile --ignore-scripts
+            bun run verify:deps
+            bun run check
+            cd release
+            shasum -a 256 -c wts-macos-arm64.sha256
+          '
+          git diff --exit-code
