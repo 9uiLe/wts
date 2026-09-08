@@ -312,16 +312,23 @@ function screen(
 	return `<section class="screen"><h3>${label}</h3><p class="meta">${escapeHtml(item.mode)} · exit ${item.code}</p><p class="meta">cwd: ${escapeHtml(item.cwd)}</p>${inputs ? `<p class="meta">入力: ${escapeHtml(inputs)}</p>` : ""}<div class="terminal"><div class="command">$ ${escapeHtml(item.command)}</div><pre>${final.plain ? rendered : '<span class="empty">（出力なし）</span>'}</pre></div>${item.frames.map((frame, index) => `<details><summary>入力前 ${index + 1}</summary><pre>${terminal(frame).html}</pre></details>`).join("")}</section>`;
 }
 
+export interface CatalogResources {
+	captures: string;
+	comparison: string;
+	coverage: string;
+}
+
 export function renderPage(
 	comparisons: Comparison[],
 	changesOnly: boolean,
+	resources: CatalogResources = {
+		captures: "収録データは埋め込まれていません。",
+		comparison: "比較結果は埋め込まれていません。",
+		coverage: "収録範囲は埋め込まれていません。",
+	},
 ): string {
-	const visible = changesOnly
-		? comparisons.filter((item) => item.changed)
-		: comparisons;
-	const cards = visible
-		.map((comparison) => {
-			const index = comparisons.indexOf(comparison);
+	const cards = comparisons
+		.map((comparison, index) => {
 			const item = comparison.current ?? comparison.previous;
 			if (!item) return "";
 			const anchor = `case-${Bun.hash(item.title).toString(16)}`;
@@ -378,10 +385,22 @@ export function renderPage(
 				)
 					reasons.push("入力前画面");
 			}
-			return `<article id="${anchor}" data-group="${group}"><h2><a href="#${anchor}">C${String(index + 1).padStart(3, "0")}</a> · ${escapeHtml(item.title)} <span class="badge">${state}</span></h2>${reasons.length ? `<p class="meta">変更点: ${reasons.join(" / ")}。背景付きの行が表示の差分です。</p>` : ""}<div class="pair">${comparison.previous ? screen(comparison.previous, "基準画面", left) : "<section><h3>基準画面</h3><p>基準にないケースです。</p></section>"}${comparison.current ? screen(comparison.current, "収録画面", right) : "<section><h3>収録画面</h3><p>収録に含まれていません。</p></section>"}</div></article>`;
+			return `<article id="${anchor}" data-group="${group}" data-changed="${comparison.changed}"${changesOnly && !comparison.changed ? " hidden" : ""}><h2><a href="#${anchor}">C${String(index + 1).padStart(3, "0")}</a> · ${escapeHtml(item.title)} <span class="badge">${state}</span></h2>${reasons.length ? `<p class="meta">変更点: ${reasons.join(" / ")}。背景付きの行が表示の差分です。</p>` : ""}<div class="pair">${comparison.previous ? screen(comparison.previous, "基準画面", left) : "<section><h3>基準画面</h3><p>基準にないケースです。</p></section>"}${comparison.current ? screen(comparison.current, "収録画面", right) : "<section><h3>収録画面</h3><p>収録に含まれていません。</p></section>"}</div></article>`;
 		})
 		.join("");
 	return `<!doctype html><html lang="ja"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>wts 出力デザイン ${changesOnly ? "変更のみ" : "全件"}</title><style>
-:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#10141a;color:#dce2eb}body{margin:0 auto;padding:32px 24px;max-width:1800px}h1{font-size:28px}h2{font-size:18px}h3{font-size:14px;color:#adbed3}p{line-height:1.7}a{color:#85baff}nav{position:sticky;top:0;background:#10141af5;padding:16px 0;display:flex;gap:8px;flex-wrap:wrap;z-index:1}button,input{background:#212a36;border:1px solid #405066;color:#e0e8f4;padding:9px 13px;border-radius:6px}button{cursor:pointer}button.active{background:#335883}input{flex:1;min-width:180px}article{border:1px solid #303b49;border-radius:10px;padding:20px;margin:20px 0;background:#171d26}.pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}.screen{min-width:0}.meta{font-size:12px;color:#99a8bd;overflow-wrap:anywhere}.terminal,details{background:#0d1117;border-radius:6px;overflow:auto}pre,.command{font-family:Menlo,"Noto Sans Mono CJK JP","Hiragino Kaku Gothic ProN",monospace;font-size:13px;line-height:1.65;white-space:pre;tab-size:8}pre{margin:0;padding:16px;min-width:max-content;color:#d8dee9}.command{padding:12px 16px;border-bottom:1px solid #253142;color:#a9b9ce}details{margin-top:10px}summary{cursor:pointer;padding:12px;color:#a9b9ce}.empty,.count{color:#95abc5}.diff-line{display:inline-block;min-width:100%;background:#4b392b;box-shadow:inset 3px 0 #eac06d}.badge{font-size:12px;background:#263747;padding:4px 8px;border-radius:4px}article[hidden]{display:none}@media(max-width:1000px){.pair{grid-template-columns:1fr}}
-</style><h1>wts 出力デザイン · ${changesOnly ? "変更のみ" : "全件"}</h1><p><a href="index.html">全件</a> · <a href="changes.html">変更のみ</a> · <a href="captures.json">収録データ（未正規化）</a> · <a href="comparison.json">比較結果</a></p><p>実 CLI を 120 桁 × 40 行の擬似端末で実行し、ANSI の色・罫線・カーソル操作を反映しています。PIPE は非 TTY の実測です。比較は一時パス・日付・UUID・Git の OID を正規化した画面と入力・終了コードを使用し、進捗アニメーションの更新回数は差分に含めません。</p><p>GitHub・失敗応答などの疑似ケースはケース名に明記しています。外部サービスの実接続、任意のパスや診断文の全値、同一表示になる引数別表記は収録対象外です。<a href="coverage.md">収録範囲・未実測事項</a>を参照してください。</p><nav>${["すべて", "共通", "doctor", "init", "config", "start", "stack", "cleanup", "restack"].map((group) => `<button data-filter="${group}">${group}</button>`).join("")}<input id="search" aria-label="ケース名・コマンド・出力を検索" placeholder="ケース名・コマンド・出力を検索"></nav><p id="count" class="count"></p>${cards || "<p>表示差分はありません。</p>"}<script>let group='すべて';const articles=[...document.querySelectorAll('article')];function filter(){const q=document.querySelector('#search').value.toLowerCase();let count=0;for(const article of articles){article.hidden=!((group==='すべて'||article.dataset.group===group)&&article.textContent.toLowerCase().includes(q));if(!article.hidden)count++;}document.querySelector('#count').textContent=count+' / '+articles.length+' ケース';for(const button of document.querySelectorAll('button'))button.classList.toggle('active',button.dataset.filter===group)}document.querySelectorAll('button').forEach(button=>button.onclick=()=>{group=button.dataset.filter;filter()});document.querySelector('#search').oninput=filter;filter();</script></html>`;
+:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#10141a;color:#dce2eb}body{margin:0 auto;padding:32px 24px;max-width:1800px}h1{font-size:28px}h2{font-size:18px}h3{font-size:14px;color:#adbed3}p{line-height:1.7}a{color:#85baff}nav{position:sticky;top:0;background:#10141af5;padding:16px 0;display:flex;gap:8px;flex-wrap:wrap;z-index:1}button,input{background:#212a36;border:1px solid #405066;color:#e0e8f4;padding:9px 13px;border-radius:6px}button{cursor:pointer}button[aria-pressed="true"]{background:#335883}button:focus-visible,input:focus-visible{outline:2px solid #85baff;outline-offset:3px}.view-navigation{display:flex;gap:8px;flex-wrap:wrap}.text-button{padding:0;border:0;background:none;color:#85baff;text-decoration:underline;font:inherit}.resource{overflow:auto;background:#0d1117;border-radius:6px}.resource pre{white-space:pre-wrap;overflow-wrap:anywhere;min-width:0}input{flex:1;min-width:180px}article{border:1px solid #303b49;border-radius:10px;padding:20px;margin:20px 0;background:#171d26}.pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}.screen{min-width:0}.meta{font-size:12px;color:#99a8bd;overflow-wrap:anywhere}.terminal,details{background:#0d1117;border-radius:6px;overflow:auto}pre,.command{font-family:Menlo,"Noto Sans Mono CJK JP","Hiragino Kaku Gothic ProN",monospace;font-size:13px;line-height:1.65;white-space:pre;tab-size:8}pre{margin:0;padding:16px;min-width:max-content;color:#d8dee9}.command{padding:12px 16px;border-bottom:1px solid #253142;color:#a9b9ce}details{margin-top:10px}summary{cursor:pointer;padding:12px;color:#a9b9ce}.empty,.count{color:#95abc5}.diff-line{display:inline-block;min-width:100%;background:#4b392b;box-shadow:inset 3px 0 #eac06d}.badge{font-size:12px;background:#263747;padding:4px 8px;border-radius:4px}[hidden]{display:none!important}@media(max-width:1000px){.pair{grid-template-columns:1fr}}
+</style><h1 id="page-title">wts 出力デザイン · ${changesOnly ? "変更のみ" : "全件"}</h1><div class="view-navigation" role="group" aria-label="表示内容">${[
+		["all", "全件"],
+		["changes", "変更のみ"],
+		["captures", "収録データ（未正規化）"],
+		["comparison", "比較結果"],
+	]
+		.map(
+			([view, label]) =>
+				`<button type="button" data-view="${view}" aria-pressed="${view === (changesOnly ? "changes" : "all")}">${label}</button>`,
+		)
+		.join(
+			"",
+		)}</div><p>実 CLI を 120 桁 × 40 行の擬似端末で実行し、ANSI の色・罫線・カーソル操作を反映しています。PIPE は非 TTY の実測です。比較は一時パス・日付・UUID・Git の OID を正規化した画面と入力・終了コードを使用し、進捗アニメーションの更新回数は差分に含めません。</p><p>GitHub・失敗応答などの疑似ケースはケース名に明記しています。外部サービスの実接続、任意のパスや診断文の全値、同一表示になる引数別表記は収録対象外です。<button type="button" class="text-button" data-view="coverage" aria-pressed="false">収録範囲・未実測事項</button>を参照してください。</p><section data-panel="cases"><nav aria-label="コマンドで絞り込み">${["すべて", "共通", "doctor", "init", "config", "start", "stack", "cleanup", "restack"].map((group) => `<button type="button" data-filter="${group}" aria-pressed="${group === "すべて"}">${group}</button>`).join("")}<input id="search" aria-label="ケース名・コマンド・出力を検索" placeholder="ケース名・コマンド・出力を検索"></nav><p id="count" class="count" aria-live="polite"></p><p id="empty" hidden></p>${cards}</section>${(["captures", "comparison", "coverage"] as const).map((view) => `<section class="resource" data-panel="${view}" hidden><pre>${escapeHtml(resources[view])}</pre></section>`).join("")}<script>let group='すべて';let view='${changesOnly ? "changes" : "all"}';const articles=[...document.querySelectorAll('article')];const labels={all:'全件',changes:'変更のみ',captures:'収録データ（未正規化）',comparison:'比較結果',coverage:'収録範囲・未実測事項'};function filter(){const q=document.querySelector('#search').value.toLowerCase();let count=0;for(const article of articles){article.hidden=!((view!=='changes'||article.dataset.changed==='true')&&(group==='すべて'||article.dataset.group===group)&&article.textContent.toLowerCase().includes(q));if(!article.hidden)count++;}document.querySelector('#count').textContent=count+' / '+articles.length+' ケース';const empty=document.querySelector('#empty');empty.hidden=count!==0;empty.textContent=view==='changes'&&!articles.some(article=>article.dataset.changed==='true')?'表示差分はありません。':'条件に一致するケースはありません。';for(const button of document.querySelectorAll('button[data-filter]'))button.setAttribute('aria-pressed',String(button.dataset.filter===group));}function showView(next){view=next;const cases=view==='all'||view==='changes';for(const panel of document.querySelectorAll('[data-panel]'))panel.hidden=panel.dataset.panel!==(cases?'cases':view);for(const button of document.querySelectorAll('button[data-view]'))button.setAttribute('aria-pressed',String(button.dataset.view===view));document.querySelector('#page-title').textContent='wts 出力デザイン · '+labels[view];document.title='wts 出力デザイン '+labels[view];filter();}document.querySelectorAll('button[data-view]').forEach(button=>button.onclick=()=>showView(button.dataset.view));document.querySelectorAll('button[data-filter]').forEach(button=>button.onclick=()=>{group=button.dataset.filter;filter()});document.querySelector('#search').oninput=filter;showView(view);</script></html>`;
 }

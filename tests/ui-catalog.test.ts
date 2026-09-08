@@ -108,7 +108,11 @@ test("catalog shows only modified, added, and removed cases on the changes page"
 	const changes = renderPage(comparison, true);
 	expect(changes).toContain("追加されたケース");
 	expect(changes).toContain("削除されたケース");
-	expect(changes).not.toContain("start 成功");
+	expect(changes).toMatch(/<article[^>]*data-changed="false"[^>]*hidden/);
+	expect(changes.match(/<article[^>]*data-changed="true"[^>]*>/g)).toHaveLength(
+		2,
+	);
+	expect(changes).not.toMatch(/<article[^>]*data-changed="true"[^>]*hidden/);
 	expect(renderPage(comparison, false)).toContain("start 成功");
 });
 
@@ -126,4 +130,47 @@ test("catalog escapes terminal and case text in standalone HTML", () => {
 	expect(page).not.toContain(dangerous);
 	expect(page).toContain("&lt;img");
 	expect(page).not.toContain('src="https://');
+});
+
+test("catalog navigation works without loading neighboring local files", () => {
+	const page = renderPage(
+		[
+			{
+				current: snapshot(),
+				previous: snapshot(),
+				changed: false,
+			},
+		],
+		false,
+	);
+	for (const view of ["all", "changes", "captures", "comparison", "coverage"]) {
+		expect(page).toContain(`data-view="${view}"`);
+	}
+	for (const filename of [
+		"index.html",
+		"changes.html",
+		"captures.json",
+		"comparison.json",
+		"coverage.md",
+	]) {
+		expect(page).not.toContain(`href="${filename}"`);
+	}
+});
+
+test("catalog embeds original review data safely without fetching files", () => {
+	const captures = JSON.stringify({
+		path: "/original/capture",
+		raw: "</pre><script>alert(1)</script>",
+	});
+	const comparison = JSON.stringify([{ changed: true }]);
+	const page = renderPage([], false, {
+		captures,
+		comparison,
+		coverage: "# 未実測\n<unknown>",
+	});
+	expect(page).toContain("/original/capture");
+	expect(page).toContain("&lt;/pre&gt;&lt;script&gt;alert(1)&lt;/script&gt;");
+	expect(page).toContain("&lt;unknown&gt;");
+	expect(page).not.toContain("fetch(");
+	expect(page).not.toContain("<script>alert(1)</script>");
 });
