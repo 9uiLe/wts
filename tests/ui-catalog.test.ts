@@ -166,5 +166,27 @@ test("catalog review contains only visual review controls and screens", () => {
 	expect(page).not.toContain("cwd:");
 	expect(page).not.toContain("未正規化");
 	expect(page).toContain("$ wts start");
-	expect(page).toContain("収録画面");
+	expect(page).toContain("追加された出力");
+});
+
+test("catalog compares only changed outputs and shows other cases once", () => {
+	const before = snapshot({ raw: "旧表示\r\n" });
+	const after = snapshot({ raw: "新表示\r\n" });
+	for (const [item, count, labels] of [
+		[{ previous: after, current: after, changed: false }, 1, ["出力"]],
+		[
+			{ previous: before, current: after, changed: true },
+			2,
+			["変更前", "変更後"],
+		],
+		[{ current: after, changed: true }, 1, ["追加された出力"]],
+		[{ previous: before, changed: true }, 1, ["削除された出力"]],
+	] as const) {
+		const page = renderPage([item], false);
+		expect(page.match(/class="screen"/g)).toHaveLength(count);
+		for (const label of labels) expect(page).toContain(`<h3>${label}</h3>`);
+		expect(page).not.toContain("基準画面");
+		expect(page).not.toContain("収録画面");
+		if (count === 1) expect(page).not.toContain('<div class="pair">');
+	}
 });

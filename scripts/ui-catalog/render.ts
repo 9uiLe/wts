@@ -352,7 +352,7 @@ export function renderPage(
 				after.html.split("\n"),
 			);
 			const reasons: string[] = [];
-			if (comparison.previous && comparison.current) {
+			if (comparison.changed && comparison.previous && comparison.current) {
 				if (before.plain !== after.plain) reasons.push("文言・配置");
 				else if (before.html !== after.html) reasons.push("配色・装飾");
 				if (comparison.previous.code !== comparison.current.code)
@@ -374,7 +374,15 @@ export function renderPage(
 				)
 					reasons.push("入力前画面");
 			}
-			return `<article id="${anchor}" data-group="${group}" data-changed="${comparison.changed}"${changesOnly && !comparison.changed ? " hidden" : ""}><h2><a href="#${anchor}">C${String(index + 1).padStart(3, "0")}</a> · ${escapeHtml(item.title)} <span class="badge">${state}</span></h2>${reasons.length ? `<p class="meta">変更点: ${reasons.join(" / ")}。背景付きの行が表示の差分です。</p>` : ""}<div class="pair">${comparison.previous ? screen(comparison.previous, "基準画面", left) : "<section><h3>基準画面</h3><p>基準にないケースです。</p></section>"}${comparison.current ? screen(comparison.current, "収録画面", right) : "<section><h3>収録画面</h3><p>収録に含まれていません。</p></section>"}</div></article>`;
+			const screens =
+				comparison.previous && comparison.current
+					? comparison.changed
+						? `<div class="pair">${screen(comparison.previous, "変更前", left)}${screen(comparison.current, "変更後", right)}</div>`
+						: screen(comparison.current, "出力")
+					: comparison.current
+						? screen(comparison.current, "追加された出力")
+						: screen(item, "削除された出力");
+			return `<article id="${anchor}" data-group="${group}" data-changed="${comparison.changed}"${changesOnly && !comparison.changed ? " hidden" : ""}><h2><a href="#${anchor}">C${String(index + 1).padStart(3, "0")}</a> · ${escapeHtml(item.title)} <span class="badge">${state}</span></h2>${reasons.length ? `<p class="meta">変更点: ${reasons.join(" / ")}。背景付きの行が表示の差分です。</p>` : ""}${screens}</article>`;
 		})
 		.join("");
 	return `<!doctype html><html lang="ja"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>wts 出力デザイン ${changesOnly ? "変更のみ" : "全件"}</title><style>
@@ -389,5 +397,5 @@ export function renderPage(
 		)
 		.join(
 			"",
-		)}</div><p>基準画面と収録画面を並べて確認できます。背景色が付いた行は変更箇所です。検索やコマンドで絞り込めます。</p><p class="meta">一部の外部応答は疑似環境で再現しています。</p><section><nav aria-label="コマンドで絞り込み">${["すべて", "共通", "doctor", "init", "config", "start", "stack", "cleanup", "restack"].map((group) => `<button type="button" data-filter="${group}" aria-pressed="${group === "すべて"}">${group}</button>`).join("")}<input id="search" aria-label="ケース名・コマンド・出力を検索" placeholder="ケース名・コマンド・出力を検索"></nav><p id="count" class="count" aria-live="polite"></p><p id="empty" hidden></p>${cards}</section><script>let group='すべて';let view='${changesOnly ? "changes" : "all"}';const articles=[...document.querySelectorAll('article')];const labels={all:'全件',changes:'変更のみ'};function filter(){const q=document.querySelector('#search').value.toLowerCase();let count=0;for(const article of articles){article.hidden=!((view!=='changes'||article.dataset.changed==='true')&&(group==='すべて'||article.dataset.group===group)&&article.textContent.toLowerCase().includes(q));if(!article.hidden)count++;}document.querySelector('#count').textContent=count+' / '+articles.length+' ケース';const empty=document.querySelector('#empty');empty.hidden=count!==0;empty.textContent=view==='changes'&&!articles.some(article=>article.dataset.changed==='true')?'表示差分はありません。':'条件に一致するケースはありません。';for(const button of document.querySelectorAll('button[data-filter]'))button.setAttribute('aria-pressed',String(button.dataset.filter===group));}function showView(next){view=next;for(const button of document.querySelectorAll('button[data-view]'))button.setAttribute('aria-pressed',String(button.dataset.view===view));document.querySelector('#page-title').textContent='wts 出力デザイン · '+labels[view];document.title='wts 出力デザイン '+labels[view];filter();}document.querySelectorAll('button[data-view]').forEach(button=>button.onclick=()=>showView(button.dataset.view));document.querySelectorAll('button[data-filter]').forEach(button=>button.onclick=()=>{group=button.dataset.filter;filter()});document.querySelector('#search').oninput=filter;showView(view);</script></html>`;
+		)}</div><p>変更がないケースは出力を1画面で、変更があるケースは変更前・変更後を並べて表示します。背景色が付いた行は変更箇所です。検索やコマンドで絞り込めます。</p><p class="meta">一部の外部応答は疑似環境で再現しています。</p><section><nav aria-label="コマンドで絞り込み">${["すべて", "共通", "doctor", "init", "config", "start", "stack", "cleanup", "restack"].map((group) => `<button type="button" data-filter="${group}" aria-pressed="${group === "すべて"}">${group}</button>`).join("")}<input id="search" aria-label="ケース名・コマンド・出力を検索" placeholder="ケース名・コマンド・出力を検索"></nav><p id="count" class="count" aria-live="polite"></p><p id="empty" hidden></p>${cards}</section><script>let group='すべて';let view='${changesOnly ? "changes" : "all"}';const articles=[...document.querySelectorAll('article')];const labels={all:'全件',changes:'変更のみ'};function filter(){const q=document.querySelector('#search').value.toLowerCase();let count=0;for(const article of articles){article.hidden=!((view!=='changes'||article.dataset.changed==='true')&&(group==='すべて'||article.dataset.group===group)&&article.textContent.toLowerCase().includes(q));if(!article.hidden)count++;}document.querySelector('#count').textContent=count+' / '+articles.length+' ケース';const empty=document.querySelector('#empty');empty.hidden=count!==0;empty.textContent=view==='changes'&&!articles.some(article=>article.dataset.changed==='true')?'表示差分はありません。':'条件に一致するケースはありません。';for(const button of document.querySelectorAll('button[data-filter]'))button.setAttribute('aria-pressed',String(button.dataset.filter===group));}function showView(next){view=next;for(const button of document.querySelectorAll('button[data-view]'))button.setAttribute('aria-pressed',String(button.dataset.view===view));document.querySelector('#page-title').textContent='wts 出力デザイン · '+labels[view];document.title='wts 出力デザイン '+labels[view];filter();}document.querySelectorAll('button[data-view]').forEach(button=>button.onclick=()=>showView(button.dataset.view));document.querySelectorAll('button[data-filter]').forEach(button=>button.onclick=()=>{group=button.dataset.filter;filter()});document.querySelector('#search').oninput=filter;showView(view);</script></html>`;
 }
