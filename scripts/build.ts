@@ -36,10 +36,10 @@ function verifyBinary(): void {
 		throw new Error("Help mismatch");
 	}
 	runCommand([`./${buildPath}`, "doctor"]);
-	verifySkills();
+	verifyEmbeddedSkill();
 }
 
-function verifySkills(): void {
+function verifyEmbeddedSkill(): void {
 	const directory = mkdtempSync(join(tmpdir(), "wts-build-skills-"));
 	function run(...args: string[]): string {
 		const result = Bun.spawnSync([resolve(buildPath), "skills", ...args], {

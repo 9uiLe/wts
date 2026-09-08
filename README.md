@@ -50,23 +50,21 @@ export PATH="$HOME/.local/bin:$PATH"
 
 ## AI 向けスキル
 
-スキル対応版の wts を配置した後、次のコマンドで `wts-cli` スキルを導入します。
+`wts-cli` は、AI が wts のセッション操作に使用するスキルです。AI の実行環境の PATH に `wts` を配置し、スキルの読み込み先へ導入してください。
 
 ```bash
 wts skills install wts-cli
 ```
 
-既定では `~/.agents/skills/wts-cli/SKILL.md` に配置します。AI のスキル読み込み先が異なる場合は、スキルの親ディレクトリを指定してください。
+既定の配置先は `~/.agents/skills/wts-cli/SKILL.md` です。読み込み先を変更する場合は、`--path` にスキルの親ディレクトリを指定します。[Claude Code の個人用スキル](https://code.claude.com/docs/en/skills#where-skills-live)として使う場合は、次のコマンドで導入します。
 
 ```bash
-wts skills install wts-cli --path /path/to/skills
+wts skills install wts-cli --path "$HOME/.claude/skills"
 ```
 
-利用する AI にスキルを再読み込みさせ、`wts-cli` を使ってセッションを操作するよう依頼してください。スキルは `wts skills get wts-cli` で、実行中のバイナリに対応した操作ガイドを取得します。ガイドには非対話で渡す入力、dry-run の実行範囲、rebase・push の再開、削除前の確認を記載しています。導入とガイド取得に Git・Bun・ソースファイルや通信は不要です。
+利用する AI にスキルを読み込ませ、`wts-cli` でセッションを操作するよう依頼してください。Claude Code では `/wts-cli` で呼び出せます。スキルは、操作前に `wts skills get wts-cli` を実行して、そのバイナリの操作ガイドを読みます。スキルの導入とガイド取得には、Git・Bun・ソースファイル・ネットワーク接続は不要です。セッション操作に必要な環境は [インストール](#インストール)を参照してください。
 
-同じ内容の再インストールは変更せず成功します。異なる内容の既存 `SKILL.md` は保護し、意図的に置き換える場合だけ `--force` を指定します。他のファイルは変更しません。バイナリ更新後もガイドは更新したバイナリから取得します。スキルの入口も更新する場合は、同じインストールコマンドを実行してください。
-
-ソースから導入を試す場合は、開発環境で `./scripts/dev.sh skills install wts-cli --path /path/to/skills` を使用できます。AI が操作する際には、スキル対応版の wts を PATH に配置するか、実行ファイルを明示してください。
+バイナリ更新後は、更新したバイナリのガイドが取得されます。インストール済みの `SKILL.md` を更新する場合は、導入コマンドを再実行してください。同じ内容なら変更せず成功します。内容が異なる場合は上書きを拒否するため、既存の編集内容を確認してから `--force` を付けて実行してください。他のファイルは変更しません。
 
 ## 対応環境と配布状態
 
