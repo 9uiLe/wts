@@ -48,6 +48,26 @@ export PATH="$HOME/.local/bin:$PATH"
 ./scripts/install.sh
 ```
 
+## AI 向けスキル
+
+スキル対応版の wts を配置した後、次のコマンドで `wts-cli` スキルを導入します。
+
+```bash
+wts skills install wts-cli
+```
+
+既定では `~/.agents/skills/wts-cli/SKILL.md` に配置します。AI のスキル読み込み先が異なる場合は、スキルの親ディレクトリを指定してください。
+
+```bash
+wts skills install wts-cli --path /path/to/skills
+```
+
+利用する AI にスキルを再読み込みさせ、`wts-cli` を使ってセッションを操作するよう依頼してください。スキルは `wts skills get wts-cli` で、実行中のバイナリに対応した操作ガイドを取得します。ガイドには非対話で渡す入力、dry-run の実行範囲、rebase・push の再開、削除前の確認を記載しています。導入とガイド取得に Git・Bun・ソースファイルや通信は不要です。
+
+同じ内容の再インストールは変更せず成功します。異なる内容の既存 `SKILL.md` は保護し、意図的に置き換える場合だけ `--force` を指定します。他のファイルは変更しません。バイナリ更新後もガイドは更新したバイナリから取得します。スキルの入口も更新する場合は、同じインストールコマンドを実行してください。
+
+ソースから導入を試す場合は、開発環境で `./scripts/dev.sh skills install wts-cli --path /path/to/skills` を使用できます。AI が操作する際には、スキル対応版の wts を PATH に配置するか、実行ファイルを明示してください。
+
 ## 対応環境と配布状態
 
 対象は Apple Silicon macOS です。[GitHub Releases](https://github.com/9uiLe/wts/releases) では検証用 Pre-release を配布します。最低対応 macOS は未確定で、GitHub Actions の macOS 15 ARM64 上で起動を検証します。Intel Mac、Linux、Windows は対象外です。

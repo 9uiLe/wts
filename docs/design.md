@@ -28,6 +28,7 @@ CLI の入口は引数をコマンドへ渡す。各コマンドは操作の順�
 | `src/commands/cleanup.ts` | PR とコミットの照合、削除候補の提示、worktree とブランチの整理 |
 | `src/commands/init.ts`、`src/commands/config.ts` | 設定初期化と検査の操作 |
 | `src/commands/doctor.ts` | 実行情報の表示、OS・依存・GitHub 認証の検査 |
+| `src/commands/skills.ts`、`skills/wts-cli/` | バイナリに埋め込んだ AI 向け操作ガイドの表示とスキルの導入 |
 | `src/git.ts` | 引数配列による外部実行、Git 参照と worktree の取得・検査 |
 | `src/project.ts` | 実行元とメインチェックアウトの特定、設定の読み込み、ローカルのベース名と origin 参照の導出、操作時のベース参照の確定 |
 | `src/session.ts` | セッション識別情報とスタックの列挙 |
