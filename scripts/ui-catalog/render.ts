@@ -309,7 +309,7 @@ function screen(
 				`${trigger} → ${keys.replaceAll("\u001b[C", "→").replaceAll("\u001b[D", "←").replaceAll("\r", "Enter").replaceAll("\u0003", "Ctrl-C")}`,
 		)
 		.join(" / ");
-	return `<section class="screen"><h3>${label}</h3><p class="meta">${escapeHtml(item.mode)} · exit ${item.code}</p>${inputs ? `<p class="meta">入力: ${escapeHtml(inputs)}</p>` : ""}<div class="terminal"><div class="command">$ ${escapeHtml(item.command)}</div><pre>${final.plain ? rendered : '<span class="empty">（出力なし）</span>'}</pre></div>${item.frames.map((frame, index) => `<details><summary>入力前 ${index + 1}</summary><pre>${terminal(frame).html}</pre></details>`).join("")}</section>`;
+	return `<section class="screen"><div class="screen-heading"><h3>${label}</h3><p class="meta">${escapeHtml(item.mode)} · 終了コード ${item.code}</p></div>${inputs ? `<p class="meta">入力: ${escapeHtml(inputs)}</p>` : ""}<div class="terminal"><div class="command">$ ${escapeHtml(item.command)}</div><pre>${final.plain ? rendered : '<span class="empty">（出力なし）</span>'}</pre></div>${item.frames.map((frame, index) => `<details><summary>入力前 ${index + 1}</summary><pre>${terminal(frame).html}</pre></details>`).join("")}</section>`;
 }
 
 export function renderPage(
@@ -339,6 +339,13 @@ export function renderPage(
 					: comparison.changed
 						? "変更"
 						: "変更なし";
+			const stateClass = !comparison.previous
+				? "added"
+				: !comparison.current
+					? "removed"
+					: comparison.changed
+						? "changed"
+						: "unchanged";
 			const before = terminal(
 				comparison.previous?.raw ?? "",
 				comparison.previous?.mode.startsWith("PIPE"),
@@ -382,20 +389,219 @@ export function renderPage(
 					: comparison.current
 						? screen(comparison.current, "追加された出力")
 						: screen(item, "削除された出力");
-			return `<article id="${anchor}" data-group="${group}" data-changed="${comparison.changed}"${changesOnly && !comparison.changed ? " hidden" : ""}><h2><a href="#${anchor}">C${String(index + 1).padStart(3, "0")}</a> · ${escapeHtml(item.title)} <span class="badge">${state}</span></h2>${reasons.length ? `<p class="meta">変更点: ${reasons.join(" / ")}。背景付きの行が表示の差分です。</p>` : ""}${screens}</article>`;
+			return `<article id="${anchor}" data-group="${group}" data-changed="${comparison.changed}"${changesOnly && !comparison.changed ? " hidden" : ""}><header class="case-heading"><div class="case-identity"><a class="case-id" href="#${anchor}" aria-label="ケース C${String(index + 1).padStart(3, "0")} へのリンク">C${String(index + 1).padStart(3, "0")}</a><h2>${escapeHtml(item.title)}</h2></div><span class="badge ${stateClass}">${state}</span></header>${reasons.length ? `<p class="change-summary"><span>変更点</span> ${reasons.join(" / ")}</p>` : ""}${screens}</article>`;
 		})
 		.join("");
-	return `<!doctype html><html lang="ja"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>wts 出力デザイン ${changesOnly ? "変更のみ" : "全件"}</title><style>
-:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#10141a;color:#dce2eb}body{margin:0 auto;padding:32px 24px;max-width:1800px}h1{font-size:28px}h2{font-size:18px}h3{font-size:14px;color:#adbed3}p{line-height:1.7}a{color:#85baff}nav{position:sticky;top:0;background:#10141af5;padding:16px 0;display:flex;gap:8px;flex-wrap:wrap;z-index:1}button,input{background:#212a36;border:1px solid #405066;color:#e0e8f4;padding:9px 13px;border-radius:6px}button{cursor:pointer}button[aria-pressed="true"]{background:#335883}button:focus-visible,input:focus-visible{outline:2px solid #85baff;outline-offset:3px}.view-navigation{display:flex;gap:8px;flex-wrap:wrap}input{flex:1;min-width:180px}article{border:1px solid #303b49;border-radius:10px;padding:20px;margin:20px 0;background:#171d26}.pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}.screen{min-width:0}.meta{font-size:12px;color:#99a8bd;overflow-wrap:anywhere}.terminal,details{background:#0d1117;border-radius:6px;overflow:auto}pre,.command{font-family:Menlo,"Noto Sans Mono CJK JP","Hiragino Kaku Gothic ProN",monospace;font-size:13px;line-height:1.65;white-space:pre;tab-size:8}pre{margin:0;padding:16px;min-width:max-content;color:#d8dee9}.command{padding:12px 16px;border-bottom:1px solid #253142;color:#a9b9ce}details{margin-top:10px}summary{cursor:pointer;padding:12px;color:#a9b9ce}.empty,.count{color:#95abc5}.diff-line{display:inline-block;min-width:100%;background:#4b392b;box-shadow:inset 3px 0 #eac06d}.badge{font-size:12px;background:#263747;padding:4px 8px;border-radius:4px}[hidden]{display:none!important}@media(max-width:1000px){.pair{grid-template-columns:1fr}}
-</style><h1 id="page-title">wts 出力デザイン · ${changesOnly ? "変更のみ" : "全件"}</h1><div class="view-navigation" role="group" aria-label="表示内容">${[
-		["all", "全件"],
-		["changes", "変更のみ"],
-	]
-		.map(
-			([view, label]) =>
-				`<button type="button" data-view="${view}" aria-pressed="${view === (changesOnly ? "changes" : "all")}">${label}</button>`,
-		)
-		.join(
-			"",
-		)}</div><p>変更がないケースは出力を1画面で、変更があるケースは変更前・変更後を並べて表示します。背景色が付いた行は変更箇所です。検索やコマンドで絞り込めます。</p><p class="meta">一部の外部応答は疑似環境で再現しています。</p><section><nav aria-label="コマンドで絞り込み">${["すべて", "共通", "doctor", "init", "config", "start", "stack", "cleanup", "restack"].map((group) => `<button type="button" data-filter="${group}" aria-pressed="${group === "すべて"}">${group}</button>`).join("")}<input id="search" aria-label="ケース名・コマンド・出力を検索" placeholder="ケース名・コマンド・出力を検索"></nav><p id="count" class="count" aria-live="polite"></p><p id="empty" hidden></p>${cards}</section><script>let group='すべて';let view='${changesOnly ? "changes" : "all"}';const articles=[...document.querySelectorAll('article')];const labels={all:'全件',changes:'変更のみ'};function filter(){const q=document.querySelector('#search').value.toLowerCase();let count=0;for(const article of articles){article.hidden=!((view!=='changes'||article.dataset.changed==='true')&&(group==='すべて'||article.dataset.group===group)&&article.textContent.toLowerCase().includes(q));if(!article.hidden)count++;}document.querySelector('#count').textContent=count+' / '+articles.length+' ケース';const empty=document.querySelector('#empty');empty.hidden=count!==0;empty.textContent=view==='changes'&&!articles.some(article=>article.dataset.changed==='true')?'表示差分はありません。':'条件に一致するケースはありません。';for(const button of document.querySelectorAll('button[data-filter]'))button.setAttribute('aria-pressed',String(button.dataset.filter===group));}function showView(next){view=next;for(const button of document.querySelectorAll('button[data-view]'))button.setAttribute('aria-pressed',String(button.dataset.view===view));document.querySelector('#page-title').textContent='wts 出力デザイン · '+labels[view];document.title='wts 出力デザイン '+labels[view];filter();}document.querySelectorAll('button[data-view]').forEach(button=>button.onclick=()=>showView(button.dataset.view));document.querySelectorAll('button[data-filter]').forEach(button=>button.onclick=()=>{group=button.dataset.filter;filter()});document.querySelector('#search').oninput=filter;showView(view);</script></html>`;
+	const total = comparisons.filter(
+		(item) => item.current || item.previous,
+	).length;
+	const changed = comparisons.filter(
+		(item) => (item.current || item.previous) && item.changed,
+	).length;
+	return `<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>wts 端末UIレビュー · ${changesOnly ? "変更のみ" : "全件"}</title>
+<style>
+:root {
+  color-scheme: dark;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans JP", sans-serif;
+  background: #10141b;
+  color: #e1e7ef;
+  --muted: #9caabd;
+  --border: #2c3543;
+  --accent: #a4c7ff;
+}
+* { box-sizing: border-box; }
+body { margin: 0 auto; max-width: 1800px; padding: 40px 32px 64px; }
+button, input { font: inherit; }
+button { cursor: pointer; }
+a { color: var(--accent); }
+button, input, summary, a { -webkit-tap-highlight-color: transparent; }
+button:focus-visible, input:focus-visible, summary:focus-visible, a:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 4px;
+}
+.page-header { margin-bottom: 28px; }
+.brand { display: inline-block; font: 700 15px Menlo, monospace; letter-spacing: -.04em; color: var(--accent); margin-bottom: 12px; }
+h1 { margin: 0 0 12px; font-size: clamp(24px, 3vw, 32px); letter-spacing: -.025em; line-height: 1.4; }
+.page-description { max-width: 780px; margin: 0; color: var(--muted); font-size: 14px; line-height: 1.9; }
+.toolbar { position: sticky; top: 0; z-index: 2; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: #181e28; box-shadow: 0 8px 24px #00000026; }
+.toolbar-primary { display: flex; gap: 24px; align-items: flex-end; justify-content: space-between; }
+.control-label { display: block; margin: 0 0 8px; color: var(--muted); font-size: 12px; font-weight: 600; }
+.view-navigation { display: inline-flex; gap: 4px; padding: 4px; border: 1px solid var(--border); border-radius: 8px; background: #10151d; }
+button { border: 1px solid transparent; border-radius: 6px; background: transparent; color: #acb9ca; padding: 8px 12px; font-size: 13px; line-height: 1.4; }
+button:hover { background: #263142; color: #f1f5fa; }
+.view-navigation button { display: inline-flex; align-items: center; gap: 12px; }
+.view-navigation button[aria-pressed="true"] { background: #304663; color: #f0f6ff; box-shadow: 0 1px 3px #0003; }
+.view-count { border-radius: 4px; background: #ffffff0a; padding: 1px 6px; font-size: 12px; font-variant-numeric: tabular-nums; }
+.search-field { flex: 1; max-width: 440px; min-width: 0; }
+input { width: 100%; min-width: 0; border: 1px solid #3c485a; border-radius: 7px; padding: 10px 12px; background: #111720; color: #e1e7ef; font-size: 14px; }
+input::placeholder { color: #8493a7; }
+.command-filters { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+.command-filters .control-label { margin: 0; flex-shrink: 0; }
+.filter-buttons { display: flex; gap: 4px; flex-wrap: wrap; }
+.filter-buttons button { padding: 6px 10px; }
+.filter-buttons button[aria-pressed="true"] { color: #cee0fc; background: #26374f; border-color: #405777; }
+.results-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin: 24px 0 14px; }
+.count { margin: 0; color: #c3cedd; font-size: 13px; font-variant-numeric: tabular-nums; }
+.results-note { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.7; }
+article { min-width: 0; margin: 0 0 20px; padding: 22px; border: 1px solid var(--border); border-radius: 12px; background: #191f29; scroll-margin-top: 230px; }
+.case-heading { display: flex; gap: 16px; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+.case-identity { min-width: 0; display: flex; align-items: baseline; gap: 14px; }
+.case-id { flex-shrink: 0; color: #8e9db1; font: 12px Menlo, monospace; text-decoration: none; }
+.case-id:hover { color: var(--accent); text-decoration: underline; }
+h2 { margin: 0; font-size: 16px; line-height: 1.65; font-weight: 600; overflow-wrap: anywhere; }
+.badge { flex-shrink: 0; margin-top: 2px; border: 1px solid transparent; padding: 3px 8px; font-size: 11px; font-weight: 500; line-height: 1.5; border-radius: 5px; }
+.badge.unchanged { color: #99a8bb; }
+.badge.changed { background: #443725; border-color: #665133; color: #efd09a; }
+.badge.added { background: #213e35; border-color: #36574b; color: #a3d9bf; }
+.badge.removed { background: #402b33; border-color: #60414b; color: #e3afb9; }
+.change-summary { margin: -8px 0 18px; font-size: 12px; color: #c7b591; line-height: 1.7; }
+.change-summary > span { color: var(--muted); margin-right: 8px; }
+.pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.screen { min-width: 0; }
+.screen-heading { display: flex; align-items: baseline; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; margin-bottom: 8px; }
+h3 { margin: 0; font-size: 12px; color: #c2cedf; font-weight: 600; }
+.meta { margin: 0; font-size: 11px; line-height: 1.7; color: #91a1b7; overflow-wrap: anywhere; }
+.screen > .meta { margin-bottom: 8px; }
+.terminal, details { background: #0d1117; border: 1px solid #2b3442; border-radius: 8px; overflow: auto; }
+pre, .command { font-family: Menlo, "Noto Sans Mono CJK JP", "Hiragino Kaku Gothic ProN", monospace; font-size: 13px; line-height: 1.65; white-space: pre; tab-size: 8; }
+pre { margin: 0; padding: 16px; min-width: max-content; color: #d8dee9; }
+.command { padding: 12px 16px; border-bottom: 1px solid #253142; color: #a9b9ce; min-width: max-content; }
+details { margin-top: 10px; }
+summary { cursor: pointer; padding: 11px 16px; color: #a9b9ce; font-size: 12px; }
+summary:hover { color: #dde8f6; }
+.empty { color: #95abc5; }
+.diff-line { display: inline-block; min-width: 100%; background: #4b392b; box-shadow: inset 3px 0 #eac06d; }
+.empty-state { border: 1px dashed #3b4758; border-radius: 12px; padding: 56px 24px; text-align: center; background: #161c25; }
+.empty-state h2 { font-size: 18px; }
+.empty-state p { color: var(--muted); font-size: 14px; line-height: 1.8; margin: 12px 0 20px; }
+.empty-state button { background: #2b405c; color: #e2edfc; border-color: #435e80; }
+.empty-state button:hover { background: #365373; }
+[hidden] { display: none !important; }
+@media (max-width: 1000px) { .pair { grid-template-columns: 1fr; } }
+@media (max-width: 640px) {
+  body { padding: 24px 14px 40px; }
+  .page-header { margin-bottom: 20px; }
+  .toolbar { padding: 12px; }
+  .toolbar-primary { align-items: stretch; flex-direction: column; gap: 14px; }
+  .search-field { max-width: none; }
+  .command-filters { align-items: flex-start; flex-direction: column; gap: 8px; margin-top: 12px; padding-top: 12px; }
+  .filter-buttons { gap: 2px; }
+  .filter-buttons button { padding: 5px 8px; }
+  .results-heading { flex-direction: column; gap: 6px; margin-top: 20px; }
+  article { padding: 16px 12px; scroll-margin-top: 340px; }
+  .case-heading { gap: 8px; }
+  .case-identity { display: block; }
+  .case-id { display: inline-block; margin-bottom: 6px; }
+  h2 { font-size: 14px; }
+  .badge { padding: 3px 5px; }
+}
+@media (max-height: 600px) { .toolbar { position: static; } article { scroll-margin-top: 16px; } }
+</style>
+</head>
+<body>
+<header class="page-header">
+  <span class="brand">wts</span>
+  <h1 id="page-title">端末UIレビュー</h1>
+  <p class="page-description">コマンドの表示を一覧で確認できます。変更があるケースは変更前・変更後を並べ、変わった行を背景色で示します。</p>
+</header>
+<main>
+  <div class="toolbar" role="region" aria-label="表示と絞り込み">
+    <div class="toolbar-primary">
+      <div>
+        <span class="control-label" id="view-label">表示するケース</span>
+        <div class="view-navigation" role="group" aria-labelledby="view-label">${[
+					["all", "全件", total],
+					["changes", "変更のみ", changed],
+				]
+					.map(
+						([view, label, count]) =>
+							`<button type="button" data-view="${view}" aria-pressed="${view === (changesOnly ? "changes" : "all")}">${label}<span class="view-count">${count}件</span></button>`,
+					)
+					.join("")}</div>
+      </div>
+      <div class="search-field">
+        <label class="control-label" for="search">ケースを検索</label>
+        <input type="search" id="search" placeholder="ケース名・コマンド・出力" autocomplete="off">
+      </div>
+    </div>
+    <nav class="command-filters" aria-label="コマンドで絞り込み">
+      <span class="control-label">コマンド</span>
+      <div class="filter-buttons">${["すべて", "共通", "doctor", "init", "config", "start", "stack", "cleanup", "restack"].map((group) => `<button type="button" data-filter="${group}" aria-pressed="${group === "すべて"}">${group}</button>`).join("")}</div>
+    </nav>
+  </div>
+  <div class="results-heading">
+    <p id="count" class="count" role="status" aria-live="polite"></p>
+    <p class="results-note">外部サービスの応答を再現したケースには「疑似」と記載しています。</p>
+  </div>
+  <section id="empty" class="empty-state" aria-labelledby="empty-title" hidden>
+    <h2 id="empty-title"></h2>
+    <p id="empty-description"></p>
+    <button type="button" id="show-all" hidden>全件を表示</button>
+    <button type="button" id="clear-filters" hidden>絞り込みを解除</button>
+  </section>
+  ${cards}
+</main>
+<script>
+let group = 'すべて';
+let view = '${changesOnly ? "changes" : "all"}';
+const articles = [...document.querySelectorAll('article')];
+const search = document.querySelector('#search');
+const labels = { all: '全件', changes: '変更のみ' };
+const changedCount = articles.filter(article => article.dataset.changed === 'true').length;
+function filter() {
+  const query = search.value.trim().toLowerCase();
+  let count = 0;
+  for (const article of articles) {
+    article.hidden = !((view !== 'changes' || article.dataset.changed === 'true')
+      && (group === 'すべて' || article.dataset.group === group)
+      && article.textContent.toLowerCase().includes(query));
+    if (!article.hidden) count++;
+  }
+  const available = view === 'changes' ? changedCount : articles.length;
+  document.querySelector('#count').textContent = labels[view] + ' ' + available + '件中 ' + count + '件を表示';
+  const noChanges = view === 'changes' && changedCount === 0;
+  document.querySelector('#empty').hidden = count !== 0;
+  document.querySelector('#empty-title').textContent = noChanges ? '表示の変更はありません' : '一致するケースがありません';
+  document.querySelector('#empty-description').textContent = noChanges
+    ? '全件に切り替えると、現在のコマンドの表示を確認できます。'
+    : '検索語やコマンドの絞り込みを変えて、もう一度お試しください。';
+  document.querySelector('#show-all').hidden = !noChanges;
+  document.querySelector('#clear-filters').hidden = noChanges;
+  for (const button of document.querySelectorAll('button[data-filter]')) {
+    button.setAttribute('aria-pressed', String(button.dataset.filter === group));
+  }
+}
+function showView(next) {
+  view = next;
+  for (const button of document.querySelectorAll('button[data-view]')) {
+    button.setAttribute('aria-pressed', String(button.dataset.view === view));
+  }
+  document.title = 'wts 端末UIレビュー · ' + labels[view];
+  filter();
+}
+document.querySelectorAll('button[data-view]').forEach(button => {
+  button.onclick = () => showView(button.dataset.view);
+});
+document.querySelectorAll('button[data-filter]').forEach(button => {
+  button.onclick = () => { group = button.dataset.filter; filter(); };
+});
+search.oninput = filter;
+document.querySelector('#show-all').onclick = () => {
+  showView('all');
+  document.querySelector('button[data-view="all"]').focus();
+};
+document.querySelector('#clear-filters').onclick = () => {
+  search.value = '';
+  group = 'すべて';
+  filter();
+  search.focus();
+};
+showView(view);
+</script>
+</body>
+</html>`;
 }

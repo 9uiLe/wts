@@ -190,3 +190,19 @@ test("catalog compares only changed outputs and shows other cases once", () => {
 		if (count === 1) expect(page).not.toContain('<div class="pair">');
 	}
 });
+
+test("catalog makes review scope, search, and empty-state recovery discoverable", () => {
+	const page = renderPage(
+		[
+			{ current: snapshot(), previous: snapshot(), changed: false },
+			{ current: snapshot({ title: "追加ケース" }), changed: true },
+		],
+		false,
+	);
+	expect(page).toMatch(/<label[^>]*for="search"/);
+	expect(page).toContain('id="show-all"');
+	expect(page).toContain('id="clear-filters"');
+	expect(page).toContain("全件を表示");
+	expect(page).toContain("絞り込みを解除");
+	expect(page).toContain("終了コード");
+});
