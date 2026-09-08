@@ -6,7 +6,8 @@ import {
 	normalizeCapture,
 	normalizeRecord,
 } from "../scripts/ui-catalog/normalize";
-import { renderPage, terminal } from "../scripts/ui-catalog/render";
+import { renderPage } from "../scripts/ui-catalog/render";
+import { terminal } from "../scripts/ui-catalog/terminal-renderer";
 
 function snapshot(overrides: Partial<Capture> = {}): Capture {
 	return {
@@ -143,28 +144,24 @@ test("catalog navigation works without loading neighboring local files", () => {
 		],
 		false,
 	);
-	for (const view of ["all", "changes"]) {
-		expect(page).toContain(`data-view="${view}"`);
-	}
-	for (const filename of [
-		"index.html",
-		"changes.html",
-		"captures.json",
-		"comparison.json",
-		"coverage.md",
-	]) {
-		expect(page).not.toContain(`href="${filename}"`);
+	expect(
+		[...page.matchAll(/<button[^>]*data-view="([^"]+)"/g)].map(
+			(match) => match[1],
+		),
+	).toEqual(["all", "changes"]);
+	for (const link of page.matchAll(/<a\b[^>]*href="([^"]+)"/g)) {
+		expect(link[1]?.startsWith("#")).toBe(true);
 	}
 });
 
 test("catalog review contains only visual review controls and screens", () => {
 	const page = renderPage([{ current: snapshot(), changed: true }], false);
-	for (const view of ["captures", "comparison", "coverage"]) {
-		expect(page).not.toContain(`data-view="${view}"`);
-		expect(page).not.toContain(`data-panel="${view}"`);
-	}
-	expect(page).not.toContain("cwd:");
-	expect(page).not.toContain("未正規化");
+	expect(
+		[...page.matchAll(/<button[^>]*data-view="([^"]+)"/g)].map(
+			(match) => match[1],
+		),
+	).toEqual(["all", "changes"]);
+	expect(page).not.toContain(snapshot().cwd);
 	expect(page).toContain("$ wts start");
 	expect(page).toContain("追加された出力");
 });
@@ -185,8 +182,9 @@ test("catalog compares only changed outputs and shows other cases once", () => {
 		const page = renderPage([item], false);
 		expect(page.match(/class="screen"/g)).toHaveLength(count);
 		for (const label of labels) expect(page).toContain(`<h3>${label}</h3>`);
-		expect(page).not.toContain("基準画面");
-		expect(page).not.toContain("収録画面");
+		expect(
+			[...page.matchAll(/<h3>([^<]+)<\/h3>/g)].map((match) => match[1]),
+		).toEqual([...labels]);
 		if (count === 1) expect(page).not.toContain('<div class="pair">');
 	}
 });

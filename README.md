@@ -199,6 +199,7 @@ wts restack --push-only --base-branch origin/main --push
 
 - [設定項目・命名スクリプト・サンプル](docs/configuration.md)
 - [開発環境・検証・ビルド・公開手順](docs/development.md)
+- [端末 UI カタログの生成とレビュー](docs/development.md#端末-ui-の一覧と変更確認)
 - [責務と不変条件](docs/design.md)
 - [設計判断の記録](docs/decisions.md)
 - [作業規約](AGENTS.md)

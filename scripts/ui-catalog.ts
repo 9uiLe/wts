@@ -5,7 +5,8 @@ import { type Capture, context } from "./ui-catalog/capture";
 import { commonCases } from "./ui-catalog/common-cases";
 import { configCases } from "./ui-catalog/config-cases";
 import { compareCaptures, normalizeRecord } from "./ui-catalog/normalize";
-import { escapeHtml, renderPage } from "./ui-catalog/render";
+import { escapeHtml } from "./ui-catalog/html";
+import { renderPage } from "./ui-catalog/render";
 import { restackCases } from "./ui-catalog/restack-cases";
 import { sessionCases } from "./ui-catalog/session-cases";
 
@@ -71,8 +72,8 @@ try {
 		console.log(`${cases.name}: ${group.length} ケースを収録しました。`);
 	}
 	const comparisons = compareCaptures(captures, baseline, context.root);
-	const normalized = comparisons.map((comparison) => {
-		const display = (item: Capture) => normalizeRecord(item, context.root);
+	const display = (item: Capture) => normalizeRecord(item, context.root);
+	const displayComparisons = comparisons.map((comparison) => {
 		return {
 			...comparison,
 			...(comparison.current ? { current: display(comparison.current) } : {}),
@@ -81,7 +82,7 @@ try {
 				: {}),
 		};
 	});
-	const resources = {
+	const diagnostics = {
 		captures: `${JSON.stringify({ version: 1, cases: captures }, null, 2)}\n`,
 		comparison: `${JSON.stringify(
 			comparisons.map((comparison) => ({
@@ -97,11 +98,17 @@ try {
 		)}\n`,
 		coverage: `# 出力一覧の収録範囲\n\n${captures.length} ケースを実 CLI で収録しています。入力待ちの各画面と最終画面、終了コードを記録します。GitHub CLI の応答、外部コマンド障害、非対応環境はシナリオの疑似応答を使用し、実サービスへの接続結果ではありません。\n\n未実測の条件:\n\n- src/copy.ts: glob 走査自体の例外。\n- src/commands/restack.ts: lease ファイル削除時の OS 例外。\n- src/copy.ts: コピー先が worktree 外になる防御的分岐。公開入力の検査と glob の相対パスにより通常は到達しません。\n- src/commands/stack.ts と restack.ts: スタックの先端が空になる防御的分岐。stackBranches は root を先頭要素に含めるため通常は到達しません。\n\n任意のパス・日付・UUID・SHA の全値や外部ツールの診断文の全組合せは列挙せず、表示形式と条件で分類しています。\n\nシナリオ定義: scripts/ui-catalog/common-cases.ts、config-cases.ts、session-cases.ts、restack-cases.ts。\n`,
 	};
-	writeFileSync(resolve(output, "captures.json"), resources.captures);
-	writeFileSync(resolve(output, "comparison.json"), resources.comparison);
-	writeFileSync(resolve(output, "coverage.md"), resources.coverage);
-	writeFileSync(resolve(output, "index.html"), renderPage(normalized, false));
-	writeFileSync(resolve(output, "changes.html"), renderPage(normalized, true));
+	writeFileSync(resolve(output, "captures.json"), diagnostics.captures);
+	writeFileSync(resolve(output, "comparison.json"), diagnostics.comparison);
+	writeFileSync(resolve(output, "coverage.md"), diagnostics.coverage);
+	writeFileSync(
+		resolve(output, "index.html"),
+		renderPage(displayComparisons, false),
+	);
+	writeFileSync(
+		resolve(output, "changes.html"),
+		renderPage(displayComparisons, true),
+	);
 	rmSync(resolve(output, "failure.txt"), { force: true });
 	rmSync(resolve(output, "partial-captures.json"), { force: true });
 	if (values["update-baseline"]) {

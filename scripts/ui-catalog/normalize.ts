@@ -1,5 +1,6 @@
 import type { Capture } from "./capture";
-import { type Comparison, terminal } from "./render";
+import type { Comparison } from "./comparison";
+import { terminal } from "./terminal-renderer";
 
 export function normalize(value: string, fixtureRoot?: string): string {
 	let result = value;
