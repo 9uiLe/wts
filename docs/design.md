@@ -114,7 +114,9 @@ cleanup はマージ済み PR とローカル変更の取り込みを証明で�
 
 doctor の実行情報表示は外部コマンドを要求しない。`doctor --check` は OS・Git・gh と認証、任意の Claude CLI を検査する。`config check` は設定を検証し、命名スクリプトは実行しない。両検査とも環境の導入・変更は行わず、認証情報を表示しない。
 
-`install.sh` は成果物を検証し、`--with-deps` 指定時に Homebrew へ Git・gh の導入を委ねてから wts を配置する。Homebrew、任意の命名環境、認証は利用者が用意する。
+`web-install.sh` はリポジトリの clone を要求せず、Pages の `channel.txt` または `--version` で選択した同じ Release からバイナリ・SHA-256・`BUILD_INFO` を取得する。SHA-256 とビルド情報のバージョン・ターゲットを検証してから配置する。Git・gh の導入、認証、Gatekeeper の許可は行わない。
+
+`install.sh` は取得済みのローカル成果物を検証し、`--with-deps` 指定時に Homebrew へ Git・gh の導入を委ねてから wts を配置する。Homebrew、任意の命名環境、認証は利用者が用意する。
 
 ## 開発・配布基盤
 
@@ -131,6 +133,7 @@ doctor の実行情報表示は外部コマンドを要求しない。`doctor --
 | `scripts/release-version.ts`、`scripts/check-release.ts` | 公開バージョンと公開対象の検証 |
 | `scripts/ui-catalog.ts`、`scripts/ui-catalog/` | ケース実行、端末表示の収録・正規化、基準版との比較と静的 HTML 生成 |
 | `.github/workflows/ci.yml`、`.github/workflows/release.yml` | 通常検証と Pre-release 公開 |
+| `.github/workflows/pages.yml` | 公開済み Release の確認とインストーラー・配布対象タグの Pages 配信 |
 
 開発用スクリプトはリポジトリの Flake を `nix develop --no-update-lock-file` で使用する。設定検査は呼び出し元ディレクトリを保持する。配布バイナリと配置スクリプトは Nix を要求しない。具体的なコマンドは [開発資料](development.md#開発コマンド)に定義する。
 
@@ -173,8 +176,16 @@ API の認証・通信・タグ解決の失敗は判定失敗として扱い、�
 
 ## 公開の境界
 
-通常の CI は `contents: read` で検証を行う。Release ワークフローでは公開ジョブだけに `contents: write` を与え、`GITHUB_TOKEN` でタグと Release を作成する。GitHub Actions の参照はコミット SHA に固定する。
+通常の CI は `contents: read` で検証を行う。Release ワークフローでは Release 公開ジョブだけに `contents: write` を与え、`GITHUB_TOKEN` でタグと Release を作成する。GitHub Actions の参照はコミット SHA に固定する。
 
 公開処理は確定したコミットにタグを作成し、成果物を下書き Release に添付した後、Pre-release として公開する。GitHub の「Latest」には指定しない。失敗時に残った下書きやタグは自動で削除・上書きせず、次の実行でも重複判定の対象とする。
 
 同じ Release ワークフローの実行は直列化する。公開直前の再検査はビルド中の更新を検出するが、検査と公開を単一のトランザクションにはしない。公開対象には検証したコミット SHA を明示し、その後のブランチ更新によって対象が変わらないようにする。
+
+## インストーラーの配信
+
+GitHub Pages は単独実行できる `install.sh` と `channel.txt` を配信し、バイナリ・SHA-256・`BUILD_INFO` は GitHub Releases から取得する。`channel.txt` は先頭 `v` 付きの SemVer タグを 1 行で保持する。バージョン未指定時の対象はこのタグであり、GitHub の Latest API やバージョン番号順による選択は行わない。
+
+Release の公開成功後に Pages ワークフローを呼び出す。Pages ワークフローは公開済み Release と 3 ファイルの存在を検査し、インストーラーとタグを一つの Pages 成果物として配信する。手動実行でも既存 Release のバージョンを必須とし、Release やタグは作成しない。最後に成功した Pages 配信が既定のインストール対象を決める。Pages の更新失敗は公開済み Release を取り消さない。
+
+Pages 配信には `pages: write` と `id-token: write` を与える。利用者のインストールは GitHub REST API への認証やトークンを要求しない。

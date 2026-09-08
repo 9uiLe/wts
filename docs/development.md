@@ -227,28 +227,58 @@ shasum -a 256 -c wts-macos-arm64.sha256
 
 ## GitHub Actions
 
-両ワークフローは `macos-15` ランナーでクリーンなチェックアウトを確認し、`setup.sh`、依存監査、`check.sh` を実行します。ローカルと同じ入口で ARM64、Flake、依存、整形・lint・型・テスト・ビルド、チェックサムを検証します。使用するアクションはコミット SHA に固定します。
+CI と Release の検証ジョブは `macos-15` ランナーでクリーンなチェックアウトを確認し、`setup.sh`、依存監査、`check.sh` を実行します。ローカルと同じ入口で ARM64、Flake、依存、整形・lint・型・テスト・ビルド、チェックサムを検証します。使用するアクションはコミット SHA に固定します。
 
 | ワークフロー | 起動 | 権限と成果 |
 | --- | --- | --- |
 | [CI](../.github/workflows/ci.yml) | push、pull request、手動 | `contents: read` で検証し、追跡ファイルの差分がないことを確認する |
-| [Release](../.github/workflows/release.yml) | `master` を選択した手動実行 | 公開ジョブに `contents: write` を付与し、検証済み成果物を Pre-release として公開する |
+| [Release](../.github/workflows/release.yml) | `master` を選択した手動実行 | 公開ジョブに `contents: write` を付与し、検証済み成果物を Pre-release として公開し、成功後に Pages を配信する |
+| [Pages](../.github/workflows/pages.yml) | Release からの呼び出し、`master` を選択した手動実行 | 公開済み Release を検査し、インストーラーと配布対象タグを Pages へ再配信する |
 
-Release はさらに、Nix 環境外でのバージョン一致・起動と、作業ツリーに変更がないことを確認します。Release ワークフローの同時実行は直列化し、進行中の実行を自動キャンセルしません。
+Release はさらに、Nix 環境外でのバージョン一致・起動と、作業ツリーに変更がないことを確認します。Release ワークフローの同時実行は直列化し、進行中の実行を自動キャンセルしません。Pages の配信ジョブには `pages: write` と `id-token: write` を付与します。
 
 ## Pre-release の公開手順
 
-リポジトリの Actions 設定とタグルールで、自動発行される `GITHUB_TOKEN` による Release・タグ作成が許可されている必要があります。
+リポジトリの Actions 設定とタグルールで、自動発行される `GITHUB_TOKEN` による Release・タグ作成が許可されている必要があります。初回は **Settings → Pages → Build and deployment → Source** を **GitHub Actions**（API の `build_type: workflow`）に設定してください。公開リポジトリの標準ランナーと GitHub Pages、Releases を使用し、外部サーバーは用意しません。
 
 1. GitHub の **Actions → Release → Run workflow** を開きます。
 2. ブランチに `master`、`version` に先頭 `v` なしの SemVer（例: `0.2.0`、`0.2.0-rc.1`）を入力して実行します。`master` 以外では公開ジョブがスキップされます。
 3. ジョブの成功後、GitHub Releases で `v<version>` の Pre-release と、`wts-macos-arm64`、`wts-macos-arm64.sha256`、`BUILD_INFO` の添付を確認します。
+4. Pages 配信の成功後、`https://9uile.github.io/wts/channel.txt` が `v<version>` の 1 行であることと、`https://9uile.github.io/wts/install.sh` の取得を確認します。
 
 チェックアウト時点の最新 `master` を公開対象とし、ビルド前後に [公開判定](design.md#公開判定) を実行します。最新公開 Release と同じコミット、使用済みバージョン、処理中の `master` 更新、API エラーは公開を止めます。入力バージョンにプレリリース識別子がなくても、公開状態は必ず Pre-release です。
 
 全ファイルのアップロード完了後に下書きを公開します。途中で失敗した場合は GitHub Releases とタグの状態を確認してください。既存の下書きやタグは再実行で上書き・削除されず、使用済みバージョンとして拒否されます。`master` 更新で停止した場合は、最新 `master` を対象に再実行してください。
 
 Release 本文には、検証環境、最低対応 macOS の未確定、Developer ID 署名・公証の未実施、Gatekeeper 許可手順の未検証、チェックサム照合手順を記載します。
+
+### Pages の再配信
+
+Release 公開後に Pages の配信が失敗した場合や、既存 Release を配布対象として選び直す場合は、**Actions → Pages → Run workflow** で `master` と `version`（先頭 `v` なしの公開済み SemVer）を指定します。公開済み Release と 3 ファイルの存在を確認してから配信します。新たな Release やタグは作成しません。
+
+`install.sh` と `channel.txt` は同じ Pages 配信に含めます。既定のインストール対象は最後に成功した Pages 配信のタグです。バージョン番号順や GitHub の Latest API では選びません。Pages が未配信、または取得できない場合、バージョン未指定のインストールは失敗します。
+
+### 実機での配布経路の検証
+
+Pages からの導入・更新、利用者の Mac での実動作、Gatekeeper の挙動と許可手順は未検証です。以下は利用者本人が Apple Silicon Mac の通常のターミナルで実施する手順です。Nix devShell を終了してから実行し、macOS バージョン、配布タグ、各操作の結果と終了コードを記録してください。
+
+1. `sw_vers` と `uname -m` で環境を記録し、Pages の `channel.txt` と対象 Release の `BUILD_INFO` を確認します。
+2. [README のインストールコマンド](../README.md#インストール)を実行し、表示された導入先を確認します。
+3. 次のコマンドを実行し、`--version` が対象 Release のバージョンと一致すること、ヘルプと環境情報が表示されることを確認します。
+
+```bash
+"$HOME/.local/bin/wts" --version
+"$HOME/.local/bin/wts" --help
+"$HOME/.local/bin/wts" doctor
+"$HOME/.local/bin/wts" doctor --check
+```
+
+4. 起動時に Gatekeeper の制限が生じるかを記録します。制限がある場合は macOS が示す内容と、利用者自身が許可した操作、その後の起動結果を記録します。インストーラーは隔離属性の削除やセキュリティ設定変更を行いません。
+5. `wts doctor --interactive` をそれぞれ肯定入力、否定入力、Ctrl-C で実行し、終了コードが `0` であることを確認します。
+6. 検証用リポジトリで [README の操作手順](../README.md#プロジェクトを初期化する)に従い、`init`、`config check`、`start`、`stack`、`restack`、`cleanup` の結果を確認します。Git・gh の導入と GitHub 認証が不足する場合は先に設定します。push・PR のマージ・worktree の削除は検証用の対象で行ってください。
+7. 更新先の Release が公開されたら実行中の wts を終了し、同じインストールコマンドを再実行します。`--version` の更新と起動を確認します。公開済みの異なるバージョンを `--version` で指定して更新を検証することもできます。異なるバージョンがなければ更新は未検証として記録します。
+
+実機の検証結果が揃うまでは、CI の起動成功だけで配布経路や対応 macOS の検証を完了扱いにしません。
 
 ## 正式リリースの条件
 
