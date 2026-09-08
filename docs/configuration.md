@@ -39,7 +39,7 @@ git add .wts.json
 git commit -m "Configure worktree sessions"
 ```
 
-`start`・`stack`・`cleanup`・`restack` とファイル指定なしの `config check` は設定ファイルが必要です。`init`・`doctor`・ヘルプ・バージョン表示は設定を必要としません。
+`start`・`stack`・`cleanup`・`restack`・`discard` とファイル指定なしの `config check` は設定ファイルが必要です。`init`・`doctor`・ヘルプ・バージョン表示は設定を必要としません。
 
 ## 設定項目
 

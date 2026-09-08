@@ -4,6 +4,7 @@ import { parseArgs } from "node:util";
 import { type Capture, context } from "./ui-catalog/capture";
 import { commonCases } from "./ui-catalog/common-cases";
 import { configCases } from "./ui-catalog/config-cases";
+import { discardCases } from "./ui-catalog/discard-cases";
 import { compareCaptures, normalizeRecord } from "./ui-catalog/normalize";
 import { escapeHtml } from "./ui-catalog/html";
 import { renderPage } from "./ui-catalog/render";
@@ -66,7 +67,13 @@ try {
 	output = resolve(values.output);
 	const baseline = readBaseline(resolve(values.baseline));
 	mkdirSync(output, { recursive: true });
-	for (const cases of [commonCases, configCases, sessionCases, restackCases]) {
+	for (const cases of [
+		commonCases,
+		configCases,
+		sessionCases,
+		restackCases,
+		discardCases,
+	]) {
 		const group = await cases();
 		captures.push(...group);
 		console.log(`${cases.name}: ${group.length} ケースを収録しました。`);
@@ -96,7 +103,7 @@ try {
 			null,
 			2,
 		)}\n`,
-		coverage: `# 出力一覧の収録範囲\n\n${captures.length} ケースを実 CLI で収録しています。入力待ちの各画面と最終画面、終了コードを記録します。GitHub CLI の応答、外部コマンド障害、非対応環境はシナリオの疑似応答を使用し、実サービスへの接続結果ではありません。\n\n未実測の条件:\n\n- src/copy.ts: glob 走査自体の例外。\n- src/commands/restack.ts: lease ファイル削除時の OS 例外。\n- src/copy.ts: コピー先が worktree 外になる防御的分岐。公開入力の検査と glob の相対パスにより通常は到達しません。\n- src/commands/stack.ts と restack.ts: スタックの先端が空になる防御的分岐。stackBranches は root を先頭要素に含めるため通常は到達しません。\n\n任意のパス・日付・UUID・SHA の全値や外部ツールの診断文の全組合せは列挙せず、表示形式と条件で分類しています。\n\nシナリオ定義: scripts/ui-catalog/common-cases.ts、config-cases.ts、session-cases.ts、restack-cases.ts。\n`,
+		coverage: `# 出力一覧の収録範囲\n\n${captures.length} ケースを実 CLI で収録しています。入力待ちの各画面と最終画面、終了コードを記録します。GitHub CLI の応答、外部コマンド障害、非対応環境はシナリオの疑似応答を使用し、実サービスへの接続結果ではありません。\n\n未実測の条件:\n\n- src/copy.ts: glob 走査自体の例外。\n- src/commands/restack.ts: lease ファイル削除時の OS 例外。\n- src/copy.ts: コピー先が worktree 外になる防御的分岐。公開入力の検査と glob の相対パスにより通常は到達しません。\n- src/commands/stack.ts と restack.ts: スタックの先端が空になる防御的分岐。stackBranches は root を先頭要素に含めるため通常は到達しません。\n\n任意のパス・日付・UUID・SHA の全値や外部ツールの診断文の全組合せは列挙せず、表示形式と条件で分類しています。\n\nシナリオ定義: scripts/ui-catalog/common-cases.ts、config-cases.ts、session-cases.ts、restack-cases.ts、discard-cases.ts。\n`,
 	};
 	writeFileSync(resolve(output, "captures.json"), diagnostics.captures);
 	writeFileSync(resolve(output, "comparison.json"), diagnostics.comparison);

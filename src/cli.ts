@@ -3,6 +3,7 @@ import "./terminal";
 import { Command, Option } from "commander";
 import { cleanupSessionBranches } from "./commands/cleanup";
 import { checkConfig } from "./commands/config";
+import { discardSession } from "./commands/discard";
 import { doctor } from "./commands/doctor";
 import { init } from "./commands/init";
 import { restack } from "./commands/restack";
@@ -127,6 +128,17 @@ dryRun(
 )
 	.option("--yes", "表示した削除対象の確認を省略します")
 	.action(cleanupSessionBranches);
+
+dryRun(
+	program
+		.command("discard <path>")
+		.description(
+			"指定したセッションの worktree とローカルブランチを破棄します",
+		),
+)
+	.option("--yes", "表示した削除対象の確認を省略します")
+	.option("--force", "未コミット・未追跡・無視されたファイルも破棄します")
+	.action(discardSession);
 
 dryRun(
 	program

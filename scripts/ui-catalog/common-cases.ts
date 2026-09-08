@@ -28,9 +28,16 @@ export async function commonCases(): Promise<Capture[]> {
 		["help", "start"],
 		["config"],
 		["config", "check", "--help"],
-		...["doctor", "init", "config", "start", "stack", "cleanup", "restack"].map(
-			(x) => [x, "--help"],
-		),
+		...[
+			"doctor",
+			"init",
+			"config",
+			"start",
+			"stack",
+			"cleanup",
+			"discard",
+			"restack",
+		].map((x) => [x, "--help"]),
 	];
 	for (const args of helpArgs)
 		await take(
@@ -46,6 +53,7 @@ export async function commonCases(): Promise<Capture[]> {
 		["start", "--unknown"],
 		["start", "--task"],
 		["stack", "--pr-number"],
+		["discard"],
 		["restack", "--base-branch"],
 		["start", "--copy-from"],
 		["doctor", "extra"],

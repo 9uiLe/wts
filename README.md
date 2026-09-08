@@ -162,7 +162,7 @@ git add .wts.json
 git commit -m "Configure wts sessions"
 ```
 
-`start`・`stack`・`restack`・`cleanup` は設定ファイルがないとエラーになります。設定の探索規則、省略時の動作、作成先・命名スクリプト・プロンプトの指定方法は [設定資料](docs/configuration.md)を参照してください。
+`start`・`stack`・`restack`・`cleanup`・`discard` は設定ファイルがないとエラーになります。設定の探索規則、省略時の動作、作成先・命名スクリプト・プロンプトの指定方法は [設定資料](docs/configuration.md)を参照してください。
 
 ## セッションで作業する
 
@@ -201,8 +201,9 @@ wts cleanup
 | `wts stack` | `--task <内容>`、`--pr-number <n>` |
 | `wts restack` | `--base-branch <ref>`、`--push`、`--push-only` |
 | `wts cleanup` | `--yes`（削除確認を省略） |
+| `wts discard <path>` | `--yes`（削除確認を省略）、`--force`（未保存のファイルも破棄） |
 
-4 コマンドは `--dry-run` に対応します。全オプションは `wts <コマンド> --help` で確認できます。
+これらのコマンドは `--dry-run` に対応します。全オプションは `wts <コマンド> --help` で確認できます。
 
 `start`・`restack` のベースは `--base-branch`、`BASE_BRANCH`、設定の `baseBranch` に対応する `origin/<baseBranch>` の順に優先します。操作ごとに別のベースを使う場合は `wts start --base-branch origin/release/stable` のように指定します。これらの上書きは `cleanup` の基準を変更しません。
 
@@ -212,7 +213,7 @@ wts cleanup
 
 ### 実行予定の確認
 
-4 コマンドとも `--dry-run` または `DRY_RUN=1` に対応します。fetch、Git ブランチ・worktree の変更、コピー、セッション情報・lease の書き込み、push は行いません。削除判定の GitHub 照会、restack のリモート参照取得、設定済み命名スクリプトの実行は行います。命名スクリプト自身の通信や副作用はその実装に依存します。
+セッション操作は `--dry-run` または `DRY_RUN=1` に対応します。fetch、Git ブランチ・worktree の変更、コピー、セッション情報・lease の書き込み、push は行いません。cleanup の GitHub 照会、restack のリモート参照取得、設定済み命名スクリプトの実行は行います。命名スクリプト自身の通信や副作用はその実装に依存します。discard はローカルの対象を調べるだけで通信しません。
 
 ```bash
 wts start --task '' --dry-run
@@ -239,6 +240,25 @@ wts cleanup
 ```
 
 削除対象の worktree は強制削除するため、未コミット・管理外ファイルも削除されます。ロックされた worktree は削除せず、失敗を報告します。
+
+### 不要になったセッションを破棄する
+
+未マージの作業を含めてセッションを破棄する場合は、メインチェックアウトなど対象の外から、worktree のルートパスを指定します。
+
+```bash
+wts discard ../wts-worktrees/session-name --dry-run
+wts discard ../wts-worktrees/session-name
+```
+
+対象の worktree と、セッションのルートブランチ・スタックブランチを一覧表示して確認します。既定の回答は「いいえ」です。マージ状況にかかわらずローカルの作業を削除するため、残したいコミットやファイルを事前に保存してください。リモートブランチは削除しません。
+
+未コミット・未追跡・Git で無視されたファイルがある場合は、内容も破棄するときに限り `--force` を指定します。`--yes` は確認入力だけを省略します。
+
+```bash
+wts discard ../wts-worktrees/session-name --force
+```
+
+対象は現在のプロジェクトの管理範囲にある wts セッションです。メインチェックアウト、実行中の worktree、手動作成の worktree、ロックされた worktree、ベースブランチや別の worktree で使用中の所属ブランチを含むセッションは破棄できません。worktree の削除が失敗した場合はブランチを削除しません。非対話実行では `--yes` が必要です。
 
 ### rebase と push の再開
 
