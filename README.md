@@ -8,16 +8,38 @@ wts（Git Worktree Session）は、作業用の Git worktree と、依存関係�
 
 配布バイナリには Bun ランタイムを含み、利用時に Nix・Bun・Node.js は不要です。Git を使用し、`restack` は Git 2.38 以上、`cleanup` は認証済み GitHub CLI（`gh`）を必要とします。fetch・PR 照会・push にはリモートへの接続が必要です。既定の命名には AI や外部の命名コマンドを使用しません。
 
-次のコマンドで、配布対象の Pre-release をダウンロードしてインストールします。リポジトリの clone は不要です。
+Apple Silicon Mac のターミナルで次を実行します。配布対象の Pre-release を検証し、`~/.local/bin/wts` にインストールします。リポジトリの clone は不要です。
 
 ```bash
 curl -fsSL https://9uile.github.io/wts/install.sh | bash
-"$HOME/.local/bin/wts" --version
 ```
 
-Apple Silicon macOS 上で、同じ Release の `wts-macos-arm64`、`wts-macos-arm64.sha256`、`BUILD_INFO` を取得し、SHA-256 と `BUILD_INFO` のバージョン・ターゲットを検証して `~/.local/bin/wts` へ配置します。配布対象は Pages で最後に配信されたタグで、Pre-release を含みます。GitHub の Latest Release とは独立しています。更新時は実行中の wts を終了し、同じコマンドを再実行してください。
+インストール後に表示される案内に従って、PATH を設定します。`~/.local/bin` が PATH にない場合は、zsh のターミナルで次を一度実行してください。新しく開いたターミナルでも `wts` を実行できるようになります。インストーラーはシェルの設定ファイルを変更しません。
 
-導入には HTTPS 接続と macOS 標準の Bash、`uname`、`curl`、`mktemp`、`rm`、`cat`、`shasum`、`mkdir`、`chmod`、`mv` を使用します。取得・検証・配置に失敗した場合は既存のバイナリを保持して終了します。配置先の `wts` がシンボリックリンクやディレクトリの場合は置き換えません。
+```bash
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+続けて、バージョン・ヘルプ・利用環境を確認します。
+
+```bash
+wts --version
+wts --help
+wts doctor --check
+```
+
+インストーラーは Git・gh の導入や認証、Gatekeeper の許可を行いません。環境検査で Git・gh の不足が示された場合は、[Homebrew](https://brew.sh/) を用意して次を実行します。
+
+```bash
+brew install git gh
+gh auth login
+wts doctor --check
+```
+
+### 更新と配置先の指定
+
+更新時は実行中の wts を終了し、同じインストールコマンドを再実行してください。取得・検証・配置に失敗した場合は既存のバイナリを保持して終了します。配置先の `wts` がシンボリックリンクやディレクトリの場合は置き換えません。
 
 バージョンを固定する場合は先頭 `v` なしの SemVer を、配置先を変える場合は `--install-dir` を指定します。次のバージョンは指定形式の例です。公開済みのバージョンは [Releases](https://github.com/9uiLe/wts/releases) で確認してください。
 
@@ -25,27 +47,19 @@ Apple Silicon macOS 上で、同じ Release の `wts-macos-arm64`、`wts-macos-a
 curl -fsSL https://9uile.github.io/wts/install.sh | bash -s -- --version 0.2.0-rc.1 --install-dir "$HOME/.local/bin"
 ```
 
-インストーラーは Git・gh の導入や認証、Gatekeeper の許可を行いません。Git と gh も導入する場合は [Homebrew](https://brew.sh/) を用意し、次を実行してください。
+指定した配置先が PATH にない場合は、そのディレクトリに合わせた zsh の設定コマンドを表示します。zsh 以外を使用する場合は、そのシェルの設定方法で配置先を PATH に登録してください。
 
-```bash
-brew install git gh
-gh auth login
-"$HOME/.local/bin/wts" doctor --check
-```
+導入には HTTPS 接続と macOS 標準の Bash、`uname`、`curl`、`mktemp`、`rm`、`cat`、`shasum`、`mkdir`、`chmod`、`mv` を使用します。同じ Release のバイナリ・SHA-256・`BUILD_INFO` を取得し、SHA-256 とビルド情報のバージョン・ターゲットを検証します。
 
-取得済みの成果物を配置する場合は、リポジトリを clone し、同じ Release の上記 3 ファイルを一つのディレクトリに置いて次を実行します。
+### 取得済みの成果物から導入する
+
+リポジトリを clone し、同じ Release の `wts-macos-arm64`、`wts-macos-arm64.sha256`、`BUILD_INFO` を一つのディレクトリに置いて実行します。
 
 ```bash
 ./scripts/install.sh /path/to/downloads
 ```
 
-このローカル配置用スクリプトは第 2 引数で配置先を指定できます。`--with-deps` を付けると成果物検証後に `brew install git gh` を実行し、成功時に wts を配置します。Homebrew がない場合や導入失敗時は配置しません。Homebrew 自体、命名スクリプト用のコマンド、認証は自動設定しません。
-
-`~/.local/bin` が PATH にない場合は `~/.zshrc` に次を追加し、シェルを再起動してください。別の配置先を使う場合はそのディレクトリを指定します。
-
-```bash
-export PATH="$HOME/.local/bin:$PATH"
-```
+第 2 引数で配置先を指定できます。`--with-deps` を付けると成果物検証後に `brew install git gh` を実行し、成功時に wts を配置します。Homebrew がない場合や導入失敗時は配置しません。Homebrew 自体、命名スクリプト用のコマンド、認証は自動設定しません。配置先の PATH 設定は [インストール](#インストール)に従ってください。
 
 ソースからビルドする場合は [開発環境の前提](docs/development.md#開発環境)を満たした Apple Silicon Mac で実行します。
 
@@ -77,7 +91,7 @@ wts skills install wts-cli --path "$HOME/.claude/skills"
 
 対象は Apple Silicon macOS です。[GitHub Releases](https://github.com/9uiLe/wts/releases) では検証用 Pre-release を配布します。最低対応 macOS は未確定で、GitHub Actions の macOS 15 ARM64 上で起動を検証します。Intel Mac、Linux、Windows は対象外です。
 
-Developer ID 署名・公証は行っていません。ダウンロードしたバイナリは Gatekeeper によって起動が制限される場合があり、その許可手順は未検証です。チェックサムの一致は起動制限を解消しません。Pages からの導入・更新と利用者の Mac での実動作は未検証です。確認手順は [実機での配布経路の検証](docs/development.md#実機での配布経路の検証)を参照してください。各 Release の説明と `BUILD_INFO` で検証範囲を確認してください。
+Developer ID 署名・公証は行っていません。ダウンロードしたバイナリは Gatekeeper によって起動が制限される場合があり、その許可手順は未検証です。チェックサムの一致は起動制限を解消しません。配布経路を通した実機での導入・更新・実動作は未検証です。確認手順は [実機での配布経路の検証](docs/development.md#実機での配布経路の検証)、各バージョンの検証範囲は Release の説明と `BUILD_INFO` を参照してください。
 
 ## 環境の検査
 
