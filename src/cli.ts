@@ -6,6 +6,7 @@ import { checkConfig } from "./commands/config";
 import { doctor } from "./commands/doctor";
 import { init } from "./commands/init";
 import { restack } from "./commands/restack";
+import { getSkill, installSkill } from "./commands/skills";
 import { startStackBranch } from "./commands/stack";
 import { startWorktreeSession } from "./commands/start";
 import { Cancelled } from "./prompts";
@@ -53,6 +54,23 @@ program
 	.command("check [file]")
 	.description("設定の項目・値・パスを検査します（スクリプトは実行しません）")
 	.action(checkConfig);
+
+const skills = program
+	.command("skills")
+	.description("AI 向けスキルを表示・導入します");
+skills
+	.command("get <name>")
+	.description("実行中の CLI に対応する操作ガイドを表示します")
+	.action(getSkill);
+skills
+	.command("install <name>")
+	.description("AI 向けスキルをインストールします")
+	.option(
+		"--path <directory>",
+		"スキルの親ディレクトリ（既定: ~/.agents/skills）",
+	)
+	.option("--force", "内容が異なる既存の SKILL.md を置き換えます")
+	.action(installSkill);
 
 function dryRun(command: Command): Command {
 	return command.addOption(

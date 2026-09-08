@@ -1,5 +1,8 @@
 import { createHash } from "node:crypto";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { mkdir, copyFile, readFile, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
 import { version as packageVersion } from "../package.json";
 import { parseReleaseVersion } from "./release-version";
 
@@ -33,6 +36,36 @@ function verifyBinary(): void {
 		throw new Error("Help mismatch");
 	}
 	runCommand([`./${buildPath}`, "doctor"]);
+	verifyEmbeddedSkill();
+}
+
+function verifyEmbeddedSkill(): void {
+	const directory = mkdtempSync(join(tmpdir(), "wts-build-skills-"));
+	function run(...args: string[]): string {
+		const result = Bun.spawnSync([resolve(buildPath), "skills", ...args], {
+			cwd: directory,
+			env: { ...process.env, PATH: "" },
+		});
+		if (result.exitCode !== 0) throw new Error(result.stderr.toString());
+		return result.stdout.toString();
+	}
+	try {
+		if (
+			run("get", "wts-cli") !==
+			readFileSync("skills/wts-cli/references/guide.md", "utf8")
+		) {
+			throw new Error("Embedded skill guide mismatch");
+		}
+		run("install", "wts-cli", "--path", directory);
+		if (
+			readFileSync(join(directory, "wts-cli/SKILL.md"), "utf8") !==
+			readFileSync("skills/wts-cli/SKILL.md", "utf8")
+		) {
+			throw new Error("Installed skill mismatch");
+		}
+	} finally {
+		rmSync(directory, { recursive: true, force: true });
+	}
 }
 
 async function writeBuildInfo(): Promise<void> {

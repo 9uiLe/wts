@@ -48,6 +48,24 @@ export PATH="$HOME/.local/bin:$PATH"
 ./scripts/install.sh
 ```
 
+## AI 向けスキル
+
+`wts-cli` は、AI が wts のセッション操作に使用するスキルです。AI の実行環境の PATH に `wts` を配置し、スキルの読み込み先へ導入してください。
+
+```bash
+wts skills install wts-cli
+```
+
+既定の配置先は `~/.agents/skills/wts-cli/SKILL.md` です。読み込み先を変更する場合は、`--path` にスキルの親ディレクトリを指定します。[Claude Code の個人用スキル](https://code.claude.com/docs/en/skills#where-skills-live)として使う場合は、次のコマンドで導入します。
+
+```bash
+wts skills install wts-cli --path "$HOME/.claude/skills"
+```
+
+利用する AI にスキルを読み込ませ、`wts-cli` でセッションを操作するよう依頼してください。Claude Code では `/wts-cli` で呼び出せます。スキルは、操作前に `wts skills get wts-cli` を実行して、そのバイナリの操作ガイドを読みます。スキルの導入とガイド取得には、Git・Bun・ソースファイル・ネットワーク接続は不要です。セッション操作に必要な環境は [インストール](#インストール)を参照してください。
+
+バイナリ更新後は、更新したバイナリのガイドが取得されます。インストール済みの `SKILL.md` を更新する場合は、導入コマンドを再実行してください。同じ内容なら変更せず成功します。内容が異なる場合は上書きを拒否するため、既存の編集内容を確認してから `--force` を付けて実行してください。他のファイルは変更しません。
+
 ## 対応環境と配布状態
 
 対象は Apple Silicon macOS です。[GitHub Releases](https://github.com/9uiLe/wts/releases) では検証用 Pre-release を配布します。最低対応 macOS は未確定で、GitHub Actions の macOS 15 ARM64 上で起動を検証します。Intel Mac、Linux、Windows は対象外です。
