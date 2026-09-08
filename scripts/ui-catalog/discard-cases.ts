@@ -23,6 +23,26 @@ export async function discardCases(): Promise<Capture[]> {
 		if (result.code !== expected) throw new Error(`${title}: ${result.raw}`);
 		items.push(result);
 	};
+	git(repo, "push", "origin", "discard-demo", "discard-demo-pr2-next");
+	await take(
+		"リモートを含む削除予定",
+		["discard", target, "--remote", "origin", "--dry-run"],
+		0,
+	);
+	await take(
+		"未登録リモートを拒否",
+		["discard", target, "--remote", "missing", "--yes"],
+		1,
+	);
+	await take(
+		"リモート削除を否定",
+		["discard", target, "--remote", "origin"],
+		0,
+		repo,
+		{
+			steps: [["このセッションを破棄しますか", "\r"]],
+		},
+	);
 	await take("削除予定", ["discard", target, "--dry-run"], 0);
 	await take("実行中のworktreeを保護", ["discard", target, "--yes"], 1, target);
 	await take("メインworktreeを保護", ["discard", repo, "--yes"], 1);
@@ -41,9 +61,15 @@ export async function discardCases(): Promise<Capture[]> {
 	writeFileSync(join(target, "unsaved"), "work");
 	await take("未保存ファイルの予定", ["discard", target, "--dry-run"], 0);
 	await take("未保存ファイルを保護", ["discard", target, "--yes"], 1);
-	await take("forceで破棄を確認", ["discard", target, "--force"], 0, repo, {
-		steps: [["このセッションを破棄しますか", "y\r"]],
-	});
+	await take(
+		"forceでリモートを含む破棄を確認",
+		["discard", target, "--force", "--remote", "origin"],
+		0,
+		repo,
+		{
+			steps: [["このセッションを破棄しますか", "y\r"]],
+		},
+	);
 	const unmanaged = join(dirname(repo), "repo-worktrees", "unmanaged");
 	git(repo, "worktree", "add", "-b", "unmanaged", unmanaged);
 	await take("未管理worktreeを保護", ["discard", unmanaged, "--yes"], 1);

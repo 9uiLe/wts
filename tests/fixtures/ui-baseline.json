@@ -2441,7 +2441,7 @@
 			"command": "wts discard --help",
 			"cwd": "<fixture>",
 			"code": 0,
-			"raw": "\u001b[1mUsage:\u001b[22m \u001b[36mwts\u001b[39m \u001b[36mdiscard\u001b[39m \u001b[32m[options]\u001b[39m <path>\r\n\r\n指定したセッションの worktree とローカルブランチを破棄します\r\n\r\n\u001b[1mOptions:\u001b[22m\r\n  \u001b[32m--dry-run\u001b[39m   変更せず実行予定を表示します (default: false)\r\n  \u001b[32m--yes\u001b[39m       表示した削除対象の確認を省略します\r\n  \u001b[32m--force\u001b[39m     未コミット・未追跡・無視されたファイルも破棄します\r\n  \u001b[32m-h, --help\u001b[39m  display help for command\r\n",
+			"raw": "\u001b[1mUsage:\u001b[22m \u001b[36mwts\u001b[39m \u001b[36mdiscard\u001b[39m \u001b[32m[options]\u001b[39m <path>\r\n\r\n指定したセッションの worktree とローカルブランチを破棄します\r\n\r\n\u001b[1mOptions:\u001b[22m\r\n  \u001b[32m--dry-run\u001b[39m        変更せず実行予定を表示します (default: false)\r\n  \u001b[32m--yes\u001b[39m            表示した削除対象の確認を省略します\r\n  \u001b[32m--force\u001b[39m          未コミット・未追跡・無視されたファイルも破棄します\r\n  \u001b[32m--remote <name>\u001b[39m  指定リモートの同名セッションブランチも削除します\r\n  \u001b[32m-h, --help\u001b[39m       display help for command\r\n",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -2456,6 +2456,58 @@
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
+		},
+		{
+			"title": "discard: リモートを含む削除予定",
+			"args": [
+				"discard",
+				"<fixture>/discard/repo-worktrees/discard-demo",
+				"--remote",
+				"origin",
+				"--dry-run"
+			],
+			"command": "wts discard <fixture>/discard/repo-worktrees/discard-demo --remote origin --dry-run",
+			"cwd": "<fixture>/discard/repo",
+			"code": 0,
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mdiscard\u001b[22m\r\n\r\n    \u001b[2mWorktree\u001b[22m  <fixture>/discard/repo-worktrees/discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo-pr2-next\r\n    \u001b[2mRemote\u001b[22m  origin\r\n    \u001b[2mRemote branch\u001b[22m  refs/heads/discard-demo\r\n    \u001b[2mRemote branch\u001b[22m  refs/heads/discard-demo-pr2-next\r\n  \u001b[36m•\u001b[39m 表示したリモートブランチも未マージの変更ごと削除します。\r\n  \u001b[36m•\u001b[39m 未コミット・未追跡・無視対象のファイルはありません。\r\n  \u001b[36m•\u001b[39m このセッションのローカルブランチを未マージの変更ごと削除します。\r\n  \u001b[36m•\u001b[39m DRY_RUN: 削除は行いません\r\n",
+			"frames": [],
+			"mode": "TTY 実測",
+			"input": []
+		},
+		{
+			"title": "discard: 未登録リモートを拒否",
+			"args": [
+				"discard",
+				"<fixture>/discard/repo-worktrees/discard-demo",
+				"--remote",
+				"missing",
+				"--yes"
+			],
+			"command": "wts discard <fixture>/discard/repo-worktrees/discard-demo --remote missing --yes",
+			"cwd": "<fixture>/discard/repo",
+			"code": 1,
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mdiscard\u001b[22m\r\n\r\n  \u001b[31m✗\u001b[39m 設定済みのリモート名を指定してください: missing\r\n",
+			"frames": [],
+			"mode": "TTY 実測",
+			"input": []
+		},
+		{
+			"title": "discard: リモート削除を否定",
+			"args": [
+				"discard",
+				"<fixture>/discard/repo-worktrees/discard-demo",
+				"--remote",
+				"origin"
+			],
+			"command": "wts discard <fixture>/discard/repo-worktrees/discard-demo --remote origin",
+			"cwd": "<fixture>/discard/repo",
+			"code": 0,
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mdiscard\u001b[22m\r\n\r\n    \u001b[2mWorktree\u001b[22m  <fixture>/discard/repo-worktrees/discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo-pr2-next\r\n    \u001b[2mRemote\u001b[22m  origin\r\n    \u001b[2mRemote branch\u001b[22m  refs/heads/discard-demo\r\n    \u001b[2mRemote branch\u001b[22m  refs/heads/discard-demo-pr2-next\r\n  \u001b[36m•\u001b[39m 表示したリモートブランチも未マージの変更ごと削除します。\r\n  \u001b[36m•\u001b[39m 未コミット・未追跡・無視対象のファイルはありません。\r\n  \u001b[36m•\u001b[39m このセッションのローカルブランチを未マージの変更ごと削除します。\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  このセッションを破棄しますか？\r\n\u001b[36m│\u001b[39m  \u001b[2m○\u001b[22m \u001b[2mはい\u001b[22m \u001b[2m/\u001b[22m \u001b[32m●\u001b[39m いいえ\r\n\u001b[36m└\u001b[39m\r\n\u001b[999D\u001b[4A\u001b[1B\u001b[J\u001b[32m◇\u001b[39m  このセッションを破棄しますか？\r\n\u001b[90m│\u001b[39m  \u001b[2mいいえ\u001b[22m\r\n\u001b[?25h  \u001b[33m−\u001b[39m キャンセルしました。\r\n",
+			"frames": [
+				"\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mdiscard\u001b[22m\r\n\r\n    \u001b[2mWorktree\u001b[22m  <fixture>/discard/repo-worktrees/discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo-pr2-next\r\n    \u001b[2mRemote\u001b[22m  origin\r\n    \u001b[2mRemote branch\u001b[22m  refs/heads/discard-demo\r\n    \u001b[2mRemote branch\u001b[22m  refs/heads/discard-demo-pr2-next\r\n  \u001b[36m•\u001b[39m 表示したリモートブランチも未マージの変更ごと削除します。\r\n  \u001b[36m•\u001b[39m 未コミット・未追跡・無視対象のファイルはありません。\r\n  \u001b[36m•\u001b[39m このセッションのローカルブランチを未マージの変更ごと削除します。\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  このセッションを破棄しますか？\r\n\u001b[36m│\u001b[39m  \u001b[2m○\u001b[22m \u001b[2mはい\u001b[22m \u001b[2m/\u001b[22m \u001b[32m●\u001b[39m いいえ\r\n\u001b[36m└\u001b[39m\r\n"
+			],
+			"mode": "TTY 実測",
+			"input": [["このセッションを破棄しますか", "\r"]]
 		},
 		{
 			"title": "discard: 削除予定",
@@ -2582,18 +2634,20 @@
 			"input": []
 		},
 		{
-			"title": "discard: forceで破棄を確認",
+			"title": "discard: forceでリモートを含む破棄を確認",
 			"args": [
 				"discard",
 				"<fixture>/discard/repo-worktrees/discard-demo",
-				"--force"
+				"--force",
+				"--remote",
+				"origin"
 			],
-			"command": "wts discard <fixture>/discard/repo-worktrees/discard-demo --force",
+			"command": "wts discard <fixture>/discard/repo-worktrees/discard-demo --force --remote origin",
 			"cwd": "<fixture>/discard/repo",
 			"code": 0,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mdiscard\u001b[22m\r\n\r\n    \u001b[2mWorktree\u001b[22m  <fixture>/discard/repo-worktrees/discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo-pr2-next\r\n  \u001b[36m•\u001b[39m 未コミット・未追跡・無視対象のファイルがあります。破棄には --force が必要です。\r\n  \u001b[36m•\u001b[39m このセッションのローカルブランチを未マージの変更ごと削除します。\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  このセッションを破棄しますか？\r\n\u001b[36m│\u001b[39m  \u001b[2m○\u001b[22m \u001b[2mはい\u001b[22m \u001b[2m/\u001b[22m \u001b[32m●\u001b[39m いいえ\r\n\u001b[36m└\u001b[39m\r\n\u001b[1A\r\n\u001b[?25h\u001b[999D\u001b[4A\u001b[1B\u001b[J\u001b[32m◇\u001b[39m  このセッションを破棄しますか？\r\n\u001b[90m│\u001b[39m  \u001b[2mはい\u001b[22m\r\n  \u001b[32m✓\u001b[39m 完了しました (2 ブランチ・1 Worktree)\r\n",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mdiscard\u001b[22m\r\n\r\n    \u001b[2mWorktree\u001b[22m  <fixture>/discard/repo-worktrees/discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo-pr2-next\r\n    \u001b[2mRemote\u001b[22m  origin\r\n    \u001b[2mRemote branch\u001b[22m  refs/heads/discard-demo\r\n    \u001b[2mRemote branch\u001b[22m  refs/heads/discard-demo-pr2-next\r\n  \u001b[36m•\u001b[39m 表示したリモートブランチも未マージの変更ごと削除します。\r\n  \u001b[36m•\u001b[39m 未コミット・未追跡・無視対象のファイルがあります。破棄には --force が必要です。\r\n  \u001b[36m•\u001b[39m このセッションのローカルブランチを未マージの変更ごと削除します。\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  このセッションを破棄しますか？\r\n\u001b[36m│\u001b[39m  \u001b[2m○\u001b[22m \u001b[2mはい\u001b[22m \u001b[2m/\u001b[22m \u001b[32m●\u001b[39m いいえ\r\n\u001b[36m└\u001b[39m\r\n\u001b[1A\r\n\u001b[?25h\u001b[999D\u001b[4A\u001b[1B\u001b[J\u001b[32m◇\u001b[39m  このセッションを破棄しますか？\r\n\u001b[90m│\u001b[39m  \u001b[2mはい\u001b[22m\r\n  \u001b[32m✓\u001b[39m 完了しました (2 ブランチ・1 Worktree・2 リモートブランチ)\r\n",
 			"frames": [
-				"\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mdiscard\u001b[22m\r\n\r\n    \u001b[2mWorktree\u001b[22m  <fixture>/discard/repo-worktrees/discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo-pr2-next\r\n  \u001b[36m•\u001b[39m 未コミット・未追跡・無視対象のファイルがあります。破棄には --force が必要です。\r\n  \u001b[36m•\u001b[39m このセッションのローカルブランチを未マージの変更ごと削除します。\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  このセッションを破棄しますか？\r\n\u001b[36m│\u001b[39m  \u001b[2m○\u001b[22m \u001b[2mはい\u001b[22m \u001b[2m/\u001b[22m \u001b[32m●\u001b[39m いいえ\r\n\u001b[36m└\u001b[39m\r\n"
+				"\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mdiscard\u001b[22m\r\n\r\n    \u001b[2mWorktree\u001b[22m  <fixture>/discard/repo-worktrees/discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo-pr2-next\r\n    \u001b[2mRemote\u001b[22m  origin\r\n    \u001b[2mRemote branch\u001b[22m  refs/heads/discard-demo\r\n    \u001b[2mRemote branch\u001b[22m  refs/heads/discard-demo-pr2-next\r\n  \u001b[36m•\u001b[39m 表示したリモートブランチも未マージの変更ごと削除します。\r\n  \u001b[36m•\u001b[39m 未コミット・未追跡・無視対象のファイルがあります。破棄には --force が必要です。\r\n  \u001b[36m•\u001b[39m このセッションのローカルブランチを未マージの変更ごと削除します。\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  このセッションを破棄しますか？\r\n\u001b[36m│\u001b[39m  \u001b[2m○\u001b[22m \u001b[2mはい\u001b[22m \u001b[2m/\u001b[22m \u001b[32m●\u001b[39m いいえ\r\n\u001b[36m└\u001b[39m\r\n"
 			],
 			"mode": "TTY 実測",
 			"input": [["このセッションを破棄しますか", "y\r"]]

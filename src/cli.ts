@@ -138,6 +138,7 @@ dryRun(
 )
 	.option("--yes", "表示した削除対象の確認を省略します")
 	.option("--force", "未コミット・未追跡・無視されたファイルも破棄します")
+	.option("--remote <name>", "指定リモートの同名セッションブランチも削除します")
 	.action(discardSession);
 
 dryRun(

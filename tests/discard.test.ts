@@ -108,6 +108,190 @@ test("discard removes the entire unmerged local session and preserves unrelated 
 	}
 });
 
+test("remote discard deletes the same-name session refs and preserves unrelated branches", () => {
+	const f = fixture();
+	try {
+		f.git("push", "origin", "unrelated");
+		const unrelated = f.git("ls-remote", "origin", "refs/heads/unrelated");
+		const main = f.git("ls-remote", "origin", "refs/heads/main");
+		const result = f.run(["--remote", "origin", "--yes"]);
+		expect(result.code).toBe(0);
+		expect(existsSync(f.target)).toBe(false);
+		expect(f.git("branch", "--format=%(refname:short)").split("\n")).toEqual([
+			"main",
+			"unrelated",
+		]);
+		expect(
+			f.git(
+				"ls-remote",
+				"origin",
+				"refs/heads/session",
+				"refs/heads/session-pr2-followup",
+			),
+		).toBe("");
+		expect(f.git("ls-remote", "origin", "refs/heads/unrelated")).toBe(
+			unrelated,
+		);
+		expect(f.git("ls-remote", "origin", "refs/heads/main")).toBe(main);
+	} finally {
+		f.dispose();
+	}
+});
+
+test("remote discard dry-run displays remote members without changing local or remote refs", () => {
+	const f = fixture();
+	try {
+		const before = f.snapshot();
+		const result = f.run(["--remote", "origin", "--dry-run"]);
+		expect(result.code).toBe(0);
+		for (const member of ["origin", "session", "session-pr2-followup"])
+			expect(result.text).toContain(member);
+		expect(f.snapshot()).toEqual(before);
+		expect(existsSync(f.target)).toBe(true);
+	} finally {
+		f.dispose();
+	}
+});
+
+for (const missing of [["session"], ["session", "session-pr2-followup"]]) {
+	test(`remote discard skips absent refs: ${missing.join(", ")}`, () => {
+		const f = fixture();
+		try {
+			f.git("push", "origin", "--delete", ...missing);
+			expect(f.run(["--remote", "origin", "--yes"]).code).toBe(0);
+			expect(existsSync(f.target)).toBe(false);
+			expect(
+				f.git(
+					"ls-remote",
+					"origin",
+					"refs/heads/session",
+					"refs/heads/session-pr2-followup",
+				),
+			).toBe("");
+		} finally {
+			f.dispose();
+		}
+	});
+}
+
+test("remote discard rejects an unconfigured remote without deleting the session", () => {
+	const f = fixture();
+	try {
+		const before = f.snapshot();
+		expect(f.run(["--remote", "unknown", "--yes"]).code).not.toBe(0);
+		expect(f.snapshot()).toEqual(before);
+		expect(existsSync(f.target)).toBe(true);
+	} finally {
+		f.dispose();
+	}
+});
+
+test("remote rejection preserves every remote ref and the local session", () => {
+	const f = fixture();
+	try {
+		const remote = f.git("remote", "get-url", "--push", "origin");
+		writeFileSync(join(remote, "hooks", "pre-receive"), "#!/bin/sh\nexit 1\n", {
+			mode: 0o755,
+		});
+		const before = f.snapshot();
+		expect(f.run(["--remote", "origin", "--yes"]).code).not.toBe(0);
+		expect(f.snapshot()).toEqual(before);
+		expect(existsSync(f.target)).toBe(true);
+	} finally {
+		f.dispose();
+	}
+});
+
+test("a remote ref changed after planning prevents atomic deletion of the entire session", () => {
+	const f = fixture();
+	try {
+		const gitPath = Bun.which("git");
+		if (!gitPath) throw new Error("Git is required for this test");
+		const remote = f.git("remote", "get-url", "origin");
+		const changedOid = f.git("rev-parse", "main");
+		const bin = join(f.dir, "bin");
+		mkdirSync(bin);
+		writeFileSync(
+			join(bin, "git"),
+			`#!${process.execPath}
+const args = process.argv.slice(2);
+if (args.includes("push")) {
+  const update = Bun.spawnSync([${JSON.stringify(gitPath)}, "--git-dir", ${JSON.stringify(remote)}, "update-ref", "refs/heads/session", ${JSON.stringify(changedOid)}]);
+  if (update.exitCode) process.exit(update.exitCode);
+}
+const result = Bun.spawnSync([${JSON.stringify(gitPath)}, ...args], { stdin: "inherit", stdout: "inherit", stderr: "inherit" });
+process.exit(result.exitCode);
+`,
+			{ mode: 0o755 },
+		);
+		const before = f.snapshot();
+		const stackBefore = f.git(
+			"ls-remote",
+			"origin",
+			"refs/heads/session-pr2-followup",
+		);
+		const result = f.run(["--remote", "origin", "--yes"], f.target, f.root, {
+			PATH: `${bin}:${process.env.PATH}`,
+		});
+		expect(result.code).not.toBe(0);
+		expect(f.git("show-ref")).toBe(before.refs);
+		expect(f.git("worktree", "list", "--porcelain")).toBe(before.worktrees);
+		expect(existsSync(f.target)).toBe(true);
+		expect(f.git("ls-remote", "origin", "refs/heads/session")).toBe(
+			`${changedOid}\trefs/heads/session`,
+		);
+		expect(
+			f.git("ls-remote", "origin", "refs/heads/session-pr2-followup"),
+		).toBe(stackBefore);
+	} finally {
+		f.dispose();
+	}
+});
+
+test("remote discard uses the push URL while preserving the fetch repository", () => {
+	const f = fixture();
+	try {
+		const pushRemote = join(f.dir, "push.git");
+		f.git("init", "--bare", pushRemote);
+		f.git("push", pushRemote, "session", "session-pr2-followup");
+		f.git("remote", "set-url", "--push", "origin", pushRemote);
+		const fetchBefore = f.git("ls-remote", "origin");
+		expect(f.run(["--remote", "origin", "--yes"]).code).toBe(0);
+		expect(existsSync(f.target)).toBe(false);
+		expect(
+			f.git(
+				"ls-remote",
+				pushRemote,
+				"refs/heads/session",
+				"refs/heads/session-pr2-followup",
+			),
+		).toBe("");
+		expect(f.git("ls-remote", "origin")).toBe(fetchBefore);
+	} finally {
+		f.dispose();
+	}
+});
+
+test("remote discard rejects multiple push URLs before deleting anything", () => {
+	const f = fixture();
+	try {
+		const origin = f.git("remote", "get-url", "origin");
+		const other = join(f.dir, "other.git");
+		f.git("init", "--bare", other);
+		f.git("push", other, "session", "session-pr2-followup");
+		f.git("remote", "set-url", "--push", "origin", origin);
+		f.git("remote", "set-url", "--add", "--push", "origin", other);
+		const before = f.snapshot();
+		const otherBefore = f.git("ls-remote", other);
+		expect(f.run(["--remote", "origin", "--yes"]).code).not.toBe(0);
+		expect(f.snapshot()).toEqual(before);
+		expect(f.git("ls-remote", other)).toBe(otherBefore);
+		expect(existsSync(f.target)).toBe(true);
+	} finally {
+		f.dispose();
+	}
+});
+
 test("dry-run lists all session members and preserves dirty worktrees and refs", () => {
 	const f = fixture();
 	try {
@@ -216,82 +400,112 @@ for (const scenario of [
 	});
 }
 
-test("worktree removal failure preserves every session branch", () => {
-	const f = fixture();
-	try {
-		const gitPath = Bun.which("git");
-		if (!gitPath) throw new Error("Git is required for this test");
-		const bin = join(f.dir, "bin");
-		mkdirSync(bin);
-		writeFileSync(
-			join(bin, "git"),
-			`#!${process.execPath}\nconst args = process.argv.slice(2); if (args.includes('worktree') && args.includes('remove')) { console.error('simulated removal failure'); process.exit(1); } const result = Bun.spawnSync([${JSON.stringify(gitPath)}, ...args], { stdin: 'inherit', stdout: 'inherit', stderr: 'inherit' }); process.exit(result.exitCode);\n`,
-			{ mode: 0o755 },
-		);
-		const before = f.snapshot();
-		expect(
-			f.run(["--yes"], f.target, f.root, { PATH: `${bin}:${process.env.PATH}` })
-				.code,
-		).not.toBe(0);
-		expect(f.snapshot()).toEqual(before);
-		expect(existsSync(f.target)).toBe(true);
-	} finally {
-		f.dispose();
-	}
-});
+for (const remote of [false, true]) {
+	test(`worktree removal failure preserves every local session branch${remote ? " and reports completed remote deletion" : ""}`, () => {
+		const f = fixture();
+		try {
+			const gitPath = Bun.which("git");
+			if (!gitPath) throw new Error("Git is required for this test");
+			const bin = join(f.dir, "bin");
+			mkdirSync(bin);
+			writeFileSync(
+				join(bin, "git"),
+				`#!${process.execPath}\nconst args = process.argv.slice(2); if (args.includes('worktree') && args.includes('remove')) { console.error('simulated removal failure'); process.exit(1); } const result = Bun.spawnSync([${JSON.stringify(gitPath)}, ...args], { stdin: 'inherit', stdout: 'inherit', stderr: 'inherit' }); process.exit(result.exitCode);\n`,
+				{ mode: 0o755 },
+			);
+			const before = f.snapshot();
+			const result = f.run(
+				["--yes", ...(remote ? ["--remote", "origin"] : [])],
+				f.target,
+				f.root,
+				{ PATH: `${bin}:${process.env.PATH}` },
+			);
+			expect(result.code).not.toBe(0);
+			expect(f.git("show-ref")).toBe(before.refs);
+			expect(f.git("worktree", "list", "--porcelain")).toBe(before.worktrees);
+			if (remote) {
+				expect(result.text).toContain("リモートブランチは削除済み");
+				expect(
+					f.git(
+						"ls-remote",
+						"origin",
+						"refs/heads/session",
+						"refs/heads/session-pr2-followup",
+					),
+				).toBe("");
+			} else {
+				expect(f.git("ls-remote", "origin")).toBe(before.remote);
+			}
+			expect(existsSync(f.target)).toBe(true);
+		} finally {
+			f.dispose();
+		}
+	});
+}
 
 const terminalTest = process.platform === "darwin" ? test : test.skip;
-for (const [name, input, deleted] of [
-	["yes", "\u001b[D\r", true],
-	["no", "\r", false],
-	["Ctrl-C", "\u0003", false],
-] as const) {
-	terminalTest(
-		`discard confirmation handles ${name} in a real terminal`,
-		async () => {
-			const f = fixture();
-			let output = "";
-			let answered = false;
-			const decoder = new TextDecoder();
-			const closed = Promise.withResolvers<void>();
-			const before = f.snapshot();
-			const child = Bun.spawn([process.execPath, cli, "discard", f.target], {
-				cwd: f.root,
-				env: {
-					...f.env,
-					CI: undefined,
-					NO_COLOR: undefined,
-					FORCE_COLOR: "1",
-					TERM: "xterm-256color",
-				},
-				terminal: {
-					data(terminal, data) {
-						output += decoder.decode(data, { stream: true });
-						if (
-							!answered &&
-							output.includes("はい") &&
-							output.includes("いいえ")
-						) {
-							answered = true;
-							terminal.write(input);
-						}
+for (const remote of [false, true]) {
+	for (const [name, input, deleted] of [
+		["yes", "\u001b[D\r", true],
+		["no", "\r", false],
+		["Ctrl-C", "\u0003", false],
+	] as const) {
+		terminalTest(
+			`discard${remote ? " --remote origin" : ""} confirmation handles ${name} in a real terminal`,
+			async () => {
+				const f = fixture();
+				let output = "";
+				let answered = false;
+				const decoder = new TextDecoder();
+				const closed = Promise.withResolvers<void>();
+				const before = f.snapshot();
+				const child = Bun.spawn(
+					[
+						process.execPath,
+						cli,
+						"discard",
+						f.target,
+						...(remote ? ["--remote", "origin"] : []),
+					],
+					{
+						cwd: f.root,
+						env: {
+							...f.env,
+							CI: undefined,
+							NO_COLOR: undefined,
+							FORCE_COLOR: "1",
+							TERM: "xterm-256color",
+						},
+						terminal: {
+							data(terminal, data) {
+								output += decoder.decode(data, { stream: true });
+								if (
+									!answered &&
+									output.includes("はい") &&
+									output.includes("いいえ")
+								) {
+									answered = true;
+									terminal.write(input);
+								}
+							},
+							exit() {
+								closed.resolve();
+							},
+						},
 					},
-					exit() {
-						closed.resolve();
-					},
-				},
-			});
-			try {
-				const [code] = await Promise.all([child.exited, closed.promise]);
-				expect(answered).toBe(true);
-				expect(code).toBe(0);
-				expect(existsSync(f.target)).toBe(!deleted);
-				if (!deleted) expect(f.snapshot()).toEqual(before);
-			} finally {
-				child.terminal?.close();
-				if (child.exitCode === null) child.kill();
-				f.dispose();
-			}
-		},
-	);
+				);
+				try {
+					const [code] = await Promise.all([child.exited, closed.promise]);
+					expect(answered).toBe(true);
+					expect(code).toBe(0);
+					expect(existsSync(f.target)).toBe(!deleted);
+					if (!deleted) expect(f.snapshot()).toEqual(before);
+				} finally {
+					child.terminal?.close();
+					if (child.exitCode === null) child.kill();
+					f.dispose();
+				}
+			},
+		);
+	}
 }

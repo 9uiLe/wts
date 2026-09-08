@@ -8,7 +8,12 @@ import { ui } from "../ui";
 
 export async function discardSession(
 	path: string,
-	options: { dryRun?: boolean; yes?: boolean; force?: boolean },
+	options: {
+		dryRun?: boolean;
+		yes?: boolean;
+		force?: boolean;
+		remote?: string;
+	},
 ): Promise<void> {
 	ui.heading("discard");
 	const repo = await repository();
@@ -62,11 +67,55 @@ export async function discardSession(
 			throw new Error(
 				"対象 worktree の現在のブランチがセッションに属していません。",
 			);
+		let remote:
+			| { name: string; url: string; refs: { ref: string; oid: string }[] }
+			| undefined;
+		if (options.remote !== undefined) {
+			if (
+				!repo.git.run(["remote"]).split("\n").includes(options.remote) ||
+				!options.remote ||
+				options.remote.startsWith("-")
+			)
+				throw new Error(
+					`設定済みのリモート名を指定してください: ${options.remote}`,
+				);
+			const urls = repo.git
+				.run(["remote", "get-url", "--push", "--all", options.remote])
+				.split("\n");
+			// Git の atomic push は複数の送信先をまたぐ削除を保証できない。
+			if (urls.length !== 1 || !urls[0])
+				throw new Error("push URL が 1 つのリモートを指定してください。");
+			const url = urls[0];
+			const listed = repo.git.tryRun(["ls-remote", "--heads", "--", url]);
+			if (listed.code !== 0)
+				throw new Error(
+					`リモートブランチを取得できませんでした: ${options.remote}`,
+				);
+			const refs = new Map(
+				listed.out
+					.split("\n")
+					.filter(Boolean)
+					.map((line) => {
+						const [oid, ref] = line.split("\t");
+						return [ref, oid] as const;
+					}),
+			);
+			remote = {
+				name: options.remote,
+				url,
+				refs: members.flatMap(({ branch }) => {
+					const ref = `refs/heads/${branch}`;
+					const oid = refs.get(ref);
+					return oid ? [{ ref, oid }] : [];
+				}),
+			};
+		}
 		return {
 			root,
 			branch: tree.branch,
 			head: git.run(["rev-parse", "HEAD"]),
 			members,
+			remote,
 			status: git.run([
 				"--no-optional-locks",
 				"status",
@@ -81,6 +130,15 @@ export async function discardSession(
 	const initial = plan();
 	ui.detail("Worktree", target);
 	for (const { branch } of initial.members) ui.detail("Branch", branch);
+	if (initial.remote) {
+		ui.detail("Remote", initial.remote.name);
+		for (const { ref } of initial.remote.refs) ui.detail("Remote branch", ref);
+		ui.info(
+			initial.remote.refs.length
+				? "表示したリモートブランチも未マージの変更ごと削除します。"
+				: "リモートに同名のブランチはありません。",
+		);
+	}
 	ui.info(
 		initial.status
 			? "未コミット・未追跡・無視対象のファイルがあります。破棄には --force が必要です。"
@@ -102,6 +160,25 @@ export async function discardSession(
 		throw new Error(
 			"確認後にセッションの状態が変わりました。再実行してください。",
 		);
+	let remoteDeleted = "";
+	if (initial.remote?.refs.length) {
+		const deleted = repo.git.tryRun([
+			"push",
+			"--atomic",
+			"--no-follow-tags",
+			...initial.remote.refs.map(
+				({ ref, oid }) => `--force-with-lease=${ref}:${oid}`,
+			),
+			"--",
+			initial.remote.url,
+			...initial.remote.refs.map(({ ref }) => `:${ref}`),
+		]);
+		if (deleted.code !== 0)
+			throw new Error(
+				"リモートブランチの削除に失敗しました。ローカルのセッションは削除していません。リモートの状態を確認してください。",
+			);
+		remoteDeleted = "リモートブランチは削除済みです。";
+	}
 	const removed = repo.git.tryRun([
 		"worktree",
 		"remove",
@@ -110,7 +187,7 @@ export async function discardSession(
 	]);
 	if (removed.code !== 0)
 		throw new Error(
-			`worktree の削除に失敗しました。ブランチは削除していません。\n${removed.err}`,
+			`${remoteDeleted}worktree の削除に失敗しました。ローカルブランチは削除していません。\n${removed.err}`,
 		);
 	const deleted = repo.git.tryRun(
 		["update-ref", "--stdin"],
@@ -126,7 +203,7 @@ export async function discardSession(
 	);
 	if (deleted.code !== 0)
 		throw new Error(
-			`worktree は削除済みですが、ブランチは残っています。git branch で確認してください: ${initial.members.map(({ branch }) => branch).join(", ")}\n${deleted.err}`,
+			`${remoteDeleted}worktree は削除済みですが、ブランチは残っています。git branch で確認してください: ${initial.members.map(({ branch }) => branch).join(", ")}\n${deleted.err}`,
 		);
 	for (const { branch } of initial.members) {
 		const settings = repo.git.tryRun([
@@ -144,8 +221,10 @@ export async function discardSession(
 		]);
 		if (settings.code !== 0 || result.code !== 0)
 			throw new Error(
-				`worktree とブランチは削除済みですが、ブランチ設定の削除に失敗しました: ${branch}\n${result.err}`,
+				`${remoteDeleted}worktree とブランチは削除済みですが、ブランチ設定の削除に失敗しました: ${branch}\n${result.err}`,
 			);
 	}
-	ui.success(`完了しました (${initial.members.length} ブランチ・1 Worktree)`);
+	ui.success(
+		`完了しました (${initial.members.length} ブランチ・1 Worktree${initial.remote ? `・${initial.remote.refs.length} リモートブランチ` : ""})`,
+	);
 }
