@@ -114,7 +114,7 @@ export async function capture(
 			cwd,
 			env,
 			terminal: {
-				// The previous catalog was captured at 120 columns and 40 rows.
+				// 収録条件を固定し、端末サイズによる折り返しを比較に混在させない。
 				cols: 120,
 				rows: 40,
 				data(terminal, data) {

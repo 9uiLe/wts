@@ -1,6 +1,4 @@
-import "../terminal";
-import { confirm, isCancel } from "@clack/prompts";
-import { withPromptOutput } from "../prompts";
+import { confirmAction } from "../prompts";
 import { ui } from "../ui";
 import { version } from "../version";
 
@@ -28,19 +26,10 @@ export async function doctor({
 	}
 
 	ui.heading("doctor");
-	const proceed = await withPromptOutput((output) =>
-		confirm({
-			output,
-			message: "起動環境を表示しますか？",
-			initialValue: true,
-			active: "はい",
-			inactive: "いいえ",
-		}),
-	);
-	if (isCancel(proceed) || !proceed) {
-		ui.cancel();
+	if (
+		!(await confirmAction("起動環境を表示しますか？", { initialValue: true }))
+	)
 		return;
-	}
 
 	ui.success(`${process.platform} / ${process.arch}`);
 }

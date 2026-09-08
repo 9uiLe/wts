@@ -12,8 +12,6 @@ export function normalize(value: string, fixtureRoot?: string): string {
 			);
 	}
 	return result
-		.replaceAll("/private/tmp/wts-output-review", "<fixture>")
-		.replaceAll("/tmp/wts-output-review", "<fixture>")
 		.replace(
 			// biome-ignore lint/suspicious/noControlCharactersInRegex: 一時パスに隣接する端末制御列を巻き込まない。
 			/(?:\/private)?\/(?:tmp(?:\/nix-shell\.[^/]+)?|var\/folders\/[^/]+\/[^/]+\/T)\/wts-ui-catalog-[^/\s\u001b]+/g,
@@ -35,21 +33,27 @@ export function normalize(value: string, fixtureRoot?: string): string {
 		.replace(/(could not apply )[0-9a-f]{7,12}(?=\.{3})/gi, "$1<short-oid>");
 }
 
+export function normalizeRecord(item: Capture, fixtureRoot?: string): Capture {
+	const text = (value: string) => normalize(value, fixtureRoot);
+	return {
+		...item,
+		args: item.args.map(text),
+		cwd: text(item.cwd),
+		command: text(item.command),
+		raw: text(item.raw),
+		frames: item.frames.map(text),
+		input: item.input.map(([trigger, keys]) => [text(trigger), keys]),
+	};
+}
+
 export function normalizeCapture(item: Capture, fixtureRoot?: string): string {
+	const record = normalizeRecord(item, fixtureRoot);
 	return JSON.stringify({
-		raw: terminal(
-			normalize(item.raw, fixtureRoot),
-			item.mode.startsWith("PIPE"),
-		).html,
-		frames: item.frames.map(
-			(frame) => terminal(normalize(frame, fixtureRoot)).html,
-		),
-		code: item.code,
-		command: normalize(item.command, fixtureRoot),
-		input: item.input.map(([trigger, keys]) => [
-			normalize(trigger, fixtureRoot),
-			keys,
-		]),
+		raw: terminal(record.raw, record.mode.startsWith("PIPE")).html,
+		frames: record.frames.map((frame) => terminal(frame).html),
+		code: record.code,
+		command: record.command,
+		input: record.input,
 	});
 }
 
@@ -59,7 +63,7 @@ export function compareCaptures(
 	fixtureRoot?: string,
 ): Comparison[] {
 	for (const [label, items] of [
-		["今回", current],
+		["収録", current],
 		["基準", baseline],
 	] as const) {
 		const titles = new Set<string>();

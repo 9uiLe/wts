@@ -212,10 +212,13 @@ const result=Bun.spawnSync([${JSON.stringify(context.gitPath)},...args],{stdin:'
 		normal.worktree,
 		0,
 	);
-	const extraWrapper = join(context.root, "restack-extra-wrapper");
-	mkdirSync(extraWrapper);
+	const commandFailureWrapper = join(
+		context.root,
+		"restack-command-failure-wrapper",
+	);
+	mkdirSync(commandFailureWrapper);
 	writeFileSync(
-		join(extraWrapper, "git"),
+		join(commandFailureWrapper, "git"),
 		`#!${context.bun}\nconst args=process.argv.slice(2);if(args[0]===process.env.WTS_PREVIEW_FAIL){console.error('preview: simulated '+args[0]+' failure');process.exit(1)}const result=Bun.spawnSync([${JSON.stringify(context.gitPath)},...args],{stdin:'inherit',stdout:'inherit',stderr:'inherit'});process.exit(result.exitCode);\n`,
 		{ mode: 0o755 },
 	);
@@ -225,7 +228,12 @@ const result=Bun.spawnSync([${JSON.stringify(context.gitPath)},...args],{stdin:'
 			[...base, "--push"],
 			normal.worktree,
 			1,
-			{ env: { PATH: `${extraWrapper}:/usr/bin:/bin`, WTS_PREVIEW_FAIL: sub } },
+			{
+				env: {
+					PATH: `${commandFailureWrapper}:/usr/bin:/bin`,
+					WTS_PREVIEW_FAIL: sub,
+				},
+			},
 		);
 	await take("Gitコマンドなし", base, normal.worktree, 1, {
 		env: { PATH: join(context.root, "no-tools") },

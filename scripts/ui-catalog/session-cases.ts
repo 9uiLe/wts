@@ -350,38 +350,38 @@ export async function sessionCases(): Promise<Capture[]> {
 		PREVIEW_GIT_FAIL: "prune",
 	});
 
-	const additional = fixture("session-additional");
-	const ad = dirname(additional);
+	const failureRepo = fixture("session-failures");
+	const ad = dirname(failureRepo);
 	const s = join(ad, "naming");
 	const defaultScript = `#!/bin/sh\nprintf "%s\\n" "\${PREVIEW_NAME:-demo}"\n`;
 	executable(s, defaultScript);
 	writeFileSync(
-		join(additional, ".wts.json"),
+		join(failureRepo, ".wts.json"),
 		JSON.stringify({ naming: { branch: { script: s } } }),
 	);
-	symlinkSync(join(ad, "destination"), join(additional, "escape"));
+	symlinkSync(join(ad, "destination"), join(failureRepo, "escape"));
 	mkdirSync(join(ad, "destination"));
-	git(additional, "add", ".");
-	git(additional, "commit", "-m", "preview configuration");
+	git(failureRepo, "add", ".");
+	git(failureRepo, "commit", "-m", "preview configuration");
 	const copy = join(ad, "copy");
 	mkdirSync(join(copy, "escape"), { recursive: true });
 	writeFileSync(join(copy, "escape", "value"), "value");
 	symlinkSync(join(copy, "not-present"), join(copy, "broken-link"));
-	writeFileSync(join(additional, ".worktree-copy"), "escape\nbroken-link\n");
-	const additionalBase = ["start", "--task", "", "--base-branch", "main"];
+	writeFileSync(join(failureRepo, ".worktree-copy"), "escape\nbroken-link\n");
+	const failureBase = ["start", "--task", "", "--base-branch", "main"];
 	await cap(
 		"start: コピー先がシンボリックリンク",
-		[...additionalBase, "--copy-from", copy],
+		[...failureBase, "--copy-from", copy],
 		0,
-		additional,
+		failureRepo,
 	);
 	const awt = join(ad, "repo-worktrees", "demo");
-	unlinkSync(join(additional, ".worktree-copy"));
-	mkdirSync(join(additional, ".worktree-copy"));
-	await cap("start: コピーリスト読み込み失敗", additionalBase, 1, additional, {
+	unlinkSync(join(failureRepo, ".worktree-copy"));
+	mkdirSync(join(failureRepo, ".worktree-copy"));
+	await cap("start: コピーリスト読み込み失敗", failureBase, 1, failureRepo, {
 		env: { PREVIEW_NAME: "copy-list-error" },
 	});
-	rmdirSync(join(additional, ".worktree-copy"));
+	rmdirSync(join(failureRepo, ".worktree-copy"));
 	const abin = join(ad, "bin");
 	mkdirSync(abin);
 	gitWrapper(
@@ -391,9 +391,9 @@ export async function sessionCases(): Promise<Capture[]> {
 	const aenv = { PATH: `${abin}:${dirname(context.gitPath)}:/usr/bin:/bin` };
 	await cap(
 		"start: git worktree add失敗（git疑似応答）",
-		additionalBase,
+		failureBase,
 		1,
-		additional,
+		failureRepo,
 		{
 			env: { ...aenv, PREVIEW_NAME: "git-error", PREVIEW_GIT_FAIL: "worktree" },
 		},
@@ -425,26 +425,26 @@ export async function sessionCases(): Promise<Capture[]> {
 		await cap(`stack: branch命名 ${name}`, stack, 1, awt);
 	}
 	writeFileSync(s, defaultScript);
-	git(additional, "remote", "set-url", "origin", join(ad, "missing-origin"));
-	git(additional, "update-ref", "-d", "refs/remotes/origin/main");
+	git(failureRepo, "remote", "set-url", "origin", join(ad, "missing-origin"));
+	git(failureRepo, "update-ref", "-d", "refs/remotes/origin/main");
 	await cap(
 		"start: fetch失敗後ローカル参照も不在",
 		["start", "--task", "", "--base-branch", "origin/main"],
 		1,
-		additional,
+		failureRepo,
 		{ env: { PREVIEW_NAME: "missing-base" } },
 	);
-	writeFileSync(join(additional, ".wts.json"), "{}");
-	git(additional, "add", ".wts.json");
-	git(additional, "commit", "-m", "default naming");
+	writeFileSync(join(failureRepo, ".wts.json"), "{}");
+	git(failureRepo, "add", ".wts.json");
+	git(failureRepo, "commit", "-m", "default naming");
 	await cap(
 		"start: 既定命名（日付UUID）",
 		["start", "--base-branch", "main", "--dry-run"],
 		0,
-		additional,
+		failureRepo,
 	);
 	writeFileSync(
-		join(additional, ".wts.json"),
+		join(failureRepo, ".wts.json"),
 		JSON.stringify({
 			worktreeDirectory: "../future-base",
 			naming: { branch: { script: s } },
@@ -454,6 +454,6 @@ export async function sessionCases(): Promise<Capture[]> {
 		s,
 		`#!${context.bun}\nawait Bun.write(${JSON.stringify(join(ad, "future-base"))}, "file");\nconsole.log("fresh");\n`,
 	);
-	await cap("start: ファイルシステムI/O失敗", additionalBase, 1, additional);
+	await cap("start: ファイルシステムI/O失敗", failureBase, 1, failureRepo);
 	return items;
 }

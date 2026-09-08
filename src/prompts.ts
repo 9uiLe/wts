@@ -6,7 +6,7 @@ import { ui } from "./ui";
 
 export class Cancelled extends Error {}
 
-export async function withPromptOutput<T>(
+async function withPromptOutput<T>(
 	action: (output: Writable) => Promise<T>,
 ): Promise<T> {
 	if (colors(process.stdout).level > 0) return action(process.stdout);
@@ -60,13 +60,16 @@ export async function askText(
 	return answer || defaultValue;
 }
 
-export async function confirmAction(message: string): Promise<boolean> {
+export async function confirmAction(
+	message: string,
+	{ initialValue = false }: { initialValue?: boolean } = {},
+): Promise<boolean> {
 	requireTTY();
 	const answer = await withPromptOutput((output) =>
 		confirm({
 			output,
 			message,
-			initialValue: false,
+			initialValue,
 			active: "はい",
 			inactive: "いいえ",
 		}),

@@ -4,6 +4,7 @@ import {
 	compareCaptures,
 	normalize,
 	normalizeCapture,
+	normalizeRecord,
 } from "../scripts/ui-catalog/normalize";
 import { renderPage, terminal } from "../scripts/ui-catalog/render";
 
@@ -12,7 +13,7 @@ function snapshot(overrides: Partial<Capture> = {}): Capture {
 		title: "start 成功",
 		args: ["start"],
 		command: "wts start",
-		cwd: "/private/tmp/wts-output-review/repo",
+		cwd: "<fixture>/repo",
 		code: 0,
 		raw: "完了\r\n",
 		frames: [],
@@ -33,7 +34,7 @@ test("catalog replays cursor edits and Japanese display widths", () => {
 
 test("catalog ignores completed spinner frames and fixture values", () => {
 	const baseline = snapshot({
-		raw: "Path /private/tmp/wts-output-review/repo\r\n",
+		raw: "Path <fixture>/repo\r\n",
 	});
 	const current = snapshot({
 		cwd: "/private/tmp/catalog-current/repo",
@@ -52,6 +53,24 @@ test("catalog compares saved captures across Nix temporary directories", () => {
 		raw: "Path /private/tmp/nix-shell.ezDlr7/wts-ui-catalog-E87LoF/repo\r\n",
 	});
 	expect(compareCaptures([second], [first])[0]?.changed).toBe(false);
+});
+
+test("catalog baseline records portable fixture values and preserves terminal input", () => {
+	const root = "/private/tmp/wts-ui-catalog-example";
+	const item = snapshot({
+		args: ["start", "--copy-from", `${root}/source`],
+		cwd: `${root}/repo`,
+		command: `wts start --copy-from ${root}/source`,
+		raw: `Path ${root}/repo\r\n`,
+		frames: [`Path ${root}/repo\r\n`],
+		input: [[`確認 ${root}/repo`, "\u0003"]],
+	});
+	const saved = normalizeRecord(item, root);
+	expect(JSON.stringify(saved)).not.toContain(root);
+	expect(saved.args).toEqual(["start", "--copy-from", "<fixture>/source"]);
+	expect(saved.input).toEqual([["確認 <fixture>/repo", "\u0003"]]);
+	expect(normalizeCapture(saved)).toBe(normalizeCapture(item, root));
+	expect(normalizeRecord(saved)).toEqual(saved);
 });
 
 test("catalog detects text, color, input, prompt frames, and exit status changes", () => {
