@@ -100,14 +100,8 @@ try {
 	writeFileSync(resolve(output, "captures.json"), resources.captures);
 	writeFileSync(resolve(output, "comparison.json"), resources.comparison);
 	writeFileSync(resolve(output, "coverage.md"), resources.coverage);
-	writeFileSync(
-		resolve(output, "index.html"),
-		renderPage(normalized, false, resources),
-	);
-	writeFileSync(
-		resolve(output, "changes.html"),
-		renderPage(normalized, true, resources),
-	);
+	writeFileSync(resolve(output, "index.html"), renderPage(normalized, false));
+	writeFileSync(resolve(output, "changes.html"), renderPage(normalized, true));
 	rmSync(resolve(output, "failure.txt"), { force: true });
 	rmSync(resolve(output, "partial-captures.json"), { force: true });
 	if (values["update-baseline"]) {

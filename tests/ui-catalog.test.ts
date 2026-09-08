@@ -143,7 +143,7 @@ test("catalog navigation works without loading neighboring local files", () => {
 		],
 		false,
 	);
-	for (const view of ["all", "changes", "captures", "comparison", "coverage"]) {
+	for (const view of ["all", "changes"]) {
 		expect(page).toContain(`data-view="${view}"`);
 	}
 	for (const filename of [
@@ -157,20 +157,14 @@ test("catalog navigation works without loading neighboring local files", () => {
 	}
 });
 
-test("catalog embeds original review data safely without fetching files", () => {
-	const captures = JSON.stringify({
-		path: "/original/capture",
-		raw: "</pre><script>alert(1)</script>",
-	});
-	const comparison = JSON.stringify([{ changed: true }]);
-	const page = renderPage([], false, {
-		captures,
-		comparison,
-		coverage: "# 未実測\n<unknown>",
-	});
-	expect(page).toContain("/original/capture");
-	expect(page).toContain("&lt;/pre&gt;&lt;script&gt;alert(1)&lt;/script&gt;");
-	expect(page).toContain("&lt;unknown&gt;");
-	expect(page).not.toContain("fetch(");
-	expect(page).not.toContain("<script>alert(1)</script>");
+test("catalog review contains only visual review controls and screens", () => {
+	const page = renderPage([{ current: snapshot(), changed: true }], false);
+	for (const view of ["captures", "comparison", "coverage"]) {
+		expect(page).not.toContain(`data-view="${view}"`);
+		expect(page).not.toContain(`data-panel="${view}"`);
+	}
+	expect(page).not.toContain("cwd:");
+	expect(page).not.toContain("未正規化");
+	expect(page).toContain("$ wts start");
+	expect(page).toContain("収録画面");
 });
