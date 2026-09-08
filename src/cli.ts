@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import "./terminal";
 import { Command, Option } from "commander";
 import { cleanupSessionBranches } from "./commands/cleanup";
 import { checkConfig } from "./commands/config";
@@ -8,11 +9,21 @@ import { restack } from "./commands/restack";
 import { startStackBranch } from "./commands/stack";
 import { startWorktreeSession } from "./commands/start";
 import { Cancelled } from "./prompts";
+import { stdoutStyling, ui } from "./ui";
 import { version } from "./version";
 
 const program = new Command()
 	.name("wts")
 	.description("Git Worktree Session")
+	.configureHelp({
+		styleTitle: (text) => stdoutStyling(text, "title"),
+		styleCommandText: (text) => stdoutStyling(text, "command"),
+		styleOptionText: (text) => stdoutStyling(text, "option"),
+	})
+	.configureOutput({
+		outputError: (message) =>
+			ui.error(message.replace(/^error: /, "").trimEnd()),
+	})
 	.version(version);
 
 program

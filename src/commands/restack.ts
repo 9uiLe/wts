@@ -4,6 +4,7 @@ import { ensureClean, fetchBase, worktrees } from "../git";
 import { repository } from "../project";
 import { askText, confirmAction } from "../prompts";
 import { sessionRootBranch, stackBranches } from "../session";
+import { commandLine, ui } from "../ui";
 
 export async function restack(options: {
 	dryRun?: boolean;
@@ -11,6 +12,8 @@ export async function restack(options: {
 	push?: boolean;
 	baseBranch?: string;
 }): Promise<void> {
+	ui.heading("restack");
+	if (options.dryRun) ui.info("DRY_RUN: rebase・push は行いません");
 	const repo = await repository();
 	const { git, gitDir } = repo;
 	const root = sessionRootBranch(repo);
@@ -67,10 +70,10 @@ export async function restack(options: {
 			);
 		}
 	}
-	console.log(`スタック: ${branches.join(", ")}`);
+	ui.detail("スタック", branches.join(", "));
 	const base =
 		options.baseBranch || (await askText("ベースブランチ", "origin/main"));
-	fetchBase(git, base, options.dryRun ?? false);
+	await fetchBase(git, base, options.dryRun ?? false);
 	const original =
 		git.tryRun(["symbolic-ref", "--quiet", "--short", "HEAD"]).out.trim() ||
 		git.run(["rev-parse", "HEAD"]).trim();
@@ -92,7 +95,9 @@ export async function restack(options: {
 			}
 		}
 	} else {
-		const remote = git.tryRun(["ls-remote", "--heads", "origin"]);
+		const remote = await ui.task("origin の lease を取得しています", () =>
+			git.tryRunAsync(["ls-remote", "--heads", "origin"]),
+		);
 		if (remote.code !== 0) {
 			throw new Error(`origin の lease を取得できません: ${remote.err}`);
 		}
@@ -127,16 +132,18 @@ export async function restack(options: {
 	];
 	if (options.dryRun) {
 		if (!options.pushOnly) {
-			console.log(`実行予定: git checkout ${tip}`);
-			console.log(`実行予定: git rebase --update-refs ${base}`);
+			ui.plan(commandLine(["git", "checkout", tip]));
+			ui.plan(commandLine(["git", "rebase", "--update-refs", base]));
 		}
-		console.log(`実行予定: git ${pushArgs(branches).join(" ")}`);
+		ui.plan(commandLine(["git", ...pushArgs(branches)]));
 		return;
 	}
 	try {
 		if (!options.pushOnly) {
 			git.run(["checkout", tip]);
-			const result = git.tryRun(["rebase", "--update-refs", base]);
+			const result = await ui.task(`${base} をベースに rebase しています`, () =>
+				git.tryRunAsync(["rebase", "--update-refs", base]),
+			);
 			if (result.code !== 0) {
 				throw new Error(
 					`rebase に失敗しました。コンフリクト解消後 git rebase --continue を実行し、wts restack --push-only で push してください\n${result.out}${result.err}`,
@@ -149,22 +156,23 @@ export async function restack(options: {
 				leases.get(branch),
 		);
 		if (selected.length > 0) {
-			console.log(`push 対象: ${selected.join(", ")}`);
+			ui.detail("push 対象", selected.join(", "));
 			if (!options.push && !(await confirmAction("これらを push しますか？"))) {
-				console.log("キャンセルしました");
 				return;
 			}
-			git.run(pushArgs(selected));
+			await ui.task("スタックを push しています", () =>
+				git.runAsync(pushArgs(selected)),
+			);
 		}
 		unlinkSync(leaseFile);
-		console.log(
+		ui.success(
 			selected.length ? "restack 完了" : "push が必要なブランチはありません",
 		);
 	} finally {
 		if (!rebasing()) {
 			const result = git.tryRun(["checkout", original]);
 			if (result.code !== 0)
-				console.warn(`元のブランチへの復帰に失敗: ${result.err}`);
+				ui.warn(`元のブランチへの復帰に失敗: ${result.err}`);
 		}
 	}
 }

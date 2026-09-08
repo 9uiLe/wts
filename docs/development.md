@@ -46,6 +46,7 @@ Nix Flakes は Bun、Git、OSV-Scanner、Coreutils を提供し、Bun は JavaSc
 | `bun run lint` | Biome の recommended ルールで静的検査する |
 | `bun run typecheck` | `tsc --noEmit` で型を検査する |
 | `bun run test` | CLI、初期化・設定・命名、セッション操作、環境検査、バージョン、公開判定、インストールの振る舞いをテストする |
+| `bun run ui:catalog` | 全コマンドの出力を収録し、全件と基準版との差分を静的 HTML に生成する |
 | `bun run verify:deps` | 固定依存をインストールし、依存一覧と監査結果を生成する |
 | `bun run build` | Apple Silicon 向けバイナリを生成し、起動を検証する |
 | `bun run check` | 整形検査、lint、型チェック、テスト、ビルドを順に実行する |
@@ -55,6 +56,30 @@ Nix Flakes は Bun、Git、OSV-Scanner、Coreutils を提供し、Bun は JavaSc
 整形と lint の対象・規則は `biome.json`、型検査の設定は `tsconfig.json` で定義します。対話を変更した場合は TTY 上で `bun run dev doctor --interactive` を実行し、肯定入力、否定入力、Ctrl-C によるキャンセルを確認してください。出力と終了コードは [README](../README.md#環境の検査) に記載しています。
 
 設定・命名は一時ディレクトリとテスト用スクリプトで、セッション操作は一時 Git リポジトリと bare origin で検証します。外部サービスの応答や Homebrew はテスト用コマンドを使い、通常の自動テストで実サービスへの認証やシステムへの依存導入を行いません。実サービスへの接続やダウンロード後の起動を検証した場合は、自動テストとは分けて結果を記録してください。
+
+### 端末 UI の一覧と変更確認
+
+UI を変更したら、固定 devShell で静的 HTML を生成します。
+
+```bash
+nix develop --no-update-lock-file --command bun run ui:catalog
+```
+
+`release/ui-catalog/index.html` が全件一覧、`changes.html` が基準版から変わったケースだけの一覧です。同じディレクトリのファイルを一緒に共有してください。HTML はサーバーや外部 CDN を必要とせず、ブラウザーで開けます。各ケースでコマンド、入力、終了コード、対話の入力前画面、最終画面を確認できます。変更されたケースには変更前後を表示し、追加・削除も区別します。CI でも生成し、Actions の `terminal-ui-review` アーティファクトとして取得できます。
+
+基準版は `tests/fixtures/ui-baseline.json` です。初期の基準は表示改善前に収録した215ケースで、改善内容を比較できます。生成だけでは基準ファイルを書き換えず、差分があること自体は失敗にしません。表示をレビューして採用した後に更新し、関連する UI 変更と一緒にコミットします。
+
+```bash
+# 別の基準版・出力先を指定する
+bun run ui:catalog --baseline /path/to/baseline.json --output release/ui-review
+
+# 表示を確認した後、今回の出力を次の基準版にする
+bun run ui:catalog --update-baseline tests/fixtures/ui-baseline.json
+```
+
+収録は Bun の擬似端末と一時 Git リポジトリを使います。リモート操作はローカル bare リポジトリ、GitHub 応答や障害はテスト用コマンドで再現し、実サービスへ push・削除しません。収録条件は前回一覧と同じ120桁・40行で、CLI の制限値ではありません。パス、日付付き UUID、Git の OID などを正規化し、スピナーの描画回数が変わっただけでは差分にしません。色・文言・入力前画面・終了コードの変更は比較対象です。
+
+ケースは `scripts/ui-catalog/` に定義します。コマンドや表示分岐を追加したら、到達条件と期待する終了コードを持つケースも追加してください。タイトルは基準版との対応キーなので、表示文言の変更だけでは変更しません。条件を変えた場合はケースの追加・削除としてレビューします。可変値の全組合せ、OS や Git が返す診断文の全種類を列挙する仕組みではありません。未再現の glob 走査例外と lease 削除時の OS 例外、および通常到達しない防御的分岐は、実測ケースとは区別します。
 
 ### 依存の検証
 

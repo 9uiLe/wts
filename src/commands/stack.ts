@@ -3,12 +3,15 @@ import { defaultNaming, generateName, validateBranchName } from "../naming";
 import { repository } from "../project";
 import { askText } from "../prompts";
 import { sessionRootBranch, stackBranches } from "../session";
+import { commandLine, ui } from "../ui";
 
 export async function startStackBranch(options: {
 	dryRun?: boolean;
 	task?: string;
 	prNumber?: string;
 }): Promise<void> {
+	ui.heading("stack");
+	if (options.dryRun) ui.info("DRY_RUN: ブランチは作成しません");
 	const repo = await repository();
 	const root = sessionRootBranch(repo);
 	ensureClean(repo.git);
@@ -36,7 +39,7 @@ export async function startStackBranch(options: {
 	if (branches.some((branch) => branch.number === BigInt(number))) {
 		throw new Error(`PR 番号 ${number} は既に使われています`);
 	}
-	const suffix = generateName(repo.config, {
+	const suffix = await generateName(repo.config, {
 		...defaultNaming(),
 		kind: "branch",
 		task,
@@ -46,11 +49,13 @@ export async function startStackBranch(options: {
 	const branch = `${root}-pr${number}-${suffix}`;
 	validateBranchName(repo.git, branch);
 	if (options.dryRun) {
-		console.log(`dry-run: git checkout -b ${branch}`);
+		ui.plan(commandLine(["git", "checkout", "-b", branch]));
 	} else {
-		repo.git.run(["checkout", "-b", branch]);
+		await ui.task("スタックブランチを作成しています", () =>
+			repo.git.runAsync(["checkout", "-b", branch]),
+		);
 	}
-	console.log(
-		`スタックブランチ準備完了${options.dryRun ? " (dry-run)" : ""}\nBranch  ${branch}`,
-	);
+	if (options.dryRun) ui.info("スタックブランチの作成予定 (dry-run)");
+	else ui.success("スタックブランチ準備完了");
+	ui.detail("Branch", branch);
 }

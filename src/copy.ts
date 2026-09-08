@@ -8,6 +8,7 @@ import {
 	realpathSync,
 } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
+import { ui } from "./ui";
 function inside(root: string, path: string): boolean {
 	const rel = relative(root, path);
 	return rel !== ".." && !rel.startsWith(`..${sep}`) && !isAbsolute(rel);
@@ -48,7 +49,7 @@ function copyPath(sourceRoot: string, targetRoot: string, rel: string): void {
 			try {
 				copyPath(sourceRoot, targetRoot, join(rel, name));
 			} catch (error) {
-				console.warn(`コピーをスキップ: ${join(rel, name)}: ${String(error)}`);
+				ui.warn(`コピーをスキップ: ${join(rel, name)}: ${String(error)}`);
 			}
 		}
 	} else if (stat.isFile()) {
@@ -70,7 +71,7 @@ export function copyUnmanaged(
 	try {
 		sourceRoot = realpathSync(source);
 	} catch (error) {
-		console.warn(`コピー元を参照できません: ${source}: ${String(error)}`);
+		ui.warn(`コピー元を参照できません: ${source}: ${String(error)}`);
 		return;
 	}
 	for (const line of readFileSync(list, "utf8").split(/\r?\n/)) {
@@ -81,7 +82,7 @@ export function copyUnmanaged(
 			entry.includes("..") ||
 			entry.split("/").includes(".git")
 		) {
-			console.warn(`不正なエントリをスキップ: ${entry}`);
+			ui.warn(`不正なエントリをスキップ: ${entry}`);
 			continue;
 		}
 		try {
@@ -93,14 +94,17 @@ export function copyUnmanaged(
 			});
 			for (const rel of matches) {
 				try {
-					console.log(`コピー${dryRun ? " (dry-run)" : ""}: ${rel}`);
-					if (!dryRun) copyPath(sourceRoot, target, rel);
+					if (dryRun) ui.plan(`コピー (dry-run): ${rel}`);
+					else {
+						copyPath(sourceRoot, target, rel);
+						ui.info(`コピー: ${rel}`);
+					}
 				} catch (error) {
-					console.warn(`コピーをスキップ: ${rel}: ${String(error)}`);
+					ui.warn(`コピーをスキップ: ${rel}: ${String(error)}`);
 				}
 			}
 		} catch (error) {
-			console.warn(`コピーに失敗しました: ${entry}: ${String(error)}`);
+			ui.warn(`コピーに失敗しました: ${entry}: ${String(error)}`);
 		}
 	}
 }

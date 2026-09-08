@@ -34,6 +34,7 @@ CLI の入口は引数をコマンドへ渡す。各コマンドは操作の順�
 | `src/config.ts` | 設定データ、パス、実行権限の検証 |
 | `src/naming.ts` | 日付＋UUID の生成、命名スクリプトとの入出力、名前の検証 |
 | `src/prompts.ts` | Clack による入力・確認、キャンセルの扱い |
+| `src/ui.ts` | 出力の階層・状態色・詳細行、TTY とパイプの表示切替、非同期処理中の進捗 |
 | `src/copy.ts` | 管理外ファイルの列挙と境界を検査したコピー |
 | `src/version.ts` | ソースとバイナリの表示バージョン |
 
@@ -48,6 +49,8 @@ stack はクリーンな作業ツリーとスタック先端での実行を要�
 cleanup はマージ済み PR とローカル変更の取り込みを証明できるブランチを削除候補にする。`main`、実行中のブランチ、管理範囲外の worktree で使用中のブランチは除外する。削除候補の worktree は強制削除の対象であり、未コミット・管理外ファイルの保持は保証しない。
 
 対話の否定・Ctrl-C は正常終了する。必要な入力を受け取れない非対話環境ではエラーにする。外部コマンドは引数配列で実行し、入力をシェル式として解釈しない。
+
+表示は共通 UI を通し、通常の結果と診断をそれぞれ stdout と stderr に出す。Chalk は状態色と情報の強弱、Ora は stderr の TTY での進捗、Clack は入力・確認を担当する。長時間の外部処理は非同期に実行し、進捗の描画と中断操作を妨げない。スピナーは処理結果にかかわらず停止してから結果を表示し、対話中には動かさない。出力先ごとに TTY を判定し、パイプには ANSI 装飾を出さない。色を使わない場合も結果の意味が分かる記号・文言を残す。
 
 `--dry-run` は wts による fetch、ブランチ・worktree・ファイル・セッション情報・lease の変更と push を抑制する。PR 情報とリモート参照の取得、命名スクリプトの実行は行う。
 
@@ -70,6 +73,7 @@ doctor の実行情報表示は外部コマンドを要求しない。`doctor --
 | `scripts/verify-dependencies.sh`、`scripts/dependency-inventory.ts` | 固定依存の取得・棚卸し・監査 |
 | `scripts/build.ts` | コンパイル、起動検証、チェックサム・ビルド情報の生成 |
 | `scripts/release-version.ts`、`scripts/check-release.ts` | 公開バージョンと公開対象の検証 |
+| `scripts/ui-catalog.ts`、`scripts/ui-catalog/` | ケース実行、端末表示の収録・正規化、基準版との比較と静的 HTML 生成 |
 | `.github/workflows/ci.yml`、`.github/workflows/release.yml` | 通常検証と Pre-release 公開 |
 
 開発用スクリプトはリポジトリの Flake を `nix develop --no-update-lock-file` で使用する。設定検査は呼び出し元ディレクトリを保持する。配布バイナリと配置スクリプトは Nix を要求しない。具体的なコマンドは [開発資料](development.md#開発コマンド)に定義する。

@@ -60,7 +60,7 @@ test("default naming combines JST date and independent UUIDs", () => {
 	expect(a.date).toBe(expected);
 });
 
-test("configured script receives exact JSON task and prompt in config directory", () => {
+test("configured script receives exact JSON task and prompt in config directory", async () => {
 	const config = fixture(
 		'const input = await Bun.stdin.json(); await Bun.write("received.json", JSON.stringify(input)); console.log("feature/custom");',
 		"命名の指示",
@@ -72,21 +72,21 @@ test("configured script receives exact JSON task and prompt in config directory"
 		rootBranch: "root",
 		prNumber: "2",
 	};
-	expect(generateName(config, context)).toBe("feature/custom");
+	expect(await generateName(config, context)).toBe("feature/custom");
 	expect(
 		JSON.parse(readFileSync(join(config.directory, "received.json"), "utf8")),
 	).toEqual({ ...context, prompt: "命名の指示" });
 	const rule = config.config.naming?.branch;
 	if (!rule) throw new Error("fixture missing naming rule");
 	delete rule.prompt;
-	expect(generateName(config, context)).toBe("feature/custom");
+	expect(await generateName(config, context)).toBe("feature/custom");
 	expect(
 		JSON.parse(readFileSync(join(config.directory, "received.json"), "utf8"))
 			.prompt,
 	).toBe("");
 });
 
-test("missing naming configuration returns default without running a script", () => {
+test("missing naming configuration returns default without running a script", async () => {
 	const config = fixture('throw new Error("must not run")');
 	config.config = {};
 	const context = {
@@ -94,7 +94,7 @@ test("missing naming configuration returns default without running a script", ()
 		kind: "branch" as const,
 		task: "request AI",
 	};
-	expect(generateName(config, context)).toBe(context.defaultName);
+	expect(await generateName(config, context)).toBe(context.defaultName);
 });
 
 for (const [name, code] of [
@@ -103,11 +103,11 @@ for (const [name, code] of [
 	["extra blank line", 'console.log("one\\n")'],
 	["failure", 'console.error("private diagnostics"); process.exit(2)'],
 ] as const) {
-	test(`script ${name} is rejected without exposing stderr`, () => {
+	test(`script ${name} is rejected without exposing stderr`, async () => {
 		const config = fixture(code);
-		expect(() =>
+		await expect(
 			generateName(config, { ...defaultNaming(), kind: "branch", task: "" }),
-		).toThrow(/命名スクリプト/);
+		).rejects.toThrow(/命名スクリプト/);
 	});
 }
 

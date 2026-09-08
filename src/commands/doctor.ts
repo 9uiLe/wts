@@ -1,4 +1,7 @@
-import { cancel, confirm, intro, isCancel, outro } from "@clack/prompts";
+import "../terminal";
+import { confirm, isCancel } from "@clack/prompts";
+import { withPromptOutput } from "../prompts";
+import { ui } from "../ui";
 import { version } from "../version";
 
 export async function doctor({
@@ -13,9 +16,10 @@ export async function doctor({
 		return;
 	}
 	if (!interactive) {
-		console.log(
-			`wts ${version}\nplatform=${process.platform}\narch=${process.arch}`,
-		);
+		ui.heading("doctor");
+		ui.line(`wts ${version}`);
+		ui.line(`platform=${process.platform}`);
+		ui.line(`arch=${process.arch}`);
 		return;
 	}
 
@@ -23,23 +27,37 @@ export async function doctor({
 		throw new Error("対話モードは TTY 端末で実行してください。");
 	}
 
-	intro("wts doctor");
-	const proceed = await confirm({ message: "起動環境を表示しますか？" });
+	ui.heading("doctor");
+	const proceed = await withPromptOutput((output) =>
+		confirm({
+			output,
+			message: "起動環境を表示しますか？",
+			initialValue: true,
+			active: "はい",
+			inactive: "いいえ",
+		}),
+	);
 	if (isCancel(proceed) || !proceed) {
-		cancel("キャンセルしました。");
+		ui.cancel();
 		return;
 	}
 
-	outro(`${process.platform} / ${process.arch}`);
+	ui.success(`${process.platform} / ${process.arch}`);
 }
 
-function run(executable: string, args: string[]) {
+async function run(executable: string, args: string[]) {
 	try {
-		return Bun.spawnSync([executable, ...args], {
+		const child = Bun.spawn([executable, ...args], {
 			stdin: "ignore",
 			stdout: "pipe",
 			stderr: "pipe",
 		});
+		const [exitCode, stdout] = await Promise.all([
+			child.exited,
+			new Response(child.stdout).text(),
+			new Response(child.stderr).text(),
+		]);
+		return { exitCode, stdout };
 	} catch {
 		return undefined;
 	}
@@ -54,16 +72,19 @@ export async function checkEnvironment({
 } = {}): Promise<void> {
 	let failed = false;
 	function report(ok: boolean, message: string) {
-		console.log(`${ok ? "OK" : "NG"}: ${message}`);
+		ui.check(ok, message);
 		if (!ok) failed = true;
 	}
 
+	ui.heading("doctor");
 	report(
 		platform === "darwin" && arch === "arm64",
 		`実行環境 ${platform} / ${arch}（対応: Apple Silicon macOS）`,
 	);
 
-	const git = run("git", ["--version"]);
+	const git = await ui.task("Git のバージョンを確認しています…", () =>
+		run("git", ["--version"]),
+	);
 	const version = git?.stdout.toString().match(/^git version (\d+)\.(\d+)/);
 	const compatible =
 		git?.exitCode === 0 &&
@@ -78,14 +99,21 @@ export async function checkEnvironment({
 			: "Git 2.38 以上が必要です。導入・更新: brew install git（導入済みなら brew upgrade git）。PATH も確認してください。",
 	);
 
-	const gh = run("gh", ["--version"]);
+	const gh = await ui.task("GitHub CLI を確認しています…", () =>
+		run("gh", ["--version"]),
+	);
 	const hasGh = gh?.exitCode === 0;
 	report(
 		hasGh,
 		hasGh ? "GitHub CLI" : "GitHub CLI を実行できません。導入: brew install gh",
 	);
 	if (hasGh) {
-		const authenticated = run("gh", ["auth", "status"])?.exitCode === 0;
+		const authenticated =
+			(
+				await ui.task("GitHub CLI の認証を確認しています…", () =>
+					run("gh", ["auth", "status"]),
+				)
+			)?.exitCode === 0;
 		report(
 			authenticated,
 			authenticated
@@ -94,10 +122,15 @@ export async function checkEnvironment({
 		);
 	}
 
-	console.log(
-		Bun.which("claude")
-			? "OK: Claude CLI（任意・Claude 用命名スクリプトを設定した場合に使用）"
-			: "任意: Claude CLI は未導入です。日付＋UUID によるブランチ命名を利用できます。",
-	);
+	if (Bun.which("claude")) {
+		ui.check(
+			true,
+			"Claude CLI（任意・Claude 用命名スクリプトを設定した場合に使用）",
+		);
+	} else {
+		ui.info(
+			"任意: Claude CLI は未導入です。日付＋UUID によるブランチ命名を利用できます。",
+		);
+	}
 	process.exitCode = failed ? 1 : 0;
 }

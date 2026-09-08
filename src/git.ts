@@ -1,3 +1,5 @@
+import { ui } from "./ui";
+
 export function requireCommand(name: string): void {
 	if (!Bun.which(name))
 		throw new Error(
@@ -25,10 +27,40 @@ export function command(
 	};
 }
 
+export async function commandAsync(
+	executable: string,
+	args: string[],
+	cwd: string,
+	input?: string,
+): Promise<{ code: number; out: string; err: string }> {
+	requireCommand(executable);
+	const result = Bun.spawn([executable, ...args], {
+		cwd,
+		stdin: input === undefined ? "ignore" : Buffer.from(input),
+		stdout: "pipe",
+		stderr: "pipe",
+	});
+	const [code, out, err] = await Promise.all([
+		result.exited,
+		new Response(result.stdout).text(),
+		new Response(result.stderr).text(),
+	]);
+	return { code, out: out.trimEnd(), err: err.trimEnd() };
+}
+
 export class Git {
 	constructor(public cwd: string = process.cwd()) {}
 	tryRun(args: string[], input?: string) {
 		return command("git", args, this.cwd, input);
+	}
+	tryRunAsync(args: string[], input?: string) {
+		return commandAsync("git", args, this.cwd, input);
+	}
+	async runAsync(args: string[], input?: string): Promise<string> {
+		const result = await this.tryRunAsync(args, input);
+		if (result.code !== 0)
+			throw new Error(`git ${args[0]} に失敗しました。\n${result.err}`);
+		return result.out;
 	}
 	run(args: string[], input?: string): string {
 		const result = this.tryRun(args, input);
@@ -68,14 +100,18 @@ export function validateRef(ref: string): void {
 		throw new Error(`不正なベースブランチ: ${ref}`);
 }
 
-export function fetchBase(git: Git, base: string, dryRun: boolean): void {
+export async function fetchBase(
+	git: Git,
+	base: string,
+	dryRun: boolean,
+): Promise<void> {
 	validateRef(base);
 	if (!dryRun && base.startsWith("origin/")) {
-		const result = git.tryRun(["fetch", "--", "origin", base.slice(7)]);
+		const result = await ui.task(`${base} を取得しています`, () =>
+			git.tryRunAsync(["fetch", "--", "origin", base.slice(7)]),
+		);
 		if (result.code !== 0)
-			console.warn(
-				`${base} の fetch に失敗しました。ローカルの参照を使用します。`,
-			);
+			ui.warn(`${base} の fetch に失敗しました。ローカルの参照を使用します。`);
 	}
 	if (
 		git.tryRun(["rev-parse", "--verify", "--quiet", `${base}^{commit}`])
