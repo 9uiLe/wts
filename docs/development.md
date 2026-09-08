@@ -1,6 +1,6 @@
 # wts の開発とリリース
 
-開発者向けに、環境構築、検証、成果物の生成、GitHub Actions からの Pre-release 公開を説明します。利用方法と配布状態は [README](../README.md)、実装の責務と公開判定は [設計書](design.md)、選択理由は [設計判断](decisions.md)、変更時の規約は [AGENTS.md](../AGENTS.md) を参照してください。
+このリポジトリでは、プロジェクト設定に基づく wts のセッションを使って開発します。本書は、新しいチェックアウトから開発を始め、変更を検証し、成果物を生成・公開するまでの手順を定義します。利用方法と配布状態は [README](../README.md)、実装の責務と公開判定は [設計書](design.md)、選択理由は [設計判断](decisions.md)、変更時の規約は [AGENTS.md](../AGENTS.md) を参照してください。
 
 ## 開発環境
 
@@ -19,6 +19,51 @@ nix develop --no-update-lock-file --command bun run verify:deps
 Nix Flakes は Bun、Git、OSV-Scanner、Coreutils を提供し、Bun は JavaScript / TypeScript の依存を管理します。ツールは `flake.lock`、パッケージは `bun.lock` で固定します。通常の開発と CI ではロックファイルを更新せず、devShell の Bun を使用してください。インストール時のスクリプトは実行しません。
 
 `setup.sh` は Apple Silicon macOS、Nix、Xcode Command Line Tools の存在を確認し、Flake を検査してから `install-deps.sh` で依存を取得します。Nix や Xcode Command Line Tools 自体のインストールは行いません。依存取得だけを再実行する場合は `./scripts/install-deps.sh` を使用します。
+
+## 開発セッション
+
+### 設定と作成元
+
+メインチェックアウトはリポジトリを clone したディレクトリです。作業用 worktree は、その隣の `wts-worktrees` ディレクトリに作成します。リポジトリで管理する `.wts.json` が、この配置とベースブランチ `master`、日付＋UUID の既定命名を指定しています。
+
+`start` は `origin/master` からセッションを作成し、`restack` は同じ参照から更新を取り込みます。`cleanup` は `master` を削除対象から除き、`origin/master` への取り込み状況を調べます。別のベースを使う操作では `start`・`restack` の `--base-branch` を指定できます。設定の契約と優先順位は [設定資料](configuration.md) を参照してください。
+
+### セッションを作成する
+
+開発環境を用意したメインチェックアウトから、設定と作成予定を確認してセッションを作成します。`./scripts/dev.sh` は固定 Nix 環境で、そのスクリプトが属するチェックアウトのソースを実行します。バイナリのビルドやインストールは不要です。
+
+```bash
+./scripts/dev.sh config check
+./scripts/dev.sh start --dry-run
+./scripts/dev.sh start
+```
+
+作成される worktree のソースと `.wts.json` は、ベースのコミットに含まれるものです。作成結果の `Path` へ `cd` し、その worktree にある `./scripts/setup.sh` を実行してください。`node_modules` は Git 管理しないため、worktree ごとに固定依存を取得します。以降のソース実行と検証には、作業中の worktree にあるスクリプトを使います。
+
+### 変更を積み、ベースの更新を取り込む
+
+変更は [開発コマンド](#開発コマンド) と [検証手順](#検証を実行する) に従って検証し、目的が共通する実装・テスト・文書を一つの変更単位としてコミットします。PR の記載項目は [PR テンプレート](../.github/PULL_REQUEST_TEMPLATE.md) に従ってください。
+
+同じ worktree で次の変更を別ブランチに積む場合は `stack` を使います。現在のブランチがスタックの先端で、未コミット変更がないことが必要です。最初の追加ブランチの番号は `2` です。
+
+```bash
+./scripts/dev.sh stack --pr-number 2
+```
+
+`master` の更新をスタックへ取り込む場合は `restack` を使います。rebase 後の origin への push は対話で確認します。PR の作成・マージは GitHub または gh で行ってください。
+
+```bash
+./scripts/dev.sh restack
+```
+
+### マージ済みのセッションを整理する
+
+メインチェックアウトへ戻り、削除予定を確認してから整理します。削除対象の worktree にある未コミット変更や管理外ファイルは保持されないため、必要な内容は事前に保存してください。
+
+```bash
+./scripts/dev.sh cleanup --dry-run
+./scripts/dev.sh cleanup
+```
 
 ## 開発コマンド
 

@@ -120,6 +120,45 @@ test("config rejects unknown keys, null, invalid types, NUL and missing naming s
 	}
 });
 
+test("config accepts base branch names without requiring an existing Git ref", () => {
+	const f = fixture();
+	try {
+		for (const baseBranch of ["main", "master", "release/stable"]) {
+			f.config({ baseBranch });
+			expect(loadConfigFile(f.file).config.baseBranch).toBe(baseBranch);
+		}
+		f.config({});
+		expect(loadConfigFile(f.file).config.baseBranch).toBeUndefined();
+	} finally {
+		f.dispose();
+	}
+});
+
+test("config rejects invalid base branch values and revision expressions", () => {
+	const f = fixture();
+	try {
+		for (const baseBranch of [
+			null,
+			42,
+			"",
+			" ",
+			"--help",
+			"HEAD",
+			"topic..branch",
+			"main~1",
+			"@{-1}",
+			"a\nbranch",
+			"a\0b",
+			"a.lock",
+		]) {
+			f.config({ baseBranch });
+			expect(() => loadConfigFile(f.file)).toThrow("baseBranch");
+		}
+	} finally {
+		f.dispose();
+	}
+});
+
 test("config reports unreadable or malformed explicit files and rejects missing or nonexecutable scripts", () => {
 	const f = fixture();
 	try {

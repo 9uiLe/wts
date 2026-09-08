@@ -33,19 +33,22 @@ function git(cwd: string, ...args: string[]) {
 	return result.stdout.toString().trim();
 }
 
-function fixture(conflict = false) {
+function fixture(conflict = false, baseBranch = "main") {
 	const dir = mkdtempSync(join(tmpdir(), "wts-restack-"));
 	temporary.push(dir);
 	const main = join(dir, "repo");
 	const origin = join(dir, "origin.git");
 	git(dir, "init", "--bare", origin);
-	git(dir, "init", "-b", "main", main);
-	writeFileSync(join(main, ".wts.json"), JSON.stringify({ naming: {} }));
+	git(dir, "init", "-b", baseBranch, main);
+	writeFileSync(
+		join(main, ".wts.json"),
+		JSON.stringify({ baseBranch, naming: {} }),
+	);
 	writeFileSync(join(main, "shared"), "base\n");
 	git(main, "add", ".");
 	git(main, "commit", "-m", "base");
 	git(main, "remote", "add", "origin", origin);
-	git(main, "push", "-u", "origin", "main");
+	git(main, "push", "-u", "origin", baseBranch);
 	const root = "session.a";
 	const next = `${root}-pr2-second`;
 	const worktree = join(`${main}-worktrees`, root);
@@ -63,7 +66,7 @@ function fixture(conflict = false) {
 	writeFileSync(join(main, conflict ? "shared" : "upstream"), "upstream\n");
 	git(main, "add", ".");
 	git(main, "commit", "-m", "upstream");
-	git(main, "push", "origin", "main");
+	git(main, "push", "origin", baseBranch);
 	const gitDir = git(worktree, "rev-parse", "--absolute-git-dir");
 	writeFileSync(
 		join(gitDir, "wts-session.json"),
@@ -73,7 +76,7 @@ function fixture(conflict = false) {
 }
 
 function run(worktree: string, options: Record<string, unknown> = {}) {
-	const script = `import { restack } from ${JSON.stringify(modulePath)}; await restack(${JSON.stringify({ baseBranch: "origin/main", push: true, ...options })});`;
+	const script = `import { restack } from ${JSON.stringify(modulePath)}; await restack(${JSON.stringify({ push: true, ...options })});`;
 	const result = Bun.spawnSync([process.execPath, "-e", script], {
 		cwd: worktree,
 		env,
@@ -85,20 +88,37 @@ function run(worktree: string, options: Record<string, unknown> = {}) {
 	};
 }
 
-test("restack rebases every literal-root stack branch, pushes and restores checkout", () => {
-	const f = fixture();
+test("restack rebases every literal-root stack branch onto the configured base, pushes and restores checkout", () => {
+	const f = fixture(false, "master");
 	const unrelated = git(f.main, "rev-parse", "sessionXa-pr3-unrelated");
 	const result = run(f.worktree);
 	expect(result).toMatchObject({ code: 0 });
 	expect(git(f.worktree, "branch", "--show-current")).toBe(f.root);
 	for (const branch of [f.root, f.next]) {
-		git(f.main, "merge-base", "--is-ancestor", "main", branch);
+		git(f.main, "merge-base", "--is-ancestor", "master", branch);
 		expect(git(f.origin, "rev-parse", branch)).toBe(
 			git(f.main, "rev-parse", branch),
 		);
 	}
 	expect(git(f.main, "rev-parse", "sessionXa-pr3-unrelated")).toBe(unrelated);
 	expect(existsSync(join(f.gitDir, "restack-lease"))).toBe(false);
+});
+
+test("restack explicit base overrides the configured project base", () => {
+	const f = fixture(false, "master");
+	git(f.main, "switch", "-c", "release/stable");
+	writeFileSync(join(f.main, "release"), "release\n");
+	git(f.main, "add", "release");
+	git(f.main, "commit", "-m", "advance release base");
+	git(f.main, "push", "origin", "release/stable");
+	const result = run(f.worktree, { baseBranch: "origin/release/stable" });
+	expect(result.code).toBe(0);
+	for (const branch of [f.root, f.next]) {
+		git(f.main, "merge-base", "--is-ancestor", "release/stable", branch);
+		expect(git(f.origin, "rev-parse", branch)).toBe(
+			git(f.main, "rev-parse", branch),
+		);
+	}
 });
 
 test("dry-run preserves refs, checkout and lease without fetching", () => {

@@ -62,6 +62,13 @@ function dryRun(command: Command): Command {
 	);
 }
 
+function baseBranchOption(): Option {
+	return new Option(
+		"--base-branch <branch>",
+		"ベースブランチ（省略時は設定の origin/<baseBranch>、未設定なら対話）",
+	).env("BASE_BRANCH");
+}
+
 dryRun(
 	program
 		.command("start")
@@ -71,12 +78,7 @@ dryRun(
 		"--task <text>",
 		"命名スクリプトへ渡す作業内容（既定の命名は日付＋UUID）",
 	)
-	.addOption(
-		new Option(
-			"--base-branch <branch>",
-			"ベースブランチ（既定: origin/main）",
-		).env("BASE_BRANCH"),
-	)
+	.addOption(baseBranchOption())
 	.addOption(
 		new Option("--copy-from <directory>", "管理外ファイルのコピー元").env(
 			"COPY_FROM",
@@ -113,12 +115,7 @@ dryRun(
 		.command("restack")
 		.description("線形スタックを rebase し lease 付きで一括 push します"),
 )
-	.addOption(
-		new Option(
-			"--base-branch <branch>",
-			"ベースブランチ（既定: origin/main）",
-		).env("BASE_BRANCH"),
-	)
+	.addOption(baseBranchOption())
 	.addOption(
 		new Option(
 			"--push-only",

@@ -1,8 +1,8 @@
 import { existsSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ensureClean, fetchBase, worktrees } from "../git";
-import { repository } from "../project";
-import { askText, confirmAction } from "../prompts";
+import { repository, resolveBaseRef } from "../project";
+import { confirmAction } from "../prompts";
 import { sessionRootBranch, stackBranches } from "../session";
 import { commandLine, ui } from "../ui";
 
@@ -71,8 +71,7 @@ export async function restack(options: {
 		}
 	}
 	ui.detail("スタック", branches.join(", "));
-	const base =
-		options.baseBranch || (await askText("ベースブランチ", "origin/main"));
+	const base = await resolveBaseRef(repo.config.config, options.baseBranch);
 	await fetchBase(git, base, options.dryRun ?? false);
 	const original =
 		git.tryRun(["symbolic-ref", "--quiet", "--short", "HEAD"]).out.trim() ||

@@ -1,7 +1,22 @@
 import { realpathSync } from "node:fs";
 import { dirname, resolve } from "node:path";
-import { loadProjectConfig } from "./config";
+import { loadProjectConfig, type ProjectConfig } from "./config";
 import { Git } from "./git";
+import { askText } from "./prompts";
+
+export function projectBase(config: ProjectConfig) {
+	const branch = config.baseBranch ?? "main";
+	return { branch, remoteRef: `origin/${branch}` };
+}
+
+export async function resolveBaseRef(
+	config: ProjectConfig,
+	override?: string,
+): Promise<string> {
+	if (override) return override;
+	const { remoteRef } = projectBase(config);
+	return config.baseBranch ? remoteRef : askText("ベースブランチ", remoteRef);
+}
 
 export function repositoryLocation() {
 	const initial = new Git();

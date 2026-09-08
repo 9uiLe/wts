@@ -51,6 +51,19 @@ export async function sessionCases(): Promise<Capture[]> {
 		return result;
 	}
 	const base = ["start", "--base-branch", "main", "--task", ""];
+	config({ baseBranch: "master", naming: { branch: { script } } });
+	git(p, "push", "origin", "main:master");
+	await cap(
+		"start: 設定のベースで対話なし成功",
+		["start", "--task", ""],
+		0,
+		p,
+		{ pipe: true, env: { PREVIEW_NAME: "configured-base" } },
+	);
+	assert.equal(
+		git(join(d, "repo-worktrees", "configured-base"), "rev-parse", "HEAD"),
+		git(p, "rev-parse", "origin/master"),
+	);
 	config({ naming: { branch: { script } } });
 	await cap("start: dry-run", [...base, "--dry-run"], 0);
 	await cap("start: タスクとベースを対話入力", ["start", "--dry-run"], 0, p, {

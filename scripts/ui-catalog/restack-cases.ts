@@ -55,8 +55,14 @@ export async function restackCases(): Promise<Capture[]> {
 			);
 		items.push(result);
 	};
-	const setup = (name: string, conflict = false) => {
+	const setup = (name: string, conflict = false, baseBranch?: string) => {
 		const repo = fixture(`restack-${name}`);
+		if (baseBranch) {
+			writeFileSync(join(repo, ".wts.json"), JSON.stringify({ baseBranch }));
+			git(repo, "add", ".wts.json");
+			git(repo, "commit", "-m", "configure base branch");
+			git(repo, "push", "origin", `main:${baseBranch}`);
+		}
 		const worktree = join(`${repo}-worktrees`, "session");
 		git(repo, "worktree", "add", "-b", "session", worktree);
 		const gitDir = git(worktree, "rev-parse", "--absolute-git-dir");
@@ -77,6 +83,14 @@ export async function restackCases(): Promise<Capture[]> {
 		}
 		return { repo, worktree, gitDir };
 	};
+	const configured = setup("configured", false, "master");
+	await take(
+		"設定のベースで対話なしdry-run",
+		["--dry-run"],
+		configured.worktree,
+		0,
+		{ pipe: true },
+	);
 	const normal = setup("normal");
 	await take(
 		"dry-run（未公開branchの空lease）",

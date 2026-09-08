@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { sep } from "node:path";
 import { commandAsync, type Git, requireCommand, worktrees } from "../git";
-import { repository } from "../project";
+import { projectBase, repository } from "../project";
 import { confirmAction } from "../prompts";
 import { ui } from "../ui";
 
@@ -38,6 +38,7 @@ async function rewriteReasons(
 	owner: string,
 	branch: string,
 	oid: string,
+	remoteBase: string,
 ) {
 	const reasons: string[] = [];
 	const remote = await git.tryRunAsync([
@@ -69,16 +70,16 @@ async function rewriteReasons(
 		"rev-list",
 		"--count",
 		"--min-parents=2",
-		`origin/main..${branch}`,
+		`${remoteBase}..${branch}`,
 	]);
 	if (merges.code !== 0 || merges.out.trim() !== "0") {
 		reasons.push(`独自 merge commit ${merges.out.trim() || "?"} 件`);
 	}
 	try {
-		const base = git.run(["merge-base", "origin/main", branch]).trim();
-		const main = await patchIds(git, `${base}..origin/main`);
-		const local = await patchIds(git, `origin/main..${branch}`);
-		const unmatched = [...local].filter((id) => !main.has(id)).length;
+		const base = git.run(["merge-base", remoteBase, branch]).trim();
+		const upstream = await patchIds(git, `${base}..${remoteBase}`);
+		const local = await patchIds(git, `${remoteBase}..${branch}`);
+		const unmatched = [...local].filter((id) => !upstream.has(id)).length;
 		if (unmatched) reasons.push(`パッチ非同値 ${unmatched} 件`);
 	} catch {
 		reasons.push("パッチ比較に失敗");
@@ -126,7 +127,10 @@ export async function cleanupSessionBranches(options: {
 	yes?: boolean;
 }): Promise<void> {
 	ui.heading("cleanup");
-	const { git, worktreesBase } = await repository();
+	const { git, worktreesBase, config } = await repository();
+	const { branch: baseBranch, remoteRef: remoteBase } = projectBase(
+		config.config,
+	);
 	const trees = worktrees(git);
 	const current = git.run(["rev-parse", "--abbrev-ref", "HEAD"]).trim();
 	const candidates = git
@@ -136,7 +140,7 @@ export async function cleanupSessionBranches(options: {
 		.filter(
 			(branch) =>
 				branch &&
-				branch !== "main" &&
+				branch !== baseBranch &&
 				branch !== current &&
 				!trees.some(
 					(tree) =>
@@ -164,13 +168,13 @@ export async function cleanupSessionBranches(options: {
 	if (
 		!options.dryRun &&
 		(
-			await ui.task("origin/main を取得しています", () =>
-				git.tryRunAsync(["fetch", "-q", "origin", "main"]),
+			await ui.task(`${remoteBase} を取得しています`, () =>
+				git.tryRunAsync(["fetch", "-q", "origin", baseBranch]),
 			)
 		).code !== 0
 	) {
 		ui.warn(
-			"origin/main の fetch に失敗しました（判定が古い状態で行われます）",
+			`${remoteBase} の fetch に失敗しました（判定が古い状態で行われます）`,
 		);
 	}
 	const automatic: { branch: string; path: string | undefined }[] = [];
@@ -185,10 +189,10 @@ export async function cleanupSessionBranches(options: {
 		if (!heads.length) continue;
 		const reasons =
 			heads.includes(oid) ||
-			git.tryRun(["merge-base", "--is-ancestor", oid, "origin/main"]).code === 0
+			git.tryRun(["merge-base", "--is-ancestor", oid, remoteBase]).code === 0
 				? []
 				: await ui.task(`${branch} の変更を比較しています`, () =>
-						rewriteReasons(git, owner, branch, oid),
+						rewriteReasons(git, owner, branch, oid, remoteBase),
 					);
 		const path = trees.find((tree) => tree.branch === branch)?.path;
 		if (reasons.length) {
@@ -229,7 +233,7 @@ export async function cleanupSessionBranches(options: {
 			}
 			removedTrees++;
 		}
-		// 書き換え前の tip は main の祖先ではないため、分類で証明した上で -D を使う。
+		// 書き換え前の tip は基準ブランチの祖先ではないため、分類で証明した上で -D を使う。
 		if (git.tryRun(["branch", "-D", branch]).code !== 0) failed.push(branch);
 		else removedBranches++;
 	}
