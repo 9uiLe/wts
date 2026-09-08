@@ -24,7 +24,9 @@ Nix Flakes は Bun、Git、OSV-Scanner、Coreutils を提供し、Bun は JavaSc
 
 ### 設定と作成元
 
-メインチェックアウトはリポジトリを clone したディレクトリです。作業用 worktree は、その隣の `wts-worktrees` ディレクトリに作成します。リポジトリで管理する `.wts.json` が、この配置とベースブランチ `master`、日付＋UUID の既定命名を指定しています。
+メインチェックアウトはリポジトリを clone したディレクトリです。作業用 worktree は、その隣の `wts-worktrees` ディレクトリに作成します。リポジトリで管理する `.wts.json` が、この配置とベースブランチ `master`、作業内容に基づく命名を指定しています。
+
+命名には Python 3 と認証済み Claude CLI が必要です。`scripts/name-session.py` は Claude の Haiku で英語の作業名を生成し、start では `YYYYMMDD-<作業名>`、stack では `<root>-pr<n>-<作業名>` を使います。worktree はブランチと同じ名前です。命名時は Claude への通信が発生し、`--dry-run` でも生成します。生成失敗や名前の衝突は作成前のエラーになります。
 
 `start` は `origin/master` からセッションを作成し、`restack` は同じ参照から更新を取り込みます。`cleanup` は `master` を削除対象から除き、`origin/master` への取り込み状況を調べます。別のベースを使う操作では `start`・`restack` の `--base-branch` を指定できます。設定の契約と優先順位は [設定資料](configuration.md) を参照してください。
 
@@ -34,8 +36,8 @@ Nix Flakes は Bun、Git、OSV-Scanner、Coreutils を提供し、Bun は JavaSc
 
 ```bash
 ./scripts/dev.sh config check
-./scripts/dev.sh start --dry-run
-./scripts/dev.sh start
+./scripts/dev.sh start --task '設定の診断を改善する' --dry-run
+./scripts/dev.sh start --task '設定の診断を改善する'
 ```
 
 作成される worktree のソースと `.wts.json` は、ベースのコミットに含まれるものです。作成結果の `Path` へ `cd` し、その worktree にある `./scripts/setup.sh` を実行してください。`node_modules` は Git 管理しないため、worktree ごとに固定依存を取得します。以降のソース実行と検証には、作業中の worktree にあるスクリプトを使います。
@@ -47,7 +49,7 @@ Nix Flakes は Bun、Git、OSV-Scanner、Coreutils を提供し、Bun は JavaSc
 同じ worktree で次の変更を別ブランチに積む場合は `stack` を使います。現在のブランチがスタックの先端で、未コミット変更がないことが必要です。最初の追加ブランチの番号は `2` です。
 
 ```bash
-./scripts/dev.sh stack --pr-number 2
+./scripts/dev.sh stack --pr-number 2 --task '診断結果の表示を整える'
 ```
 
 `master` の更新をスタックへ取り込む場合は `restack` を使います。rebase 後の origin への push は対話で確認します。PR の作成・マージは GitHub または gh で行ってください。
