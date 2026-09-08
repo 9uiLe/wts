@@ -439,8 +439,8 @@ button:hover { background: #263142; color: #f1f5fa; }
 .search-field { flex: 1; max-width: 440px; min-width: 0; }
 input { width: 100%; min-width: 0; border: 1px solid #3c485a; border-radius: 7px; padding: 10px 12px; background: #111720; color: #e1e7ef; font-size: 14px; }
 input::placeholder { color: #8493a7; }
-.command-filters { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
-.command-filters .control-label { margin: 0; flex-shrink: 0; }
+.command-filters { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); }
+.command-filters .control-label { margin-bottom: 8px; }
 .filter-buttons { display: flex; gap: 4px; flex-wrap: wrap; }
 .filter-buttons button { padding: 6px 10px; }
 .filter-buttons button[aria-pressed="true"] { color: #cee0fc; background: #26374f; border-color: #405777; }
@@ -488,7 +488,7 @@ summary:hover { color: #dde8f6; }
   .toolbar { padding: 12px; }
   .toolbar-primary { align-items: stretch; flex-direction: column; gap: 14px; }
   .search-field { max-width: none; }
-  .command-filters { align-items: flex-start; flex-direction: column; gap: 8px; margin-top: 12px; padding-top: 12px; }
+  .command-filters { margin-top: 12px; padding-top: 12px; }
   .filter-buttons { gap: 2px; }
   .filter-buttons button { padding: 5px 8px; }
   .results-heading { flex-direction: column; gap: 6px; margin-top: 20px; }
@@ -528,8 +528,8 @@ summary:hover { color: #dde8f6; }
         <input type="search" id="search" placeholder="ケース名・コマンド・出力" autocomplete="off">
       </div>
     </div>
-    <nav class="command-filters" aria-label="コマンドで絞り込み">
-      <span class="control-label">コマンド</span>
+    <nav class="command-filters" aria-labelledby="command-filter-label">
+      <span class="control-label" id="command-filter-label">コマンドで絞り込み</span>
       <div class="filter-buttons">${["すべて", "共通", "doctor", "init", "config", "start", "stack", "cleanup", "restack"].map((group) => `<button type="button" data-filter="${group}" aria-pressed="${group === "すべて"}">${group}</button>`).join("")}</div>
     </nav>
   </div>
