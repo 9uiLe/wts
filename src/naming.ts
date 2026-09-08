@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { LoadedConfig } from "./config";
 import type { Git } from "./git";
+import { ui } from "./ui";
 
 export type NamingContext = {
 	kind: "branch" | "worktree";
@@ -31,15 +32,15 @@ export function defaultNaming(): {
 	return { date, uuid, defaultName: `${date}-${uuid}` };
 }
 
-export function generateName(
+export async function generateName(
 	config: LoadedConfig,
 	context: NamingContext,
-): string {
+): Promise<string> {
 	const rule = config.config.naming?.[context.kind];
 	if (!rule) return context.defaultName;
-	let result: ReturnType<typeof Bun.spawnSync>;
+	let child: Bun.Subprocess<Buffer, "pipe", "pipe">;
 	try {
-		result = Bun.spawnSync([rule.script], {
+		child = Bun.spawn([rule.script], {
 			cwd: config.directory,
 			stdin: Buffer.from(
 				JSON.stringify({
@@ -53,10 +54,21 @@ export function generateName(
 	} catch {
 		throw new Error(`${context.kind} 命名スクリプトを実行できませんでした`);
 	}
-	if (result.exitCode !== 0 || result.signalCode) {
+	const [exitCode, stdout] = await ui.task(
+		context.kind === "branch"
+			? "ブランチ名を生成しています"
+			: "Worktree 名を生成しています",
+		() =>
+			Promise.all([
+				child.exited,
+				new Response(child.stdout).text(),
+				new Response(child.stderr).text(),
+			]),
+	);
+	if (exitCode !== 0 || child.signalCode) {
 		throw new Error(`${context.kind} 命名スクリプトが失敗しました`);
 	}
-	const name = (result.stdout?.toString() ?? "").replace(/\r?\n$/, "");
+	const name = stdout.replace(/\r?\n$/, "");
 	if (!name.trim() || /[\r\n\0]/.test(name)) {
 		throw new Error(
 			`${context.kind} 命名スクリプトは名前を 1 行で出力してください`,

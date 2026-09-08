@@ -15,6 +15,7 @@
 		"lint": "biome lint .",
 		"typecheck": "bun run --bun tsc --noEmit",
 		"test": "bun test",
+		"ui:catalog": "bun scripts/ui-catalog.ts",
 		"verify:deps": "bash scripts/verify-dependencies.sh",
 		"build": "bun scripts/build.ts",
 		"check": "bun run format:check && bun run lint && bun run typecheck && bun test && bun run build"
@@ -22,7 +23,9 @@
 	"trustedDependencies": [],
 	"dependencies": {
 		"@clack/prompts": "1.7.0",
-		"commander": "15.0.0"
+		"chalk": "5.6.2",
+		"commander": "15.0.0",
+		"ora": "9.4.1"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.5.12",
