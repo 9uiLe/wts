@@ -2,7 +2,7 @@
 
 wts（Git Worktree Session）は、作業用の Git worktree と、依存関係のあるブランチの列を管理する Apple Silicon macOS 向け CLI です。
 
-`init` でプロジェクト設定を用意し、`start` で作業場所を作ります。作業を分けてレビューしたいときは `stack` でブランチを積み重ね、`restack` でベースの更新を取り込みます。マージ後は `cleanup` でブランチと worktree を整理します。
+プロジェクトごとに `.wts.json` でベースブランチ、worktree の配置先、命名方法を共有します。`init` で設定ファイルを用意し、`start` で作業場所を作ります。作業を分けてレビューしたいときは `stack` でブランチを積み重ね、`restack` でベースの更新を取り込みます。マージ後は `cleanup` でブランチと worktree を整理します。
 
 ## インストール
 
@@ -92,28 +92,43 @@ Git リポジトリ外や非対話環境でも実行できます。認証確認�
 | スタック番号（`n`） | セッション内の順番。`--pr-number` で指定する 2 以上の整数で、GitHub の PR 番号とは別 |
 | 管理範囲 | 設定の `worktreeDirectory` で指定するディレクトリ。セッションの配置と cleanup の対象判定に使用 |
 
-ベースブランチの対話入力の既定値は `origin/main` です。これは Git の参照名であり、メインチェックアウトのパスを表しません。リポジトリのブランチに応じて `--base-branch origin/master` などを指定してください。cleanup の判定では `main` と `origin/main` を使用します。
+ベースブランチは作業の分岐元と更新の取り込み元で、プロジェクト設定で指定します。メインチェックアウトという呼び名はディレクトリの役割を表し、ブランチ名が `main` であることを意味しません。
 
 ## プロジェクトを初期化する
 
-対象リポジトリのメインチェックアウトで実行します。
+対象リポジトリのメインチェックアウトで設定ファイルを生成します。
 
 ```bash
 cd /path/to/project
 wts init
+```
+
+`init` は `.wts.json` を生成し、既存ファイルは上書きしません。生成後に `.wts.json` を編集し、プロジェクトのベースブランチを指定します。ベースが `main`、メインチェックアウトの名前が `project` の例です。
+
+```json
+{
+  "baseBranch": "main",
+  "worktreeDirectory": "../project-worktrees",
+  "naming": {}
+}
+```
+
+`baseBranch` には `master` や `release/stable` など、プロジェクトで使うローカルブランチ名を `origin/` なしで指定します。`start`・`restack` は `origin/<baseBranch>` を使用します。`cleanup` はそのローカルブランチを保護し、`origin/<baseBranch>` を取り込み判定の基準にします。
+
+既定の作成先はメインチェックアウトと同じ親ディレクトリの `<プロジェクト名>-worktrees`、命名は日本時間の日付＋UUID です。設定を検査し、セッションのベースブランチへコミットして共有してください。
+
+```bash
 wts config check
 git add .wts.json
 git commit -m "Configure wts sessions"
 ```
 
-`init` は `.wts.json` を生成し、既存ファイルは上書きしません。既定の作成先はメインチェックアウトと同じ親ディレクトリの `<プロジェクト名>-worktrees`、命名は日本時間の日付＋UUID です。設定をセッションのベースブランチへコミットして共有してください。
-
-`start`・`stack`・`restack`・`cleanup` は設定ファイルがないとエラーになります。作成先・命名スクリプト・プロンプトの設定方法と検査は [設定資料](docs/configuration.md)にまとめています。
+`start`・`stack`・`restack`・`cleanup` は設定ファイルがないとエラーになります。設定の探索規則、省略時の動作、作成先・命名スクリプト・プロンプトの指定方法は [設定資料](docs/configuration.md)を参照してください。
 
 ## セッションで作業する
 
 ```bash
-wts start --base-branch origin/main
+wts start
 ```
 
 表示された `Path` へ移動してください。wts は呼び出し元シェルのディレクトリを変更しません。
@@ -123,7 +138,7 @@ cd /path/printed/by/wts
 # ファイルを編集して、作業をコミットする
 wts stack --pr-number 2
 # 次の作業を編集・コミットする
-wts restack --base-branch origin/main --push
+wts restack --push
 ```
 
 `stack` は同じ worktree 内で新しいブランチへ切り替えます。現在のブランチがスタックの先端で、未コミット変更がないことが必要です。番号省略時は、使用済みの最大番号＋1 を対話で提示します。
@@ -150,7 +165,9 @@ wts cleanup
 
 4 コマンドは `--dry-run` に対応します。全オプションは `wts <コマンド> --help` で確認できます。
 
-ベースとスタック番号は省略時に対話で入力します。命名スクリプトを設定した場合は作業内容も対話で入力します。非対話環境では必要な入力をオプションで渡してください。`--task ''` は空の作業内容を明示し、命名スクリプトがあれば空の内容でも実行します。
+`start`・`restack` のベースは `--base-branch`、`BASE_BRANCH`、設定の `baseBranch` に対応する `origin/<baseBranch>` の順に優先します。操作ごとに別のベースを使う場合は `wts start --base-branch origin/release/stable` のように指定します。これらの上書きは `cleanup` の基準を変更しません。
+
+ベースをいずれの方法でも指定しない場合は対話で入力し、入力の既定値は `origin/main` です。スタック番号も省略時に対話で入力します。命名スクリプトを設定した場合は作業内容も対話で入力します。非対話環境では必要な入力をオプションで渡してください。`baseBranch` を設定していれば、非対話でもベースの指定は不要です。`--task ''` は空の作業内容を明示し、命名スクリプトがあれば空の内容でも実行します。
 
 `BASE_BRANCH`、`COPY_FROM`、`PR_NUMBER`、`PUSH=1`、`PUSH_ONLY=1`、`DRY_RUN=1` を対応するオプションの代わりに使用できます。オプションを優先します。
 
@@ -159,7 +176,7 @@ wts cleanup
 4 コマンドとも `--dry-run` または `DRY_RUN=1` に対応します。fetch、Git ブランチ・worktree の変更、コピー、セッション情報・lease の書き込み、push は行いません。削除判定の GitHub 照会、restack のリモート参照取得、設定済み命名スクリプトの実行は行います。命名スクリプト自身の通信や副作用はその実装に依存します。
 
 ```bash
-wts start --task '' --base-branch origin/main --dry-run
+wts start --task '' --dry-run
 wts cleanup --dry-run
 ```
 
@@ -176,7 +193,7 @@ wts cleanup --dry-run
 
 ### マージ済みブランチの整理
 
-`cleanup` は `main`、実行中のブランチ、設定された作成先の外にある worktree で使用中のブランチを除外します。同一リポジトリのマージ済み PR を確認し、その head と一致するか `origin/main` に到達可能なブランチを削除候補にします。それ以外はリモートブランチの不存在、push 済み tip、独自 merge commit の不存在、厳密なパッチ一致を確認します。削除を証明できない候補は理由と手動コマンドを表示します。
+`cleanup` は設定の `baseBranch`（省略時は `main`）、実行中のブランチ、設定された作成先の外にある worktree で使用中のブランチを除外します。同一リポジトリのマージ済み PR を確認し、その head と一致するか `origin/<baseBranch>` に到達可能なブランチを削除候補にします。それ以外はリモートブランチの不存在、push 済み tip、独自 merge commit の不存在、ベースとの厳密なパッチ一致を確認します。削除を証明できない候補は理由と手動コマンドを表示します。
 
 ```bash
 wts cleanup
@@ -190,7 +207,7 @@ wts cleanup
 
 ```bash
 git rebase --continue
-wts restack --push-only --base-branch origin/main --push
+wts restack --push-only --push
 ```
 
 `--push-only` は保存した lease を使い、他者が push した変更の上書きを拒否します。リモート確認失敗や不足した lease はエラーになります。push の否定・Ctrl-C は正常終了し、lease を残します。通常終了時は元のブランチへ戻ります。

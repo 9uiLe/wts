@@ -4,18 +4,15 @@
 
 wts は Git リポジトリの `.wts.json` を読み取ります。実行中の worktree のルートを優先し、ファイルがなければメインチェックアウトのルートを探します。両方になければ設定を必要とするコマンドはエラーになります。設定はマージせず、見つかった一つのファイルを使います。
 
-## 初期化と既定の動作
+## 初期化と共有
 
-対象の Git リポジトリで初期化します。サブディレクトリから実行しても、その worktree のルートに `.wts.json` を生成します。
+対象リポジトリのメインチェックアウトで初期化します。サブディレクトリから実行しても、その worktree のルートに `.wts.json` を生成します。
 
 ```bash
 wts init
-wts config check
-git add .wts.json
-git commit -m "Configure worktree sessions"
 ```
 
-メインチェックアウトの名前が `project` の場合、次の設定を生成します。
+メインチェックアウトの名前が `project` の場合、生成内容は次のとおりです。既存の `.wts.json` は内容が不正であっても上書きしません。
 
 ```json
 {
@@ -24,18 +21,31 @@ git commit -m "Configure worktree sessions"
 }
 ```
 
-既存の `.wts.json` は内容が不正であっても上書きしません。設定ファイルをセッションのベースブランチへコミットすると、新しい worktree にも引き継がれます。命名スクリプトを追加した場合は、そのファイルもコミットしてください。
+生成後に `baseBranch` を設定し、作成先と命名方法をプロジェクトに合わせます。ベースブランチが `main` の場合の設定例です。
+
+```json
+{
+  "baseBranch": "main",
+  "worktreeDirectory": "../project-worktrees",
+  "naming": {}
+}
+```
+
+設定を検査し、セッションのベースブランチへコミットしてください。新しい worktree にも設定が引き継がれます。命名スクリプトを使う場合は、そのファイルもコミットします。
+
+```bash
+wts config check
+git add .wts.json
+git commit -m "Configure worktree sessions"
+```
 
 `start`・`stack`・`cleanup`・`restack` とファイル指定なしの `config check` は設定ファイルが必要です。`init`・`doctor`・ヘルプ・バージョン表示は設定を必要としません。
-
-設定項目を省略した場合、作成先はメインチェックアウトの絶対パスに `-worktrees` を付けたパス、セッションのブランチ名は日本時間の `YYYYMMDD-<UUID>` です。UUID は作成ごとに生成します。worktree のディレクトリ名はブランチ名と同じです。AI や外部の命名コマンドは呼び出しません。既存のブランチ・パスと衝突した場合は上書きせずエラーにします。
-
-スタックブランチは `<root>-pr<n>-<YYYYMMDD-UUID>` になります。`root` はセッション作成時のブランチ、`n` は GitHub の PR 番号とは独立したスタック内の番号です。命名スクリプトを設定しても `<root>-pr<n>-` の部分はスタック管理に使用するため固定です。
 
 ## 設定項目
 
 ```json
 {
+  "baseBranch": "main",
   "worktreeDirectory": "../project-worktrees",
   "naming": {
     "branch": {
@@ -52,6 +62,7 @@ git commit -m "Configure worktree sessions"
 
 | 項目 | 型 | 省略時・内容 |
 | --- | --- | --- |
+| `baseBranch` | 空でない文字列 | プロジェクトのローカルベースブランチ名。start・restack の分岐元と更新元、cleanup の保護対象と取り込み判定を指定。省略時の動作は [ベースブランチ](#ベースブランチ)を参照 |
 | `worktreeDirectory` | 空でない文字列 | メインチェックアウトの絶対パスに `-worktrees` を付けたパス。絶対パスまたはメインチェックアウトを基準とする相対パス |
 | `naming` | オブジェクト | スクリプトを使わず日付＋UUID で命名 |
 | `naming.branch` | オブジェクト | 日付＋UUID。設定すると start のブランチ名と stack の接尾辞をスクリプトで生成 |
@@ -61,9 +72,23 @@ git commit -m "Configure worktree sessions"
 
 不明な項目、型違い、`null`、存在しない・実行できないスクリプトはエラーです。`naming.branch` や `naming.worktree` を指定するときは `script` が必要です。`~`・環境変数・シェル式の展開はしません。スクリプトには shebang と実行権限を設定します。
 
+### ベースブランチ
+
+`baseBranch` は `main`、`master`、`release/stable` のように、`origin/` を付けずに指定します。Git で有効なローカルブランチ名が必要です。設定検査では参照の存在を要求しません。cleanup は設定したローカルブランチを削除対象から除外し、通常実行時に origin からこのブランチを fetch して、`origin/<baseBranch>` を祖先判定とパッチ一致の基準に使用します。`baseBranch` の省略時は `main` を保護し、`origin/main` を判定に使用します。
+
+start・restack のベースは `--base-branch`、`BASE_BRANCH`、明示した `baseBranch` の `origin/<baseBranch>` の順に優先します。いずれも指定しなければ対話で入力し、その既定値は `origin/main` です。`baseBranch` を明示していれば、非対話でもベースの入力を省略できます。cleanup の基準は設定で決まり、`BASE_BRANCH` では変わりません。
+
+### worktree の配置と管理範囲
+
 作成先は存在しなくても指定できます。既存の親パスがディレクトリであり書き込み可能であることを検査します。メインチェックアウトそのものや Git の管理領域は作成先にできません。リポジトリ内に置く場合は、そのディレクトリを `.gitignore` に追加してください。cleanup はこの作成先を管理範囲として使うため、worktree 専用のディレクトリを指定します。
 
 相対の作成先は worktree 内から実行しても常にメインチェックアウト基準です。名前の異なる worktree でも stack・restack を使えるよう、start は worktree 専用の Git ディレクトリに `wts-session.json` を保存します。stack・restack はこの記録を必要とし、手動で作成した worktree は対象にしません。作成先を後から変更した場合、変更前の場所は現在の管理範囲から外れます。
+
+### 既定の命名
+
+命名スクリプトを設定しない場合、セッションのブランチ名は日本時間の `YYYYMMDD-<UUID>` です。UUID は作成ごとに生成し、worktree のディレクトリ名にはブランチ名を使います。AI や外部の命名コマンドは呼び出しません。既存のブランチ・パスと衝突した場合は上書きせずエラーにします。
+
+スタックブランチは `<root>-pr<n>-<YYYYMMDD-UUID>` になります。`root` はセッション作成時のブランチ、`n` は GitHub の PR 番号とは独立したスタック内の番号です。命名スクリプトを設定しても `<root>-pr<n>-` の部分はスタック管理に使用するため固定です。
 
 ## 設定の検査
 
@@ -120,10 +145,12 @@ wts config check /path/to/project/.wts.json
 chmod +x scripts/name-with-claude.py
 ```
 
-`.wts.json` に次を設定します。
+`.wts.json` の `naming.branch` にスクリプトとプロンプトを設定します。ベースブランチと作成先を含む例です。
 
 ```json
 {
+  "baseBranch": "main",
+  "worktreeDirectory": "../project-worktrees",
   "naming": {
     "branch": {
       "script": "./scripts/name-with-claude.py",

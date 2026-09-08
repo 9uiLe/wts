@@ -9,7 +9,8 @@ import {
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
-function fixture() {
+function fixture(baseBranch?: string) {
+	const base = baseBranch ?? "main";
 	const dir = mkdtempSync(join(tmpdir(), "wts-cleanup-"));
 	const root = join(dir, "repo");
 	const remote = join(dir, "origin.git");
@@ -32,14 +33,17 @@ function fixture() {
 		if (result.exitCode) throw new Error(result.stderr.toString());
 		return result.stdout.toString().trim();
 	}
-	git("init", "-b", "main");
+	git("init", "-b", base);
 	git("init", "--bare", remote);
-	writeFileSync(join(root, ".wts.json"), JSON.stringify({ naming: {} }));
+	writeFileSync(
+		join(root, ".wts.json"),
+		JSON.stringify({ naming: {}, baseBranch }),
+	);
 	writeFileSync(join(root, "file"), "base\n");
 	git("add", ".");
 	git("commit", "-m", "base");
 	git("remote", "add", "origin", remote);
-	git("push", "-u", "origin", "main");
+	git("push", "-u", "origin", base);
 	const heads: Record<
 		string,
 		{ headRefOid: string; headRepository: { nameWithOwner: string } }[]
@@ -75,6 +79,7 @@ function fixture() {
 	}
 	return {
 		root,
+		base,
 		dir,
 		git,
 		merged,
@@ -113,43 +118,52 @@ test("cleanup deletes merged heads and reachable tips, protecting external workt
 	}
 });
 
-test("cleanup proves rebased patches, retaining whitespace differences and unpushed tips", () => {
-	const f = fixture();
-	try {
-		f.git("switch", "-c", "rewritten");
-		writeFileSync(join(f.root, "file"), "base\nchange\n");
-		f.git("commit", "-am", "feature");
-		const old = f.git("rev-parse", "HEAD");
-		f.git("branch", "unpushed");
-		f.git("switch", "main");
-		writeFileSync(join(f.root, "other"), "independent\n");
-		f.git("add", ".");
-		f.git("commit", "-m", "independent");
-		f.git("cherry-pick", old);
-		const merged = f.git("rev-parse", "HEAD");
-		f.git("push", "origin", "main");
-		f.git("switch", "-c", "whitespace", "rewritten");
-		writeFileSync(join(f.root, "file"), "base\nchange \n");
-		f.git("commit", "-am", "whitespace", "--amend");
-		f.git("switch", "main");
-		for (const branch of ["rewritten", "whitespace", "unpushed"])
-			f.merged(branch, merged);
-		const review = f.run({ dryRun: true }, { API_FAIL: "1" });
-		expect(review.code).toBe(0);
-		expect(review.text).toContain("tip が origin に無い");
-		expect(review.text).not.toContain("削除対象:");
-		const result = f.run({ yes: true });
-		expect(result.code).toBe(0);
-		expect(result.text).toContain("要確認: whitespace");
-		expect(result.text).toContain("パッチ非同値");
-		expect(f.git("branch", "--format=%(refname:short)").split("\n")).toEqual([
-			"main",
-			"whitespace",
-		]);
-	} finally {
-		f.dispose();
-	}
-});
+const baseCases = [
+	["default main", undefined],
+	["configured master", "master"],
+	["configured release/stable", "release/stable"],
+] as const;
+
+test.each(baseCases)(
+	"cleanup proves rebased patches against %s, retaining whitespace differences and unpushed tips",
+	(_label, baseBranch) => {
+		const f = fixture(baseBranch);
+		try {
+			f.git("switch", "-c", "rewritten");
+			writeFileSync(join(f.root, "file"), "base\nchange\n");
+			f.git("commit", "-am", "feature");
+			const old = f.git("rev-parse", "HEAD");
+			f.git("branch", "unpushed");
+			f.git("switch", f.base);
+			writeFileSync(join(f.root, "other"), "independent\n");
+			f.git("add", ".");
+			f.git("commit", "-m", "independent");
+			f.git("cherry-pick", old);
+			const merged = f.git("rev-parse", "HEAD");
+			f.git("push", "origin", f.base);
+			f.git("switch", "-c", "whitespace", "rewritten");
+			writeFileSync(join(f.root, "file"), "base\nchange \n");
+			f.git("commit", "-am", "whitespace", "--amend");
+			f.git("switch", f.base);
+			for (const branch of ["rewritten", "whitespace", "unpushed"])
+				f.merged(branch, merged);
+			const review = f.run({ dryRun: true }, { API_FAIL: "1" });
+			expect(review.code).toBe(0);
+			expect(review.text).toContain("tip が origin に無い");
+			expect(review.text).not.toContain("削除対象:");
+			const result = f.run({ yes: true });
+			expect(result.code).toBe(0);
+			expect(result.text).toContain("要確認: whitespace");
+			expect(result.text).toContain("パッチ非同値");
+			expect(f.git("branch", "--format=%(refname:short)").split("\n")).toEqual([
+				f.base,
+				"whitespace",
+			]);
+		} finally {
+			f.dispose();
+		}
+	},
+);
 
 test("dry-run preserves refs and worktrees and never fetches", () => {
 	const f = fixture();
@@ -207,3 +221,32 @@ test("cleanup reports missing gh without deleting candidates", () => {
 		f.dispose();
 	}
 });
+
+test.each(baseCases)(
+	"cleanup protects %s independently of worktrees and fetches its updated ancestry",
+	(_label, baseBranch) => {
+		const f = fixture(baseBranch);
+		try {
+			const original = f.git("rev-parse", "HEAD");
+			f.git("switch", "-c", "current");
+			f.git("switch", "-c", "ancestor");
+			writeFileSync(join(f.root, "file"), "updated base\n");
+			f.git("commit", "-am", "update");
+			const updated = f.git("rev-parse", "HEAD");
+			f.git("push", "origin", `HEAD:refs/heads/${f.base}`);
+			f.git("update-ref", `refs/remotes/origin/${f.base}`, original);
+			f.git("switch", "current");
+			f.merged(f.base, original);
+			f.merged("ancestor", "rewritten");
+			const result = f.run({ yes: true }, { API_FAIL: "1" });
+			expect(result.code).toBe(0);
+			expect(result.text).toContain("1 ブランチ・0 Worktree");
+			expect(f.git("rev-parse", `origin/${f.base}`)).toBe(updated);
+			expect(f.git("branch", "--format=%(refname:short)").split("\n")).toEqual(
+				["current", f.base].sort(),
+			);
+		} finally {
+			f.dispose();
+		}
+	},
+);

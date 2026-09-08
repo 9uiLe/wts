@@ -8,9 +8,11 @@ import {
 	writeFileSync,
 } from "node:fs";
 import { basename, dirname, join, relative, resolve, sep } from "node:path";
+import { Git } from "./git";
 
 export type NamingRule = { script: string; prompt?: string };
 export type ProjectConfig = {
+	baseBranch?: string;
 	worktreeDirectory?: string;
 	naming?: { branch?: NamingRule; worktree?: NamingRule };
 };
@@ -78,9 +80,28 @@ function namingRule(
 	return rule;
 }
 
+function baseBranch(value: unknown, directory: string): string {
+	const branch = string(value, "baseBranch");
+	if (
+		!branch ||
+		branch.startsWith("-") ||
+		branch === "HEAD" ||
+		new Git(directory).tryRun(["check-ref-format", `refs/heads/${branch}`])
+			.code !== 0
+	)
+		throw new Error("baseBranch は有効な Git ブランチ名で指定してください。");
+	return branch;
+}
+
 function parse(data: unknown, directory: string): ProjectConfig {
-	const value = object(data, ".wts.json", ["worktreeDirectory", "naming"]);
+	const value = object(data, ".wts.json", [
+		"baseBranch",
+		"worktreeDirectory",
+		"naming",
+	]);
 	const config: ProjectConfig = {};
+	if ("baseBranch" in value)
+		config.baseBranch = baseBranch(value.baseBranch, directory);
 	if ("worktreeDirectory" in value) {
 		config.worktreeDirectory = string(
 			value.worktreeDirectory,

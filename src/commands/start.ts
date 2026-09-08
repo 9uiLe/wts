@@ -8,7 +8,7 @@ import {
 	validateBranchName,
 	validateWorktreeName,
 } from "../naming";
-import { repository } from "../project";
+import { repository, resolveBaseRef } from "../project";
 import { askText } from "../prompts";
 import { recordSession } from "../session";
 import { commandLine, ui } from "../ui";
@@ -27,8 +27,7 @@ export async function startWorktreeSession(options: {
 		(repo.config.config.naming?.branch || repo.config.config.naming?.worktree
 			? await askText("作業内容 (Enter でスキップ)")
 			: "");
-	const base =
-		options.baseBranch || (await askText("ベースブランチ", "origin/main"));
+	const base = await resolveBaseRef(repo.config.config, options.baseBranch);
 	validateRef(base);
 	const naming = defaultNaming();
 	const branch = await generateName(repo.config, {

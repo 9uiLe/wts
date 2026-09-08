@@ -11,6 +11,10 @@ const errorEvidence: Record<string, string> = {
 	"config check JSON構文不正": "設定ファイルの JSON 構文が不正です",
 	"config check ルート型不正": ".wts.json はオブジェクトで指定してください。",
 	"config check 未知キー": "不明な設定キー: .wts.json.unknown",
+	"config check baseBranch型不正": "baseBranch は文字列で指定してください。",
+	"config check baseBranch NUL": "baseBranch に NUL は使用できません。",
+	"config check baseBranch名不正":
+		"baseBranch は有効な Git ブランチ名で指定してください。",
 	"config check worktreeDirectory型不正":
 		"worktreeDirectory は文字列で指定してください。",
 	"config check NUL": "worktreeDirectory に NUL は使用できません。",
@@ -134,6 +138,9 @@ export async function configCases(): Promise<Capture[]> {
 		["JSON構文不正", "{"],
 		["ルート型不正", "[]"],
 		["未知キー", '{"unknown":true}'],
+		["baseBranch型不正", '{"baseBranch":1}'],
+		["baseBranch NUL", '{"baseBranch":"\\u0000"}'],
+		["baseBranch名不正", '{"baseBranch":"invalid name"}'],
 		["worktreeDirectory型不正", '{"worktreeDirectory":1}'],
 		["NUL", '{"worktreeDirectory":"\\u0000"}'],
 		["空パス", '{"worktreeDirectory":" "}'],

@@ -38,7 +38,12 @@ function fixture() {
 	git(main, "commit", "-m", "initial");
 	return { dir, main };
 }
-function run(cwd: string, method: string, options: object) {
+function run(
+	cwd: string,
+	method: string,
+	options: object,
+	env: Record<string, string | undefined> = {},
+) {
 	const result = Bun.spawnSync(
 		[
 			process.execPath,
@@ -53,7 +58,7 @@ function run(cwd: string, method: string, options: object) {
 					: [flag, String(value)];
 			}),
 		],
-		{ cwd },
+		{ cwd, env: { ...process.env, BASE_BRANCH: undefined, ...env } },
 	);
 	return {
 		code: result.exitCode,
@@ -65,6 +70,39 @@ function createdPath(out: string) {
 	const path = out.match(/^Path\s+(.+)$/m)?.[1];
 	if (!path) throw new Error(out);
 	return path;
+}
+
+for (const source of ["config", "environment", "option"] as const) {
+	test(`start creates a worktree from the ${source} base with option > environment > config precedence`, () => {
+		const { main } = fixture();
+		writeFileSync(
+			join(main, ".wts.json"),
+			JSON.stringify({ baseBranch: "master", naming: {} }),
+		);
+		git(main, "add", ".wts.json");
+		git(main, "commit", "-m", "configure master base");
+		git(main, "update-ref", "refs/remotes/origin/master", "HEAD");
+		writeFileSync(join(main, "tracked"), "main ahead");
+		git(main, "add", "tracked");
+		git(main, "commit", "-m", "advance main");
+		const result = run(
+			main,
+			"startWorktreeSession",
+			{ task: "", ...(source === "option" ? { baseBranch: "main" } : {}) },
+			{
+				BASE_BRANCH:
+					source === "environment"
+						? "main"
+						: source === "option"
+							? "origin/master"
+							: undefined,
+			},
+		);
+		expect(result.code).toBe(0);
+		expect(git(createdPath(result.out), "rev-parse", "HEAD")).toBe(
+			git(main, "rev-parse", source === "config" ? "origin/master" : "main"),
+		);
+	});
 }
 
 test("worktree creation copies glob entries from base worktree and protects .git and symlink destinations", () => {
