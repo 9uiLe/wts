@@ -1,5 +1,10 @@
 {
 	"baseBranch": "master",
 	"worktreeDirectory": "../wts-worktrees",
-	"naming": {}
+	"naming": {
+		"branch": {
+			"script": "./scripts/name-session.py",
+			"prompt": "wts CLI の開発タスクから、作業内容を表す英語のスラッグを生成してください。英小文字・数字をハイフンで区切り、スラッグだけを一行で出力してください。日付やブランチの接頭辞は付けず、説明・装飾・質問は不要です。"
+		}
+	}
 }
