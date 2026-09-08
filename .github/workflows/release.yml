@@ -69,3 +69,12 @@ jobs:
             --notes-file "$RUNNER_TEMP/release-notes.md" \
             --draft --prerelease
           gh release edit "$RELEASE_TAG" --draft=false --prerelease --latest=false
+  pages:
+    needs: release
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/pages.yml
+    with:
+      version: ${{ inputs.version }}
