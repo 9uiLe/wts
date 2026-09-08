@@ -105,7 +105,9 @@ test("web install downloads the channel and verified release, installs and updat
 			expect((await stat(join(root, "local bin/wts"))).mode & 0o777).toBe(
 				0o755,
 			);
-			expect(result.stdout?.toString()).toContain("export PATH=");
+			expect(result.stdout?.toString()).toContain(">> ~/.zshrc");
+			expect(result.stdout?.toString()).toContain("source ~/.zshrc");
+			expect(result.stdout?.toString()).toContain("wts --version");
 			expect(result.stdout?.toString()).toContain("doctor --check");
 		}
 		const log = await readFile(join(root, "curl.log"), "utf8");
@@ -121,13 +123,60 @@ test("web install downloads the channel and verified release, installs and updat
 
 test("explicit version skips channel lookup and defaults to HOME/.local/bin", async () => {
 	await fixture(async ({ root, install }) => {
-		expect(install(["--version", "0.1.0-rc.1"]).exitCode).toBe(0);
+		const result = install(["--version", "0.1.0-rc.1"]);
+		expect(result.exitCode).toBe(0);
+		expect(result.stdout?.toString()).toContain(
+			"echo 'export PATH=\"$HOME/.local/bin:$PATH\"' >> ~/.zshrc",
+		);
 		expect(await readFile(join(root, ".local/bin/wts"), "utf8")).toBe(binary);
 		expect(await readFile(join(root, "curl.log"), "utf8")).not.toContain(
 			"channel.txt",
 		);
 	});
 });
+
+test("web install skips PATH setup when the installation directory is already on PATH", async () => {
+	await fixture(async ({ root, install }) => {
+		const result = install(["--install-dir", join(root, "local bin")], {
+			PATH: `${join(root, "commands")}:${join(root, "local bin")}`,
+		});
+		expect(result.exitCode).toBe(0);
+		expect(result.stdout?.toString()).not.toContain("~/.zshrc");
+		expect(result.stdout?.toString()).toContain("wts --version");
+	});
+});
+
+for (const directory of [undefined, "tools with spaces", "tools'\\name"]) {
+	test(`printed zsh instructions enable wts in the current and subsequent shell (${directory ?? "default directory"})`, async () => {
+		await fixture(async ({ root, install }) => {
+			const result = install(directory ? ["--install-dir", directory] : []);
+			expect(result.exitCode).toBe(0);
+			const commands = (result.stdout?.toString() ?? "")
+				.split("\n")
+				.filter((line) => line.startsWith("  "))
+				.join("\n");
+			const shell = (input: string) =>
+				Bun.spawnSync(["/bin/zsh", "-f"], {
+					stdin: Buffer.from(input),
+					cwd: root,
+					env: {
+						...process.env,
+						HOME: root,
+						ZDOTDIR: root,
+						PATH: join(root, "commands"),
+					},
+				});
+			for (const input of [
+				`${commands}\nwts --version\n`,
+				"source ~/.zshrc\nwts --version\n",
+			]) {
+				const invocation = shell(input);
+				expect(invocation.exitCode).toBe(0);
+				expect(invocation.stdout.toString().trim()).toBe("0.1.0-rc.1");
+			}
+		});
+	});
+}
 
 for (const failure of [
 	"download",
@@ -224,7 +273,7 @@ test("a truncated piped installer cannot start downloading or installing", async
 	await fixture(async ({ root }) => {
 		const script = await readFile(installer, "utf8");
 		const result = Bun.spawnSync([bash], {
-			stdin: Buffer.from(script.slice(0, script.indexOf("\n  mv -f"))),
+			stdin: Buffer.from(script.slice(0, script.lastIndexOf("\n)"))),
 			cwd: root,
 		});
 		expect(result.exitCode).not.toBe(0);

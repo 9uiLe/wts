@@ -260,20 +260,20 @@ Release 公開後に Pages の配信が失敗した場合や、既存 Release �
 
 ### 実機での配布経路の検証
 
-Pages からの導入・更新、利用者の Mac での実動作、Gatekeeper の挙動と許可手順は未検証です。以下は利用者本人が Apple Silicon Mac の通常のターミナルで実施する手順です。Nix devShell を終了してから実行し、macOS バージョン、配布タグ、各操作の結果と終了コードを記録してください。
+配布経路を通した実機での導入・更新・実動作、Gatekeeper の挙動と許可手順は未検証です。配布検証の担当者は Apple Silicon Mac の通常のターミナルで以下を実施します。Nix devShell を終了してから実行し、macOS バージョン、配布タグ、各操作の結果と終了コードを記録してください。
 
 1. `sw_vers` と `uname -m` で環境を記録し、Pages の `channel.txt` と対象 Release の `BUILD_INFO` を確認します。
-2. [README のインストールコマンド](../README.md#インストール)を実行し、表示された導入先を確認します。
-3. 次のコマンドを実行し、`--version` が対象 Release のバージョンと一致すること、ヘルプと環境情報が表示されることを確認します。
+2. [README のインストールコマンド](../README.md#インストール)を実行し、表示された導入先を確認します。PATH の設定案内が表示された場合は zsh でそのコマンドを実行します。
+3. 次のコマンドを実行し、`--version` が対象 Release のバージョンと一致すること、ヘルプと環境情報が表示されることを確認します。新しく開いたターミナルでも `wts --version` を実行できることを確認します。
 
 ```bash
-"$HOME/.local/bin/wts" --version
-"$HOME/.local/bin/wts" --help
-"$HOME/.local/bin/wts" doctor
-"$HOME/.local/bin/wts" doctor --check
+wts --version
+wts --help
+wts doctor
+wts doctor --check
 ```
 
-4. 起動時に Gatekeeper の制限が生じるかを記録します。制限がある場合は macOS が示す内容と、利用者自身が許可した操作、その後の起動結果を記録します。インストーラーは隔離属性の削除やセキュリティ設定変更を行いません。
+4. 起動時に Gatekeeper の制限が生じるかを記録します。制限がある場合は macOS が示す内容と、実施した許可操作、その後の起動結果を記録します。インストーラーは隔離属性の削除やセキュリティ設定変更を行いません。
 5. `wts doctor --interactive` をそれぞれ肯定入力、否定入力、Ctrl-C で実行し、終了コードが `0` であることを確認します。
 6. 検証用リポジトリで [README の操作手順](../README.md#プロジェクトを初期化する)に従い、`init`、`config check`、`start`、`stack`、`restack`、`cleanup` の結果を確認します。Git・gh の導入と GitHub 認証が不足する場合は先に設定します。push・PR のマージ・worktree の削除は検証用の対象で行ってください。
 7. 更新先の Release が公開されたら実行中の wts を終了し、同じインストールコマンドを再実行します。`--version` の更新と起動を確認します。公開済みの異なるバージョンを `--version` で指定して更新を検証することもできます。異なるバージョンがなければ更新は未検証として記録します。
