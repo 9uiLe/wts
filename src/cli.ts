@@ -132,9 +132,7 @@ dryRun(
 dryRun(
 	program
 		.command("discard <path>")
-		.description(
-			"指定したセッションの worktree とローカルブランチを破棄します",
-		),
+		.description("指定したセッションの worktree とブランチを破棄します"),
 )
 	.option("--yes", "表示した削除対象の確認を省略します")
 	.option("--force", "未コミット・未追跡・無視されたファイルも破棄します")

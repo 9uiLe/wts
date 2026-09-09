@@ -67,9 +67,18 @@ Nix Flakes は Bun、Git、OSV-Scanner、Coreutils を提供し、Bun は JavaSc
 ./scripts/dev.sh cleanup
 ```
 
-## 開発コマンド
+### 不要なセッションを破棄する
 
-開発を中止したセッションは、メインチェックアウトから `wts discard <worktreeのパス> --dry-run` で対象を確認し、`wts discard <worktreeのパス>` で破棄します。未保存のファイルも捨てる場合だけ `--force` を指定します。リモート上の同名ブランチも削除する場合は `--remote origin` を併用します。マージ済み作業をまとめて整理する `cleanup` と使い分けてください。
+メインチェックアウトから、対象 worktree のルートパスを指定します。リモートの同名ブランチを含めて破棄する例です。
+
+```bash
+./scripts/dev.sh discard ../wts-worktrees/session-name --remote origin --dry-run
+./scripts/dev.sh discard ../wts-worktrees/session-name --remote origin
+```
+
+ローカルだけを対象とする場合は両方のコマンドから `--remote origin` を省きます。未コミット・未追跡・無視対象ファイルも破棄するときは `--force` を指定します。削除範囲、確認、失敗時の扱いは [利用手順](../README.md#セッションの破棄)を参照してください。
+
+## 開発コマンド
 
 各スクリプトは自身の位置から wts リポジトリと固定 Nix 環境を特定します。設定検査は呼び出し元のプロジェクトを対象とするため、現在のディレクトリを保持します。
 
@@ -106,7 +115,7 @@ Nix Flakes は Bun、Git、OSV-Scanner、Coreutils を提供し、Bun は JavaSc
 
 設定・命名は一時ディレクトリとテスト用スクリプトで、セッション操作は一時 Git リポジトリと bare origin で検証します。外部サービスの応答や Homebrew はテスト用コマンドを使い、通常の自動テストで実サービスへの認証やシステムへの依存導入を行いません。実サービスへの接続やダウンロード後の起動を検証した場合は、自動テストとは分けて結果を記録してください。
 
-discard の検証は一時 Git リポジトリのセッションを対象に、所属ブランチの削除、対象外の保護、未保存ファイルの扱い、TTY の確認・否定・キャンセル、失敗時の保持を確認します。リモート削除は一時 bare リポジトリで、push 先の選択と拒否時のローカル保持を検証します。実際の開発 worktree をテスト対象にはしません。
+セッション破棄の仕様は `tests/discard.test.ts` で検証します。実 Git の一時 worktree と bare リモートを使い、削除範囲、保護対象、ファイルの扱い、push 先の選択、参照の競合、段階ごとの失敗時の保持を確認します。TTY の承認・否定・Ctrl-C はローカルのみとリモートを含む両方の操作を対象にします。実際の開発 worktree や公開リモートをテストには使いません。
 
 ### AI 向けスキルの保守
 
