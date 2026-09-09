@@ -60,15 +60,11 @@ function screen(
 	return `<section class="screen"><div class="screen-heading"><h3>${label}</h3><p class="meta">${escapeHtml(item.mode)} · 終了コード ${item.code}</p></div>${inputs ? `<p class="meta">入力: ${escapeHtml(inputs)}</p>` : ""}<div class="terminal"><div class="command">$ ${escapeHtml(item.command)}</div><pre>${final.plain ? rendered : '<span class="empty">（出力なし）</span>'}</pre></div>${item.frames.map((frame, index) => `<details><summary>入力前 ${index + 1}</summary><pre>${terminal(frame).html}</pre></details>`).join("")}</section>`;
 }
 
-const commands = [
-	"doctor",
-	"init",
-	"config",
-	"start",
-	"stack",
-	"cleanup",
-	"restack",
-];
+function commandGroup(item: Capture): string {
+	const command = item.args[0];
+	return command && !command.startsWith("-") ? command : "共通";
+}
+
 const stateLabels = {
 	added: "追加",
 	removed: "削除",
@@ -84,7 +80,7 @@ function caseCard(
 	const item = comparison.current ?? comparison.previous;
 	if (!item) return "";
 	const anchor = `case-${Bun.hash(item.title).toString(16)}`;
-	const group = commands.includes(item.args[0] ?? "") ? item.args[0] : "共通";
+	const group = escapeHtml(commandGroup(item));
 	const stateClass = !comparison.previous
 		? "added"
 		: !comparison.current
@@ -142,6 +138,14 @@ export function renderPage(
 	comparisons: Comparison[],
 	changesOnly: boolean,
 ): string {
+	const commands = [
+		...new Set(
+			comparisons.flatMap((comparison) => {
+				const item = comparison.current ?? comparison.previous;
+				return item ? [commandGroup(item)] : [];
+			}),
+		),
+	];
 	const cards = comparisons
 		.map((comparison, index) => caseCard(comparison, index, changesOnly))
 		.join("");
@@ -187,7 +191,7 @@ export function renderPage(
     </div>
     <nav class="command-filters" aria-labelledby="command-filter-label">
       <span class="control-label" id="command-filter-label">コマンドで絞り込み</span>
-      <div class="filter-buttons">${["すべて", "共通", ...commands].map((group) => `<button type="button" data-filter="${group}" aria-pressed="${group === "すべて"}">${group}</button>`).join("")}</div>
+      <div class="filter-buttons">${["すべて", ...commands].map((group) => `<button type="button" data-filter="${escapeHtml(group)}" aria-pressed="${group === "すべて"}">${escapeHtml(group)}</button>`).join("")}</div>
     </nav>
   </div>
   <div class="results-heading">

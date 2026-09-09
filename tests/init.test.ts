@@ -11,41 +11,21 @@ import {
 	writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
-
-const cli = resolve(import.meta.dir, "../src/cli.ts");
+import { runCli } from "./helpers/cli";
+import { gitWithEnv, initRepository } from "./helpers/git";
+import { join } from "node:path";
 
 function fixture() {
 	const dir = realpathSync(mkdtempSync(join(tmpdir(), "wts-init-")));
 	const root = join(dir, "repo");
 	mkdirSync(root);
-	const env = {
-		...process.env,
-		GIT_CONFIG_NOSYSTEM: "1",
-		GIT_CONFIG_GLOBAL: "/dev/null",
-		GIT_AUTHOR_NAME: "Test",
-		GIT_AUTHOR_EMAIL: "test@example.invalid",
-		GIT_COMMITTER_NAME: "Test",
-		GIT_COMMITTER_EMAIL: "test@example.invalid",
-	};
-	function git(...args: string[]) {
-		const result = Bun.spawnSync(["git", ...args], { cwd: root, env });
-		if (result.exitCode !== 0) throw new Error(result.stderr.toString());
-		return result.stdout.toString();
-	}
-	git("init", "-b", "main");
+	const git = (...args: string[]) => gitWithEnv(root, args);
+	initRepository(root);
 	writeFileSync(join(root, "tracked"), "initial\n");
 	git("add", ".");
 	git("commit", "-m", "initial");
 	function run(cwd: string, ...args: string[]) {
-		const result = Bun.spawnSync([process.execPath, cli, ...args], {
-			cwd,
-			env,
-		});
-		return {
-			code: result.exitCode,
-			text: result.stdout.toString() + result.stderr.toString(),
-		};
+		return runCli(cwd, args);
 	}
 	return {
 		dir,
@@ -124,7 +104,7 @@ test("commands requiring config fail before initialization without changing refs
 			["start", "--base-branch", "main"],
 			["stack"],
 			["cleanup", "--yes"],
-			["restack"],
+			["restack", "--push"],
 			["config", "check"],
 		]) {
 			const result = f.run(f.root, ...args);
@@ -139,6 +119,55 @@ test("commands requiring config fail before initialization without changing refs
 		expect(existsSync(join(f.root, ".wts.json"))).toBe(false);
 		expect(f.run(f.root, "doctor").code).toBe(0);
 		expect(f.run(f.root, "--help").code).toBe(0);
+	} finally {
+		f.dispose();
+	}
+});
+
+test("init saves an explicit local base and rejects invalid values before writing", () => {
+	for (const base of ["main", "feature/base", "-bad", "HEAD", "bad name"]) {
+		const f = fixture();
+		try {
+			const result = f.run(f.root, "init", "--base-branch", base);
+			if (["main", "feature/base"].includes(base)) {
+				expect(result.code).toBe(0);
+				expect(
+					JSON.parse(readFileSync(join(f.root, ".wts.json"), "utf8"))
+						.baseBranch,
+				).toBe(base);
+			} else {
+				expect(result.code).toBe(1);
+				expect(existsSync(join(f.root, ".wts.json"))).toBe(false);
+			}
+		} finally {
+			f.dispose();
+		}
+	}
+});
+
+test("init suggests origin HEAD without saving it and config distinguishes input from cleanup base", () => {
+	const f = fixture();
+	try {
+		f.git("update-ref", "refs/remotes/origin/develop", "HEAD");
+		f.git(
+			"symbolic-ref",
+			"refs/remotes/origin/HEAD",
+			"refs/remotes/origin/develop",
+		);
+		expect(f.run(f.root, "init").text).toContain("ベース候補: origin/develop");
+		expect(
+			JSON.parse(readFileSync(join(f.root, ".wts.json"), "utf8")).baseBranch,
+		).toBeUndefined();
+		const checked = f.run(f.root, "config", "check");
+		expect(checked.code).toBe(0);
+		for (const text of [
+			"start・restack",
+			"入力",
+			"main を保護 / origin/main",
+			"Branch naming",
+			"Worktree naming",
+		])
+			expect(checked.text).toContain(text);
 	} finally {
 		f.dispose();
 	}

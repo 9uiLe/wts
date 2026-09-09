@@ -7,11 +7,11 @@ import {
 	writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { join } from "node:path";
+import { cli, runCli, cliEnvironment } from "./helpers/cli";
+import { gitWithEnv, initRepository, initBareOrigin } from "./helpers/git";
 import { Git } from "../src/git";
 import { recordSession } from "../src/session";
-
-const cli = resolve(import.meta.dir, "../src/cli.ts");
 
 function fixture() {
 	const dir = mkdtempSync(join(tmpdir(), "wts-discard-"));
@@ -19,29 +19,15 @@ function fixture() {
 	const target = join(dir, "repo-worktrees", "session");
 	const remote = join(dir, "origin.git");
 	mkdirSync(root);
-	const env = {
-		...process.env,
-		GIT_CONFIG_NOSYSTEM: "1",
-		GIT_CONFIG_GLOBAL: "/dev/null",
-		GIT_AUTHOR_NAME: "Test",
-		GIT_AUTHOR_EMAIL: "test@example.com",
-		GIT_COMMITTER_NAME: "Test",
-		GIT_COMMITTER_EMAIL: "test@example.com",
-	};
-	function git(...args: string[]) {
-		const result = Bun.spawnSync(["git", ...args], { cwd: root, env });
-		if (result.exitCode) throw new Error(result.stderr.toString());
-		return result.stdout.toString().trim();
-	}
-	git("init", "-b", "main");
-	git("init", "--bare", remote);
+	const env = cliEnvironment();
+	const git = (...args: string[]) => gitWithEnv(root, args, env);
+	initRepository(root);
 	writeFileSync(join(root, ".wts.json"), JSON.stringify({ naming: {} }));
 	writeFileSync(join(root, ".gitignore"), "ignored\n");
 	writeFileSync(join(root, "file"), "base\n");
 	git("add", ".");
 	git("commit", "-m", "base");
-	git("remote", "add", "origin", remote);
-	git("push", "-u", "origin", "main");
+	initBareOrigin(root, remote);
 	git("worktree", "add", "-b", "session", target);
 	recordSession(new Git(root), target, "session");
 	writeFileSync(join(target, "file"), "unmerged work\n");
@@ -66,14 +52,7 @@ function fixture() {
 		cwd = root,
 		extra: Record<string, string> = {},
 	) {
-		const result = Bun.spawnSync(
-			[process.execPath, cli, "discard", path, ...args],
-			{ cwd, env: { ...env, ...extra } },
-		);
-		return {
-			code: result.exitCode,
-			text: result.stdout.toString() + result.stderr.toString(),
-		};
+		return runCli(cwd, ["discard", path, ...args], { ...env, ...extra });
 	}
 	return {
 		dir,
@@ -509,3 +488,104 @@ for (const remote of [false, true]) {
 		);
 	}
 }
+
+for (const phase of ["refs", "settings"] as const) {
+	test(`discard preserves settings and reports completed deletion when ${phase} deletion fails`, () => {
+		const f = fixture();
+		try {
+			const gitPath = Bun.which("git");
+			if (!gitPath) throw new Error("Git is required for this test");
+			for (const branch of ["session", "session-pr2-followup"])
+				f.git("config", `branch.${branch}.description`, "keep settings");
+			const bin = join(f.dir, "bin");
+			mkdirSync(bin);
+			writeFileSync(
+				join(bin, "git"),
+				`#!${process.execPath}
+const args = process.argv.slice(2);
+if (${phase === "refs" ? "args[0] === 'update-ref'" : "args[0] === 'config' && args.includes('--remove-section')"}) process.exit(1);
+const result = Bun.spawnSync([${JSON.stringify(gitPath)}, ...args], { stdin: 'inherit', stdout: 'inherit', stderr: 'inherit' });
+process.exit(result.exitCode);
+`,
+				{ mode: 0o755 },
+			);
+			const before = f.snapshot();
+			const result = f.run(["--yes"], f.target, f.root, {
+				PATH: `${bin}:${process.env.PATH}`,
+			});
+			expect(result.code).not.toBe(0);
+			expect(existsSync(f.target)).toBe(false);
+			expect(result.text).toContain(
+				phase === "refs"
+					? "worktree は削除済みですが、ブランチは残っています"
+					: "worktree とブランチは削除済みですが、ブランチ設定の削除に失敗",
+			);
+			if (phase === "refs") expect(f.git("show-ref")).toBe(before.refs);
+			else
+				expect(
+					f.git("branch", "--format=%(refname:short)").split("\n"),
+				).toEqual(["main", "unrelated"]);
+			for (const branch of ["session", "session-pr2-followup"])
+				expect(f.git("config", `branch.${branch}.description`)).toBe(
+					"keep settings",
+				);
+			expect(f.git("ls-remote", "origin")).toBe(before.remote);
+		} finally {
+			f.dispose();
+		}
+	});
+}
+
+terminalTest(
+	"discard revalidates state changed while awaiting confirmation",
+	async () => {
+		const f = fixture();
+		const before = f.snapshot();
+		let output = "";
+		let answered = false;
+		const decoder = new TextDecoder();
+		const closed = Promise.withResolvers<void>();
+		const child = Bun.spawn([process.execPath, cli, "discard", f.target], {
+			cwd: f.root,
+			env: {
+				...f.env,
+				CI: undefined,
+				NO_COLOR: undefined,
+				FORCE_COLOR: "1",
+				TERM: "xterm-256color",
+			},
+			terminal: {
+				data(terminal, data) {
+					output += decoder.decode(data, { stream: true });
+					if (
+						!answered &&
+						output.includes("はい") &&
+						output.includes("いいえ")
+					) {
+						answered = true;
+						writeFileSync(
+							join(f.target, "untracked"),
+							"created while confirming",
+						);
+						terminal.write("\u001b[D\r");
+					}
+				},
+				exit() {
+					closed.resolve();
+				},
+			},
+		});
+		try {
+			const [code] = await Promise.all([child.exited, closed.promise]);
+			expect(answered).toBe(true);
+			expect(code).not.toBe(0);
+			expect(output).toContain("確認後にセッションの状態が変わりました");
+			expect(f.snapshot()).toEqual(before);
+			expect(existsSync(join(f.target, "untracked"))).toBe(true);
+		} finally {
+			child.terminal?.close();
+			if (child.exitCode === null) child.kill();
+			f.dispose();
+		}
+	},
+);

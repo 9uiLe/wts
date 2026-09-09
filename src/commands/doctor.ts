@@ -1,4 +1,6 @@
-import { confirmAction } from "../prompts";
+import { commandAsync } from "../process";
+import { parseGitVersion, supportsUpdateRefs } from "../git-version";
+import { confirmAction, isInteractive } from "../prompts";
 import { ui } from "../ui";
 import { version } from "../version";
 
@@ -21,7 +23,7 @@ export async function doctor({
 		return;
 	}
 
-	if (!process.stdin.isTTY || !process.stdout.isTTY) {
+	if (!isInteractive()) {
 		throw new Error("対話モードは TTY 端末で実行してください。");
 	}
 
@@ -36,17 +38,8 @@ export async function doctor({
 
 async function run(executable: string, args: string[]) {
 	try {
-		const child = Bun.spawn([executable, ...args], {
-			stdin: "ignore",
-			stdout: "pipe",
-			stderr: "pipe",
-		});
-		const [exitCode, stdout] = await Promise.all([
-			child.exited,
-			new Response(child.stdout).text(),
-			new Response(child.stderr).text(),
-		]);
-		return { exitCode, stdout };
+		const result = await commandAsync(executable, args, process.cwd());
+		return { exitCode: result.code, stdout: result.out };
 	} catch {
 		return undefined;
 	}
@@ -74,17 +67,12 @@ export async function checkEnvironment({
 	const git = await ui.task("Git のバージョンを確認しています…", () =>
 		run("git", ["--version"]),
 	);
-	const version = git?.stdout.toString().match(/^git version (\d+)\.(\d+)/);
-	const compatible =
-		git?.exitCode === 0 &&
-		version !== null &&
-		version !== undefined &&
-		(Number(version[1]) > 2 ||
-			(Number(version[1]) === 2 && Number(version[2]) >= 38));
+	const version = parseGitVersion(git?.stdout ?? "");
+	const compatible = git?.exitCode === 0 && supportsUpdateRefs(git.stdout);
 	report(
 		compatible,
 		compatible
-			? `Git ${version?.[1]}.${version?.[2]}（restack に必要な 2.38 以上）`
+			? `Git ${version?.major}.${version?.minor}（restack に必要な 2.38 以上）`
 			: "Git 2.38 以上が必要です。導入・更新: brew install git（導入済みなら brew upgrade git）。PATH も確認してください。",
 	);
 

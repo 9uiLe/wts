@@ -6,6 +6,8 @@ import {
 	writeFile,
 	readFile,
 	stat,
+	readdir,
+	lstat,
 	symlink,
 	rm,
 } from "node:fs/promises";
@@ -23,7 +25,16 @@ async function withArtifacts(run: (directory: string) => Promise<void>) {
 		await mkdir(artifacts);
 		const commands = join(directory, "commands");
 		await mkdir(commands);
-		for (const name of ["dirname", "shasum", "cat", "mkdir", "install"]) {
+		for (const name of [
+			"dirname",
+			"shasum",
+			"cat",
+			"mkdir",
+			"install",
+			"mktemp",
+			"rm",
+			"mv",
+		]) {
 			await symlink(Bun.which(name) as string, join(commands, name));
 		}
 		await writeFile(
@@ -178,4 +189,66 @@ test("installer explains options and rejects unknown options", () => {
 	const unknown = Bun.spawnSync([bash, installer, "--unknown"]);
 	expect(unknown.exitCode).toBe(1);
 	expect(unknown.stderr.toString()).toContain("不明なオプション");
+});
+
+for (const kind of ["symlink", "dangling-symlink", "directory", "fifo"]) {
+	test(`install rejects a destination ${kind} without modifying it`, async () => {
+		await withArtifacts(async (directory) => {
+			await mkdir(join(directory, "local bin"));
+			const destination = join(directory, "local bin/wts");
+			const original = join(directory, "original");
+			await writeFile(original, "keep");
+			if (kind === "symlink" || kind === "dangling-symlink")
+				await symlink(
+					kind === "symlink" ? original : join(directory, "missing"),
+					destination,
+				);
+			else if (kind === "directory") await mkdir(destination);
+			else expect(Bun.spawnSync(["mkfifo", destination]).exitCode).toBe(0);
+			const before = await lstat(destination);
+			expect(install(directory).exitCode).not.toBe(0);
+			expect((await lstat(destination)).ino).toBe(before.ino);
+			expect(await readFile(original, "utf8")).toBe("keep");
+			expect(await readdir(join(directory, "local bin"))).toEqual(["wts"]);
+		});
+	});
+}
+
+for (const command of ["install", "mv"]) {
+	test(`failed ${command} keeps the installed binary and removes staging`, async () => {
+		await withArtifacts(async (directory) => {
+			await mkdir(join(directory, "local bin"));
+			await writeFile(join(directory, "local bin/wts"), "keep");
+			await rm(join(directory, "commands", command));
+			await writeFile(
+				join(directory, "commands", command),
+				"#!/bin/sh\nexit 1\n",
+				{ mode: 0o755 },
+			);
+			expect(install(directory).exitCode).not.toBe(0);
+			expect(await readFile(join(directory, "local bin/wts"), "utf8")).toBe(
+				"keep",
+			);
+			expect(await readdir(join(directory, "local bin"))).toEqual(["wts"]);
+		});
+	});
+}
+
+test("install replaces a regular file without changing other hard links", async () => {
+	await withArtifacts(async (directory) => {
+		await mkdir(join(directory, "local bin"));
+		await writeFile(join(directory, "original"), "keep");
+		expect(
+			Bun.spawnSync([
+				"ln",
+				join(directory, "original"),
+				join(directory, "local bin/wts"),
+			]).exitCode,
+		).toBe(0);
+		expect(install(directory).exitCode).toBe(0);
+		expect(await readFile(join(directory, "original"), "utf8")).toBe("keep");
+		expect(await readFile(join(directory, "local bin/wts"), "utf8")).not.toBe(
+			"keep",
+		);
+	});
 });

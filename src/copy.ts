@@ -1,26 +1,41 @@
 import {
 	copyFileSync,
-	existsSync,
 	lstatSync,
 	mkdirSync,
 	readdirSync,
 	readFileSync,
 	realpathSync,
 } from "node:fs";
-import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
+import { dirname, isAbsolute, join, resolve, sep } from "node:path";
+import { isSameOrDescendant } from "./path";
 import { ui } from "./ui";
-function inside(root: string, path: string): boolean {
-	const rel = relative(root, path);
-	return rel !== ".." && !rel.startsWith(`..${sep}`) && !isAbsolute(rel);
+
+export function readCopyList(list: string): string[] {
+	try {
+		return readFileSync(list, "utf8")
+			.split(/\r?\n/)
+			.map((line) => (line.split("#")[0] ?? "").trim())
+			.filter(Boolean);
+	} catch (error) {
+		if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+			try {
+				lstatSync(list);
+			} catch (missing) {
+				if ((missing as NodeJS.ErrnoException).code === "ENOENT") return [];
+			}
+		}
+		throw new Error(`コピーリストを読み込めません: ${list}`, { cause: error });
+	}
 }
 
-function safeDestination(root: string, path: string): void {
-	if (!inside(root, path)) throw new Error("コピー先が worktree 外です");
+function requireUnlinkedPath(root: string, path: string): void {
+	if (!isSameOrDescendant(path, root))
+		throw new Error("コピー先が worktree 外です");
 	let current = path;
-	while (inside(root, current)) {
+	while (isSameOrDescendant(current, root)) {
 		try {
 			if (lstatSync(current).isSymbolicLink()) {
-				throw new Error(`コピー先がシンボリックリンクです: ${current}`);
+				throw new Error(`シンボリックリンクはコピーできません: ${current}`);
 			}
 		} catch (error) {
 			if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
@@ -30,43 +45,98 @@ function safeDestination(root: string, path: string): void {
 	}
 }
 
-function copyPath(sourceRoot: string, targetRoot: string, rel: string): void {
+type CopyItem = { kind: "file" | "directory"; rel: string };
+type CopyEntry =
+	| CopyItem
+	| { kind: "rejected"; rel: string; diagnostic: string };
+
+function inspectCopyPath(
+	source: string,
+	target: string,
+	rel: string,
+): CopyItem {
 	if (rel.split(sep).includes(".git"))
 		throw new Error(".git はコピーできません");
-	const source = resolve(sourceRoot, rel);
-	const target = resolve(targetRoot, rel);
-	if (!inside(sourceRoot, realpathSync(source))) {
+	const from = resolve(source, rel);
+	if (!isSameOrDescendant(from, source))
 		throw new Error("コピー元が指定ディレクトリ外です");
-	}
-	const stat = lstatSync(source);
-	// ディレクトリの循環参照と、作成後に worktree 外を指すリンクを持ち込まない。
-	if (stat.isSymbolicLink())
-		throw new Error("シンボリックリンクはコピーできません");
-	safeDestination(targetRoot, target);
-	if (stat.isDirectory()) {
-		mkdirSync(target, { recursive: true });
-		for (const name of readdirSync(source)) {
-			try {
-				copyPath(sourceRoot, targetRoot, join(rel, name));
-			} catch (error) {
-				ui.warn(`コピーをスキップ: ${join(rel, name)}: ${String(error)}`);
-			}
-		}
-	} else if (stat.isFile()) {
-		mkdirSync(dirname(target), { recursive: true });
-		copyFileSync(source, target);
-	} else {
+	requireUnlinkedPath(source, from);
+	if (!isSameOrDescendant(realpathSync(from), source))
+		throw new Error("コピー元が指定ディレクトリ外です");
+	requireUnlinkedPath(target, resolve(target, rel));
+	const stat = lstatSync(from);
+	if (!stat.isFile() && !stat.isDirectory())
 		throw new Error("通常のファイル・ディレクトリ以外はコピーできません");
+	return { rel, kind: stat.isDirectory() ? "directory" : "file" };
+}
+
+function scanCopy(
+	entries: string[],
+	source: string,
+	target: string,
+): CopyEntry[] {
+	const result: CopyEntry[] = [];
+	const seen = new Set<string>();
+	function visit(rel: string): void {
+		if (seen.has(rel)) return;
+		seen.add(rel);
+		try {
+			const item = inspectCopyPath(source, target, rel);
+			result.push(item);
+			if (item.kind === "directory") {
+				for (const name of readdirSync(resolve(source, rel)))
+					visit(join(rel, name));
+			}
+		} catch (error) {
+			result.push({ kind: "rejected", rel, diagnostic: String(error) });
+		}
+	}
+	for (const entry of entries) {
+		if (
+			isAbsolute(entry) ||
+			entry.split(/[\\/]/).includes("..") ||
+			entry.split("/").includes(".git")
+		) {
+			result.push({
+				kind: "rejected",
+				rel: entry,
+				diagnostic: "不正なエントリ",
+			});
+			continue;
+		}
+		try {
+			for (const rel of new Bun.Glob(entry.replace(/\/$/, "")).scanSync({
+				cwd: source,
+				dot: true,
+				onlyFiles: false,
+				followSymlinks: false,
+			}))
+				visit(rel);
+		} catch (error) {
+			result.push({ kind: "rejected", rel: entry, diagnostic: String(error) });
+		}
+	}
+	return result;
+}
+
+function writeCopyItem(item: CopyItem, source: string, target: string): void {
+	const destination = resolve(target, item.rel);
+	requireUnlinkedPath(resolve(target), destination);
+	if (item.kind === "directory") mkdirSync(destination, { recursive: true });
+	else {
+		mkdirSync(dirname(destination), { recursive: true });
+		requireUnlinkedPath(resolve(target), destination);
+		copyFileSync(resolve(source, item.rel), destination);
 	}
 }
 
 export function copyUnmanaged(
-	list: string,
+	entries: string[],
 	source: string,
 	target: string,
 	dryRun: boolean,
 ): void {
-	if (!existsSync(list)) return;
+	if (!entries.length) return;
 	let sourceRoot: string;
 	try {
 		sourceRoot = realpathSync(source);
@@ -74,37 +144,22 @@ export function copyUnmanaged(
 		ui.warn(`コピー元を参照できません: ${source}: ${String(error)}`);
 		return;
 	}
-	for (const line of readFileSync(list, "utf8").split(/\r?\n/)) {
-		const entry = (line.split("#")[0] ?? "").trim();
-		if (!entry) continue;
-		if (
-			isAbsolute(entry) ||
-			entry.includes("..") ||
-			entry.split("/").includes(".git")
-		) {
-			ui.warn(`不正なエントリをスキップ: ${entry}`);
+	for (const item of scanCopy(entries, sourceRoot, resolve(target))) {
+		if (item.kind === "rejected") {
+			ui.warn(
+				`${dryRun ? "本実行で拒否" : "コピーをスキップ"}: ${item.rel}: ${item.diagnostic}`,
+			);
+			continue;
+		}
+		if (dryRun) {
+			ui.plan(`コピー (dry-run): ${item.rel}`);
 			continue;
 		}
 		try {
-			const matches = new Bun.Glob(entry.replace(/\/$/, "")).scanSync({
-				cwd: sourceRoot,
-				dot: true,
-				onlyFiles: false,
-				followSymlinks: false,
-			});
-			for (const rel of matches) {
-				try {
-					if (dryRun) ui.plan(`コピー (dry-run): ${rel}`);
-					else {
-						copyPath(sourceRoot, target, rel);
-						ui.info(`コピー: ${rel}`);
-					}
-				} catch (error) {
-					ui.warn(`コピーをスキップ: ${rel}: ${String(error)}`);
-				}
-			}
+			writeCopyItem(item, sourceRoot, resolve(target));
+			ui.info(`コピー: ${item.rel}`);
 		} catch (error) {
-			ui.warn(`コピーに失敗しました: ${entry}: ${String(error)}`);
+			ui.warn(`コピーをスキップ: ${item.rel}: ${String(error)}`);
 		}
 	}
 }

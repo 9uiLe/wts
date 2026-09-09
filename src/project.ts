@@ -15,7 +15,9 @@ export async function resolveBaseRef(
 ): Promise<string> {
 	if (override) return override;
 	const { remoteRef } = projectBase(config);
-	return config.baseBranch ? remoteRef : askText("ベースブランチ", remoteRef);
+	return config.baseBranch
+		? remoteRef
+		: askText("ベースブランチ", defaultBaseRef());
 }
 
 export function repositoryLocation() {
@@ -40,4 +42,16 @@ export async function repository() {
 		worktreesBase: config.worktreesBase,
 		config,
 	};
+}
+
+export function defaultBaseRef(git = new Git()): string {
+	const result = git.tryRun([
+		"symbolic-ref",
+		"--quiet",
+		"--short",
+		"refs/remotes/origin/HEAD",
+	]);
+	return result.code === 0 && result.out.startsWith("origin/")
+		? result.out
+		: "origin/main";
 }

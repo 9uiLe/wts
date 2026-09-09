@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { join, relative, sep } from "node:path";
+import { join } from "node:path";
+import { isSameOrDescendant } from "./path";
 import { Git } from "./git";
 
 export function sessionRootBranch(repo: {
@@ -7,12 +8,9 @@ export function sessionRootBranch(repo: {
 	worktreesBase: string;
 	gitDir: string;
 }): string {
-	const path = relative(repo.worktreesBase, repo.root);
 	if (
-		!path ||
-		path === ".." ||
-		path.startsWith(`..${sep}`) ||
-		path.startsWith(sep)
+		repo.root === repo.worktreesBase ||
+		!isSameOrDescendant(repo.root, repo.worktreesBase)
 	) {
 		throw new Error(
 			`この worktree は ${repo.worktreesBase} 配下ではありません。`,

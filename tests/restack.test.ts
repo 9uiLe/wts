@@ -7,39 +7,23 @@ import {
 	writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { join } from "node:path";
+import { runCli } from "./helpers/cli";
+import { git, initBareOrigin, initRepository } from "./helpers/git";
 
 const temporary: string[] = [];
-const modulePath = resolve(import.meta.dir, "../src/commands/restack.ts");
-const env = {
-	...process.env,
-	GIT_CONFIG_NOSYSTEM: "1",
-	GIT_CONFIG_GLOBAL: "/dev/null",
-	GIT_AUTHOR_NAME: "Test",
-	GIT_AUTHOR_EMAIL: "test@example.com",
-	GIT_COMMITTER_NAME: "Test",
-	GIT_COMMITTER_EMAIL: "test@example.com",
-	GIT_EDITOR: "true",
-};
 
 afterEach(() => {
 	for (const path of temporary.splice(0))
 		rmSync(path, { recursive: true, force: true });
 });
 
-function git(cwd: string, ...args: string[]) {
-	const result = Bun.spawnSync(["git", ...args], { cwd, env });
-	if (result.exitCode !== 0) throw new Error(result.stderr.toString());
-	return result.stdout.toString().trim();
-}
-
 function fixture(conflict = false, baseBranch = "main") {
 	const dir = mkdtempSync(join(tmpdir(), "wts-restack-"));
 	temporary.push(dir);
 	const main = join(dir, "repo");
 	const origin = join(dir, "origin.git");
-	git(dir, "init", "--bare", origin);
-	git(dir, "init", "-b", baseBranch, main);
+	initRepository(main, baseBranch);
 	writeFileSync(
 		join(main, ".wts.json"),
 		JSON.stringify({ baseBranch, naming: {} }),
@@ -47,8 +31,7 @@ function fixture(conflict = false, baseBranch = "main") {
 	writeFileSync(join(main, "shared"), "base\n");
 	git(main, "add", ".");
 	git(main, "commit", "-m", "base");
-	git(main, "remote", "add", "origin", origin);
-	git(main, "push", "-u", "origin", baseBranch);
+	initBareOrigin(main, origin, baseBranch);
 	const root = "session.a";
 	const next = `${root}-pr2-second`;
 	const worktree = join(`${main}-worktrees`, root);
@@ -75,17 +58,8 @@ function fixture(conflict = false, baseBranch = "main") {
 	return { main, origin, root, next, worktree, gitDir };
 }
 
-function run(worktree: string, options: Record<string, unknown> = {}) {
-	const script = `import { restack } from ${JSON.stringify(modulePath)}; await restack(${JSON.stringify({ push: true, ...options })});`;
-	const result = Bun.spawnSync([process.execPath, "-e", script], {
-		cwd: worktree,
-		env,
-	});
-	return {
-		code: result.exitCode,
-		out: result.stdout.toString(),
-		err: result.stderr.toString(),
-	};
+function run(worktree: string, args: string[] = []) {
+	return runCli(worktree, ["restack", "--push", ...args]);
 }
 
 test("restack rebases every literal-root stack branch onto the configured base, pushes and restores checkout", () => {
@@ -111,7 +85,7 @@ test("restack explicit base overrides the configured project base", () => {
 	git(f.main, "add", "release");
 	git(f.main, "commit", "-m", "advance release base");
 	git(f.main, "push", "origin", "release/stable");
-	const result = run(f.worktree, { baseBranch: "origin/release/stable" });
+	const result = run(f.worktree, ["--base-branch", "origin/release/stable"]);
 	expect(result.code).toBe(0);
 	for (const branch of [f.root, f.next]) {
 		git(f.main, "merge-base", "--is-ancestor", "release/stable", branch);
@@ -125,7 +99,7 @@ test("dry-run preserves refs, checkout and lease without fetching", () => {
 	const f = fixture();
 	const before = git(f.main, "show-ref");
 	const remote = git(f.origin, "show-ref");
-	const result = run(f.worktree, { dryRun: true });
+	const result = run(f.worktree, ["--dry-run"]);
 	expect(result.code).toBe(0);
 	expect(result.out).toContain("--atomic");
 	expect(git(f.main, "show-ref")).toBe(before);
@@ -146,7 +120,7 @@ test("conflict recovery keeps original leases and atomic push rejects remote cha
 	git(f.worktree, "rebase", "--continue");
 	git(f.main, "push", "--force", "origin", `main:${f.root}`);
 	const remote = git(f.origin, "show-ref");
-	const rejected = run(f.worktree, { pushOnly: true });
+	const rejected = run(f.worktree, ["--push-only"]);
 	expect(rejected.code).toBe(1);
 	expect(rejected.err).toContain("stale info");
 	expect(git(f.origin, "show-ref")).toBe(remote);
@@ -154,7 +128,7 @@ test("conflict recovery keeps original leases and atomic push rejects remote cha
 	const oldRoot = lease.split("\n")[0]?.split(" ")[1];
 	if (!oldRoot) throw new Error("missing root lease");
 	git(f.main, "push", "--force", "origin", `${oldRoot}:refs/heads/${f.root}`);
-	expect(run(f.worktree, { pushOnly: true }).code).toBe(0);
+	expect(run(f.worktree, ["--push-only"]).code).toBe(0);
 	expect(existsSync(join(f.gitDir, "restack-lease"))).toBe(false);
 });
 
@@ -169,4 +143,70 @@ test("restack refuses checked-out siblings and nonlinear stacks before changing 
 	expect(run(f.worktree).err).toContain("非線形");
 	expect(git(f.main, "show-ref")).toBe(before);
 	expect(existsSync(join(f.gitDir, "restack-lease"))).toBe(false);
+});
+
+for (const noChanges of [false, true]) {
+	test(`CLI refuses noninteractive restack before fetching, including no push targets: ${noChanges}`, () => {
+		const f = fixture();
+		if (noChanges) expect(run(f.worktree).code).toBe(0);
+		const refs = git(f.main, "show-ref");
+		const fetchHead = join(f.gitDir, "FETCH_HEAD");
+		const fetchBefore = existsSync(fetchHead)
+			? readFileSync(fetchHead, "utf8")
+			: undefined;
+		writeFileSync(join(f.gitDir, "restack-lease"), "unchanged");
+		const result = runCli(f.worktree, ["restack"]);
+		expect(result.code).not.toBe(0);
+		expect(result.err).toContain("--push");
+		expect(git(f.main, "show-ref")).toBe(refs);
+		expect(readFileSync(join(f.gitDir, "restack-lease"), "utf8")).toBe(
+			"unchanged",
+		);
+		expect(
+			existsSync(fetchHead) ? readFileSync(fetchHead, "utf8") : undefined,
+		).toBe(fetchBefore);
+	});
+}
+
+test("CLI PUSH and DRY_RUN activate only with 1 and unset restores refusal", () => {
+	const f = fixture();
+	const refs = git(f.main, "show-ref");
+	expect(runCli(f.worktree, ["restack"], { DRY_RUN: "1" }).code).toBe(0);
+	expect(git(f.main, "show-ref")).toBe(refs);
+	expect(existsSync(join(f.gitDir, "restack-lease"))).toBe(false);
+	expect(
+		runCli(f.worktree, ["restack"], { PUSH: "true", DRY_RUN: "true" }).code,
+	).not.toBe(0);
+	expect(runCli(f.worktree, ["restack"], { PUSH: "1" }).code).toBe(0);
+	expect(git(f.origin, "rev-parse", f.root)).toBe(
+		git(f.main, "rev-parse", f.root),
+	);
+	expect(runCli(f.worktree, ["restack"]).code).not.toBe(0);
+});
+
+test("CLI PUSH_ONLY uses saved lease without fetching or resolving a base", () => {
+	const f = fixture();
+	const leases = [f.root, f.next]
+		.map((branch) => `${branch} ${git(f.origin, "rev-parse", branch)}\n`)
+		.join("");
+	writeFileSync(join(f.gitDir, "restack-lease"), leases);
+	writeFileSync(join(f.worktree, "local"), "local\n");
+	git(f.worktree, "add", "local");
+	git(f.worktree, "commit", "-m", "local");
+	git(f.worktree, "branch", "-f", f.next, f.root);
+	writeFileSync(join(f.gitDir, "FETCH_HEAD"), "unchanged");
+	const before = git(f.worktree, "rev-parse", "HEAD");
+	const result = runCli(f.worktree, ["restack", "--base-branch", "missing"], {
+		PUSH: "1",
+		PUSH_ONLY: "1",
+	});
+	expect(result.code).toBe(0);
+	expect(readFileSync(join(f.gitDir, "FETCH_HEAD"), "utf8")).toBe("unchanged");
+	expect(git(f.origin, "rev-parse", f.root)).toBe(before);
+	expect(git(f.worktree, "rev-parse", "HEAD")).toBe(before);
+	expect(existsSync(join(f.gitDir, "restack-lease"))).toBe(false);
+	expect(
+		runCli(f.worktree, ["restack", "--base-branch", "missing"], { PUSH: "1" })
+			.code,
+	).not.toBe(0);
 });
