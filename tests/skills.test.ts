@@ -12,7 +12,7 @@ import {
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
-const cli = resolve(import.meta.dir, "../src/cli.ts");
+import { runCli } from "./helpers/cli";
 const entrypoint = readFileSync(
 	resolve(import.meta.dir, "../skills/wts-cli/SKILL.md"),
 	"utf8",
@@ -35,15 +35,11 @@ function fixture() {
 	const userHome = join(directory, "home");
 	mkdirSync(userHome);
 	function run(...args: string[]) {
-		const result = Bun.spawnSync([process.execPath, cli, "skills", ...args], {
-			cwd: directory,
-			env: { ...process.env, PATH: "", HOME: userHome },
+		const { code, out, err } = runCli(directory, ["skills", ...args], {
+			PATH: "",
+			HOME: userHome,
 		});
-		return {
-			code: result.exitCode,
-			out: result.stdout.toString(),
-			err: result.stderr.toString(),
-		};
+		return { code, out, err };
 	}
 	const skillDirectory = join(directory, "wts-cli");
 	const skillFile = join(skillDirectory, "SKILL.md");

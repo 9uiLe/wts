@@ -1,8 +1,8 @@
 import { realpathSync } from "node:fs";
 import { resolve } from "node:path";
-import { Git, worktrees } from "../git";
+import { dirtyStatus, Git, worktrees } from "../git";
 import { projectBase, repository } from "../project";
-import { confirmAction } from "../prompts";
+import { confirmAction, isInteractive } from "../prompts";
 import { sessionRootBranch, stackBranches } from "../session";
 import { ui } from "../ui";
 
@@ -45,7 +45,7 @@ export async function discardSession(
 ): Promise<void> {
 	ui.heading("discard");
 	const context = await discardContext(path);
-	const plan = planDiscard(context, options.remote);
+	const plan = await planDiscard(context, options.remote);
 	displayPlan(plan);
 	if (options.dryRun) {
 		ui.info("DRY_RUN: 削除は行いません");
@@ -53,13 +53,13 @@ export async function discardSession(
 	}
 	if (!(await confirmDiscard(plan, options))) return;
 	if (
-		JSON.stringify(planDiscard(context, options.remote)) !==
+		JSON.stringify(await planDiscard(context, options.remote)) !==
 		JSON.stringify(plan)
 	)
 		throw new Error(
 			"確認後にセッションの状態が変わりました。再実行してください。",
 		);
-	executeDiscard(context.repo.git, plan, options);
+	await executeDiscard(context.repo.git, plan, options);
 	ui.success(
 		`完了しました (${plan.members.length} ブランチ・1 Worktree${plan.remote ? `・${plan.remote.refs.length} リモートブランチ` : ""})`,
 	);
@@ -78,19 +78,15 @@ async function discardContext(path: string): Promise<DiscardContext> {
 	return { repo, target, worktreesBase, baseBranch };
 }
 
-function planDiscard(
+async function planDiscard(
 	{ repo, target, worktreesBase, baseBranch }: DiscardContext,
 	remoteName: string | undefined,
-): DiscardPlan {
+): Promise<DiscardPlan> {
 	const trees = worktrees(repo.git);
 	const tree = trees.find((entry) => entry.path === target);
 	if (!tree)
 		throw new Error(`登録済み worktree のルートを指定してください: ${target}`);
-	const block = repo.git
-		.run(["worktree", "list", "--porcelain", "-z"])
-		.split("\0\0")
-		.find((entry) => entry.split("\0").includes(`worktree ${target}`));
-	if (block?.split("\0").some((field) => /^locked(?: |$)/.test(field)))
+	if (tree.locked)
 		throw new Error(`ロックされた worktree は削除できません: ${target}`);
 	const git = new Git(target);
 	const root = sessionRootBranch({
@@ -121,7 +117,7 @@ function planDiscard(
 		throw new Error(
 			"対象 worktree の現在のブランチがセッションに属していません。",
 		);
-	const remote = planRemoteDeletion(repo.git, remoteName, members);
+	const remote = await planRemoteDeletion(repo.git, remoteName, members);
 	return {
 		target,
 		root,
@@ -129,22 +125,15 @@ function planDiscard(
 		head: git.run(["rev-parse", "HEAD"]),
 		members,
 		remote,
-		status: git.run([
-			"--no-optional-locks",
-			"status",
-			"--porcelain=v1",
-			"-z",
-			"--untracked-files=all",
-			"--ignored",
-		]),
+		status: dirtyStatus(git),
 	};
 }
 
-function planRemoteDeletion(
+async function planRemoteDeletion(
 	git: Git,
 	name: string | undefined,
 	members: LocalBranch[],
-): RemoteDeletion | undefined {
+): Promise<RemoteDeletion | undefined> {
 	if (name === undefined) return undefined;
 	if (
 		!git.run(["remote"]).split("\n").includes(name) ||
@@ -159,7 +148,9 @@ function planRemoteDeletion(
 	if (urls.length !== 1 || !urls[0])
 		throw new Error("push URL が 1 つのリモートを指定してください。");
 	const url = urls[0];
-	const listed = git.tryRun(["ls-remote", "--heads", "--", url]);
+	const listed = await ui.task("リモートブランチを確認しています", () =>
+		git.tryRunAsync(["ls-remote", "--heads", "--", url]),
+	);
 	if (listed.code !== 0)
 		throw new Error(`リモートブランチを取得できませんでした: ${name}`);
 	const refs = new Map(
@@ -209,44 +200,49 @@ async function confirmDiscard(
 	if (plan.status && !options.force)
 		throw new Error("ファイルを破棄する場合は --force を指定してください。");
 	if (!options.yes) {
-		if (!process.stdin.isTTY || !process.stdout.isTTY)
+		if (!isInteractive())
 			throw new Error("非対話で削除するには --yes を指定してください。");
 		if (!(await confirmAction("このセッションを破棄しますか？"))) return false;
 	}
 	return true;
 }
 
-function executeDiscard(
+async function executeDiscard(
 	git: Git,
 	plan: DiscardPlan,
 	options: DiscardOptions,
-): void {
+): Promise<void> {
 	const progress: DiscardProgress = { remoteDeleted: false, local: "intact" };
-	if (plan.remote?.refs.length) {
+	const remote = plan.remote;
+	if (remote?.refs.length) {
 		// Git の診断には認証情報を含む URL が出るため、そのまま表示しない。
-		const deleted = git.tryRun([
-			"push",
-			"--atomic",
-			"--no-follow-tags",
-			...plan.remote.refs.map(
-				({ ref, oid }) => `--force-with-lease=${ref}:${oid}`,
-			),
-			"--",
-			plan.remote.url,
-			...plan.remote.refs.map(({ ref }) => `:${ref}`),
-		]);
+		const deleted = await ui.task("リモートブランチを削除しています", () =>
+			git.tryRunAsync([
+				"push",
+				"--atomic",
+				"--no-follow-tags",
+				...remote.refs.map(
+					({ ref, oid }) => `--force-with-lease=${ref}:${oid}`,
+				),
+				"--",
+				remote.url,
+				...remote.refs.map(({ ref }) => `:${ref}`),
+			]),
+		);
 		if (deleted.code !== 0)
 			throw new Error(
 				"リモートブランチの削除に失敗しました。ローカルのセッションは削除していません。リモートの状態を確認してください。",
 			);
 		progress.remoteDeleted = true;
 	}
-	const removed = git.tryRun([
-		"worktree",
-		"remove",
-		...(options.force ? ["--force"] : []),
-		plan.target,
-	]);
+	const removed = await ui.task("Worktree を削除しています", () =>
+		git.tryRunAsync([
+			"worktree",
+			"remove",
+			...(options.force ? ["--force"] : []),
+			plan.target,
+		]),
+	);
 	if (removed.code !== 0)
 		throw localDeletionFailure(progress, plan, removed.err);
 	progress.local = "worktree-deleted";

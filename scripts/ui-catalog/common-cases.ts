@@ -31,6 +31,7 @@ export async function commonCases(): Promise<Capture[]> {
 		...[
 			"doctor",
 			"init",
+			"list",
 			"config",
 			"start",
 			"stack",

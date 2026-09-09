@@ -6,22 +6,13 @@ wts は Git リポジトリの `.wts.json` を読み取ります。実行中の 
 
 ## 初期化と共有
 
-対象リポジトリのメインチェックアウトで初期化します。サブディレクトリから実行しても、その worktree のルートに `.wts.json` を生成します。
+対象リポジトリでベースブランチを指定して初期化します。サブディレクトリから実行した場合も、実行元 worktree のルートへ `.wts.json` を生成します。
 
 ```bash
-wts init
+wts init --base-branch main
 ```
 
-メインチェックアウトの名前が `project` の場合、生成内容は次のとおりです。既存の `.wts.json` は内容が不正であっても上書きしません。
-
-```json
-{
-  "worktreeDirectory": "../project-worktrees",
-  "naming": {}
-}
-```
-
-生成後に `baseBranch` を設定し、作成先と命名方法をプロジェクトに合わせます。ベースブランチが `main` の場合の設定例です。
+メインチェックアウト名が `project` の場合の生成内容です。
 
 ```json
 {
@@ -31,7 +22,9 @@ wts init
 }
 ```
 
-設定を検査し、セッションのベースブランチへコミットしてください。新しい worktree にも設定が引き継がれます。命名スクリプトを使う場合は、そのファイルもコミットします。
+`--base-branch` は Git で有効なローカルブランチ名を受け付けます。省略時は `worktreeDirectory` と空の `naming` だけを保存します。ローカルの `origin/HEAD` がある場合はベース候補を表示しますが、自動保存しません。ベースは cleanup の保護対象と取り込み判定にも使うため、プロジェクトの作業基準を確認して指定してください。既存の `.wts.json` は内容が不正でも上書きしません。
+
+作成先と命名方法を整え、設定を検査してベースブランチへコミットします。命名スクリプトを使う場合は、そのファイルも共有してください。
 
 ```bash
 wts config check
@@ -39,7 +32,7 @@ git add .wts.json
 git commit -m "Configure worktree sessions"
 ```
 
-`start`・`stack`・`cleanup`・`restack`・`discard` とファイル指定なしの `config check` は設定ファイルが必要です。`init`・`doctor`・ヘルプ・バージョン表示は設定を必要としません。
+設定を必要とするコマンドは start・stack・restack・cleanup・discard・list と、ファイル指定なしの config check です。init・doctor・skills・ヘルプ・バージョン表示は設定なしで使用できます。
 
 ## 設定項目
 
@@ -76,7 +69,7 @@ git commit -m "Configure worktree sessions"
 
 `baseBranch` は `main`、`master`、`release/stable` のように、`origin/` を付けずに指定します。Git で有効なローカルブランチ名が必要です。設定検査では参照の存在を要求しません。cleanup は設定したローカルブランチを削除対象から除外し、通常実行時に origin からこのブランチを fetch して、`origin/<baseBranch>` を祖先判定とパッチ一致の基準に使用します。`baseBranch` の省略時は `main` を保護し、`origin/main` を判定に使用します。
 
-start・restack のベースは `--base-branch`、`BASE_BRANCH`、明示した `baseBranch` の `origin/<baseBranch>` の順に優先します。いずれも指定しなければ対話で入力し、その既定値は `origin/main` です。`baseBranch` を明示していれば、非対話でもベースの入力を省略できます。cleanup の基準は設定で決まり、`BASE_BRANCH` では変わりません。
+start・restack のベースは `--base-branch`、`BASE_BRANCH`、明示した `baseBranch` の `origin/<baseBranch>` の順に優先します。いずれも指定しなければ対話で入力し、その既定候補はローカルの `origin/HEAD` が指す参照、なければ `origin/main` です。`baseBranch` を明示していれば、非対話でもベースの入力を省略できます。cleanup の基準は設定で決まり、`BASE_BRANCH` では変わりません。
 
 ### worktree の配置と管理範囲
 
@@ -104,14 +97,9 @@ wts config check
 wts config check /path/to/project/.wts.json
 ```
 
-ソースから使うためのスクリプトもあります。固定された Nix devShell の Bun で同じ検査を実行し、呼び出したディレクトリと引数を維持します。
+検査結果には設定と worktree のパス、解決済みのベース、cleanup の保護対象と取り込み基準、branch・worktree それぞれの命名スクリプトパスまたは既定方式を表示します。ベース省略時は start・restack の入力が必要であることと、cleanup の `main` / `origin/main` を区別します。命名スクリプトは実行しません。
 
-```bash
-/path/to/wts/scripts/check-config.sh
-/path/to/wts/scripts/check-config.sh /path/to/project/.wts.json
-```
-
-成功は終了コード `0`、エラーは `1` です。JSON 構文、既知の項目、型、パス、実行権限を検査します。スクリプトのロジックや AI の応答、スクリプトが内部で使うコマンドまでは検査しません。実行環境と gh 認証の検査には `wts doctor --check` を使用します。
+JSON 構文、既知の項目、型、パス、実行権限を検査し、成功は終了コード `0`、エラーは `1` です。スクリプトのロジックや AI の応答、スクリプトが内部で使うコマンドまでは検査しません。実行環境と gh 認証の検査には `wts doctor --check` を使用します。
 
 ## 命名スクリプトの入出力
 

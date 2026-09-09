@@ -7,7 +7,7 @@
 			"command": "wts ",
 			"cwd": "<fixture>",
 			"code": 1,
-			"raw": "\u001b[1mUsage:\u001b[22m \u001b[36mwts\u001b[39m \u001b[32m[options]\u001b[39m [command]\r\n\r\nGit Worktree Session\r\n\r\n\u001b[1mOptions:\u001b[22m\r\n  \u001b[32m-V, --version\u001b[39m             output the version number\r\n  \u001b[32m-h, --help\u001b[39m                display help for command\r\n\r\n\u001b[1mCommands:\u001b[22m\r\n  doctor \u001b[32m[options]\u001b[39m          CLI の起動環境を確認します\r\n  init                      プロジェクトの .wts.json を生成します\r\n  config                    プロジェクト設定を確認します\r\n  skills                    AI 向けスキルを表示・導入します\r\n  start \u001b[32m[options]\u001b[39m           作業セッションの worktree を作成します\r\n  stack \u001b[32m[options]\u001b[39m           現在の worktree に次のスタックブランチを作成します\r\n  cleanup \u001b[32m[options]\u001b[39m         マージ済みのローカルブランチと worktree を整理します\r\n  discard \u001b[32m[options]\u001b[39m <path>  指定したセッションの worktree とブランチを破棄します\r\n  restack \u001b[32m[options]\u001b[39m         線形スタックを rebase し lease 付きで一括 push します\r\n  help [command]            display help for command\r\n",
+			"raw": "\u001b[1mUsage:\u001b[22m \u001b[36mwts\u001b[39m \u001b[32m[options]\u001b[39m [command]\r\n\r\nGit Worktree Session\r\n\r\n\u001b[1mOptions:\u001b[22m\r\n  \u001b[32m-V, --version\u001b[39m             output the version number\r\n  \u001b[32m-h, --help\u001b[39m                display help for command\r\n\r\n\u001b[1mCommands:\u001b[22m\r\n  doctor \u001b[32m[options]\u001b[39m          CLI の起動環境を確認します\r\n  init \u001b[32m[options]\u001b[39m            プロジェクトの .wts.json を生成します\r\n  list                      管理範囲のセッションと未管理 worktree を一覧します\r\n  config                    プロジェクト設定を確認します\r\n  skills                    AI 向けスキルを表示・導入します\r\n  start \u001b[32m[options]\u001b[39m           作業セッションの worktree を作成します\r\n  stack \u001b[32m[options]\u001b[39m           現在の worktree に次のスタックブランチを作成します\r\n  cleanup \u001b[32m[options]\u001b[39m         マージ済みのローカルブランチと worktree を整理します\r\n  discard \u001b[32m[options]\u001b[39m <path>  指定したセッションの worktree とブランチを破棄します\r\n  restack \u001b[32m[options]\u001b[39m         線形スタックを rebase し lease 付きで一括 push します\r\n  help [command]            display help for command\r\n",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -18,7 +18,7 @@
 			"command": "wts --help",
 			"cwd": "<fixture>",
 			"code": 0,
-			"raw": "\u001b[1mUsage:\u001b[22m \u001b[36mwts\u001b[39m \u001b[32m[options]\u001b[39m [command]\r\n\r\nGit Worktree Session\r\n\r\n\u001b[1mOptions:\u001b[22m\r\n  \u001b[32m-V, --version\u001b[39m             output the version number\r\n  \u001b[32m-h, --help\u001b[39m                display help for command\r\n\r\n\u001b[1mCommands:\u001b[22m\r\n  doctor \u001b[32m[options]\u001b[39m          CLI の起動環境を確認します\r\n  init                      プロジェクトの .wts.json を生成します\r\n  config                    プロジェクト設定を確認します\r\n  skills                    AI 向けスキルを表示・導入します\r\n  start \u001b[32m[options]\u001b[39m           作業セッションの worktree を作成します\r\n  stack \u001b[32m[options]\u001b[39m           現在の worktree に次のスタックブランチを作成します\r\n  cleanup \u001b[32m[options]\u001b[39m         マージ済みのローカルブランチと worktree を整理します\r\n  discard \u001b[32m[options]\u001b[39m <path>  指定したセッションの worktree とブランチを破棄します\r\n  restack \u001b[32m[options]\u001b[39m         線形スタックを rebase し lease 付きで一括 push します\r\n  help [command]            display help for command\r\n",
+			"raw": "\u001b[1mUsage:\u001b[22m \u001b[36mwts\u001b[39m \u001b[32m[options]\u001b[39m [command]\r\n\r\nGit Worktree Session\r\n\r\n\u001b[1mOptions:\u001b[22m\r\n  \u001b[32m-V, --version\u001b[39m             output the version number\r\n  \u001b[32m-h, --help\u001b[39m                display help for command\r\n\r\n\u001b[1mCommands:\u001b[22m\r\n  doctor \u001b[32m[options]\u001b[39m          CLI の起動環境を確認します\r\n  init \u001b[32m[options]\u001b[39m            プロジェクトの .wts.json を生成します\r\n  list                      管理範囲のセッションと未管理 worktree を一覧します\r\n  config                    プロジェクト設定を確認します\r\n  skills                    AI 向けスキルを表示・導入します\r\n  start \u001b[32m[options]\u001b[39m           作業セッションの worktree を作成します\r\n  stack \u001b[32m[options]\u001b[39m           現在の worktree に次のスタックブランチを作成します\r\n  cleanup \u001b[32m[options]\u001b[39m         マージ済みのローカルブランチと worktree を整理します\r\n  discard \u001b[32m[options]\u001b[39m <path>  指定したセッションの worktree とブランチを破棄します\r\n  restack \u001b[32m[options]\u001b[39m         線形スタックを rebase し lease 付きで一括 push します\r\n  help [command]            display help for command\r\n",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -40,7 +40,7 @@
 			"command": "wts help",
 			"cwd": "<fixture>",
 			"code": 0,
-			"raw": "\u001b[1mUsage:\u001b[22m \u001b[36mwts\u001b[39m \u001b[32m[options]\u001b[39m [command]\r\n\r\nGit Worktree Session\r\n\r\n\u001b[1mOptions:\u001b[22m\r\n  \u001b[32m-V, --version\u001b[39m             output the version number\r\n  \u001b[32m-h, --help\u001b[39m                display help for command\r\n\r\n\u001b[1mCommands:\u001b[22m\r\n  doctor \u001b[32m[options]\u001b[39m          CLI の起動環境を確認します\r\n  init                      プロジェクトの .wts.json を生成します\r\n  config                    プロジェクト設定を確認します\r\n  skills                    AI 向けスキルを表示・導入します\r\n  start \u001b[32m[options]\u001b[39m           作業セッションの worktree を作成します\r\n  stack \u001b[32m[options]\u001b[39m           現在の worktree に次のスタックブランチを作成します\r\n  cleanup \u001b[32m[options]\u001b[39m         マージ済みのローカルブランチと worktree を整理します\r\n  discard \u001b[32m[options]\u001b[39m <path>  指定したセッションの worktree とブランチを破棄します\r\n  restack \u001b[32m[options]\u001b[39m         線形スタックを rebase し lease 付きで一括 push します\r\n  help [command]            display help for command\r\n",
+			"raw": "\u001b[1mUsage:\u001b[22m \u001b[36mwts\u001b[39m \u001b[32m[options]\u001b[39m [command]\r\n\r\nGit Worktree Session\r\n\r\n\u001b[1mOptions:\u001b[22m\r\n  \u001b[32m-V, --version\u001b[39m             output the version number\r\n  \u001b[32m-h, --help\u001b[39m                display help for command\r\n\r\n\u001b[1mCommands:\u001b[22m\r\n  doctor \u001b[32m[options]\u001b[39m          CLI の起動環境を確認します\r\n  init \u001b[32m[options]\u001b[39m            プロジェクトの .wts.json を生成します\r\n  list                      管理範囲のセッションと未管理 worktree を一覧します\r\n  config                    プロジェクト設定を確認します\r\n  skills                    AI 向けスキルを表示・導入します\r\n  start \u001b[32m[options]\u001b[39m           作業セッションの worktree を作成します\r\n  stack \u001b[32m[options]\u001b[39m           現在の worktree に次のスタックブランチを作成します\r\n  cleanup \u001b[32m[options]\u001b[39m         マージ済みのローカルブランチと worktree を整理します\r\n  discard \u001b[32m[options]\u001b[39m <path>  指定したセッションの worktree とブランチを破棄します\r\n  restack \u001b[32m[options]\u001b[39m         線形スタックを rebase し lease 付きで一括 push します\r\n  help [command]            display help for command\r\n",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -51,7 +51,7 @@
 			"command": "wts help start",
 			"cwd": "<fixture>",
 			"code": 0,
-			"raw": "\u001b[1mUsage:\u001b[22m \u001b[36mwts\u001b[39m \u001b[36mstart\u001b[39m \u001b[32m[options]\u001b[39m\r\n\r\n作業セッションの worktree を作成します\r\n\r\n\u001b[1mOptions:\u001b[22m\r\n  \u001b[32m--dry-run\u001b[39m                変更せず実行予定を表示します (default: false)\r\n  \u001b[32m--task <text>\u001b[39m            命名スクリプトへ渡す作業内容（既定の命名は日付＋UUID）\r\n  \u001b[32m--base-branch <branch>\u001b[39m   ベースブランチ（既定: origin/main） (env: BASE_BRANCH)\r\n  \u001b[32m--copy-from <directory>\u001b[39m  管理外ファイルのコピー元 (env: COPY_FROM)\r\n  \u001b[32m-h, --help\u001b[39m               display help for command\r\n",
+			"raw": "\u001b[1mUsage:\u001b[22m \u001b[36mwts\u001b[39m \u001b[36mstart\u001b[39m \u001b[32m[options]\u001b[39m\r\n\r\n作業セッションの worktree を作成します\r\n\r\n\u001b[1mOptions:\u001b[22m\r\n  \u001b[32m--dry-run\u001b[39m                変更せず実行予定を表示します（DRY_RUN=1 で有効、解除は unset） (default: false)\r\n  \u001b[32m--task <text>\u001b[39m            命名スクリプトへ渡す作業内容（既定の命名は日付＋UUID）\r\n  \u001b[32m--base-branch <branch>\u001b[39m   ベースブランチ（省略時は設定の origin/<baseBranch>、未設定なら対話） (env: BASE_BRANCH)\r\n  \u001b[32m--copy-from <directory>\u001b[39m  管理外ファイルのコピー元 (env: COPY_FROM)\r\n  \u001b[32m-h, --help\u001b[39m               display help for command\r\n",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -95,7 +95,18 @@
 			"command": "wts init --help",
 			"cwd": "<fixture>",
 			"code": 0,
-			"raw": "\u001b[1mUsage:\u001b[22m \u001b[36mwts\u001b[39m \u001b[36minit\u001b[39m \u001b[32m[options]\u001b[39m\r\n\r\nプロジェクトの .wts.json を生成します\r\n\r\n\u001b[1mOptions:\u001b[22m\r\n  \u001b[32m-h, --help\u001b[39m  display help for command\r\n",
+			"raw": "\u001b[1mUsage:\u001b[22m \u001b[36mwts\u001b[39m \u001b[36minit\u001b[39m \u001b[32m[options]\u001b[39m\r\n\r\nプロジェクトの .wts.json を生成します\r\n\r\n\u001b[1mOptions:\u001b[22m\r\n  \u001b[32m--base-branch <name>\u001b[39m  設定に保存するローカルのベースブランチ名\r\n  \u001b[32m-h, --help\u001b[39m            display help for command\r\n",
+			"frames": [],
+			"mode": "TTY 実測",
+			"input": []
+		},
+		{
+			"title": "ヘルプ / バージョン: list --help",
+			"args": ["list", "--help"],
+			"command": "wts list --help",
+			"cwd": "<fixture>",
+			"code": 0,
+			"raw": "\u001b[1mUsage:\u001b[22m \u001b[36mwts\u001b[39m \u001b[36mlist\u001b[39m \u001b[32m[options]\u001b[39m\r\n\r\n管理範囲のセッションと未管理 worktree を一覧します\r\n\r\n\u001b[1mOptions:\u001b[22m\r\n  \u001b[32m-h, --help\u001b[39m  display help for command\r\n",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -117,7 +128,7 @@
 			"command": "wts start --help",
 			"cwd": "<fixture>",
 			"code": 0,
-			"raw": "\u001b[1mUsage:\u001b[22m \u001b[36mwts\u001b[39m \u001b[36mstart\u001b[39m \u001b[32m[options]\u001b[39m\r\n\r\n作業セッションの worktree を作成します\r\n\r\n\u001b[1mOptions:\u001b[22m\r\n  \u001b[32m--dry-run\u001b[39m                変更せず実行予定を表示します (default: false)\r\n  \u001b[32m--task <text>\u001b[39m            命名スクリプトへ渡す作業内容（既定の命名は日付＋UUID）\r\n  \u001b[32m--base-branch <branch>\u001b[39m   ベースブランチ（既定: origin/main） (env: BASE_BRANCH)\r\n  \u001b[32m--copy-from <directory>\u001b[39m  管理外ファイルのコピー元 (env: COPY_FROM)\r\n  \u001b[32m-h, --help\u001b[39m               display help for command\r\n",
+			"raw": "\u001b[1mUsage:\u001b[22m \u001b[36mwts\u001b[39m \u001b[36mstart\u001b[39m \u001b[32m[options]\u001b[39m\r\n\r\n作業セッションの worktree を作成します\r\n\r\n\u001b[1mOptions:\u001b[22m\r\n  \u001b[32m--dry-run\u001b[39m                変更せず実行予定を表示します（DRY_RUN=1 で有効、解除は unset） (default: false)\r\n  \u001b[32m--task <text>\u001b[39m            命名スクリプトへ渡す作業内容（既定の命名は日付＋UUID）\r\n  \u001b[32m--base-branch <branch>\u001b[39m   ベースブランチ（省略時は設定の origin/<baseBranch>、未設定なら対話） (env: BASE_BRANCH)\r\n  \u001b[32m--copy-from <directory>\u001b[39m  管理外ファイルのコピー元 (env: COPY_FROM)\r\n  \u001b[32m-h, --help\u001b[39m               display help for command\r\n",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -128,7 +139,7 @@
 			"command": "wts stack --help",
 			"cwd": "<fixture>",
 			"code": 0,
-			"raw": "\u001b[1mUsage:\u001b[22m \u001b[36mwts\u001b[39m \u001b[36mstack\u001b[39m \u001b[32m[options]\u001b[39m\r\n\r\n現在の worktree に次のスタックブランチを作成します\r\n\r\n\u001b[1mOptions:\u001b[22m\r\n  \u001b[32m--dry-run\u001b[39m             変更せず実行予定を表示します (default: false)\r\n  \u001b[32m--task <text>\u001b[39m         命名スクリプトへ渡す作業内容（既定の命名は日付＋UUID）\r\n  \u001b[32m--pr-number <number>\u001b[39m  スタック内の番号（2 以上） (env: PR_NUMBER)\r\n  \u001b[32m-h, --help\u001b[39m            display help for command\r\n",
+			"raw": "\u001b[1mUsage:\u001b[22m \u001b[36mwts\u001b[39m \u001b[36mstack\u001b[39m \u001b[32m[options]\u001b[39m\r\n\r\n現在の worktree に次のスタックブランチを作成します\r\n\r\n\u001b[1mOptions:\u001b[22m\r\n  \u001b[32m--dry-run\u001b[39m             変更せず実行予定を表示します（DRY_RUN=1 で有効、解除は unset） (default: false)\r\n  \u001b[32m--task <text>\u001b[39m         命名スクリプトへ渡す作業内容（既定の命名は日付＋UUID）\r\n  \u001b[32m--pr-number <number>\u001b[39m  スタック番号（2 以上、GitHub の PR 番号とは異なります） (env: PR_NUMBER)\r\n  \u001b[32m-h, --help\u001b[39m            display help for command\r\n",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -139,7 +150,18 @@
 			"command": "wts cleanup --help",
 			"cwd": "<fixture>",
 			"code": 0,
-			"raw": "\u001b[1mUsage:\u001b[22m \u001b[36mwts\u001b[39m \u001b[36mcleanup\u001b[39m \u001b[32m[options]\u001b[39m\r\n\r\nマージ済みのローカルブランチと worktree を整理します\r\n\r\n\u001b[1mOptions:\u001b[22m\r\n  \u001b[32m--dry-run\u001b[39m   変更せず実行予定を表示します (default: false)\r\n  \u001b[32m--yes\u001b[39m       表示した削除対象の確認を省略します\r\n  \u001b[32m-h, --help\u001b[39m  display help for command\r\n",
+			"raw": "\u001b[1mUsage:\u001b[22m \u001b[36mwts\u001b[39m \u001b[36mcleanup\u001b[39m \u001b[32m[options]\u001b[39m\r\n\r\nマージ済みのローカルブランチと worktree を整理します\r\n\r\n\u001b[1mOptions:\u001b[22m\r\n  \u001b[32m--dry-run\u001b[39m   変更せず実行予定を表示します（DRY_RUN=1 で有効、解除は unset） (default: false)\r\n  \u001b[32m--yes\u001b[39m       表示した削除対象の確認を省略します\r\n  \u001b[32m-h, --help\u001b[39m  display help for command\r\n",
+			"frames": [],
+			"mode": "TTY 実測",
+			"input": []
+		},
+		{
+			"title": "ヘルプ / バージョン: discard --help",
+			"args": ["discard", "--help"],
+			"command": "wts discard --help",
+			"cwd": "<fixture>",
+			"code": 0,
+			"raw": "\u001b[1mUsage:\u001b[22m \u001b[36mwts\u001b[39m \u001b[36mdiscard\u001b[39m \u001b[32m[options]\u001b[39m <path>\r\n\r\n指定したセッションの worktree とブランチを破棄します\r\n\r\n\u001b[1mOptions:\u001b[22m\r\n  \u001b[32m--dry-run\u001b[39m        変更せず実行予定を表示します（DRY_RUN=1 で有効、解除は unset） (default: false)\r\n  \u001b[32m--yes\u001b[39m            表示した削除対象の確認を省略します\r\n  \u001b[32m--force\u001b[39m          未コミット・未追跡・無視されたファイルも破棄します\r\n  \u001b[32m--remote <name>\u001b[39m  指定リモートの同名セッションブランチも削除します\r\n  \u001b[32m-h, --help\u001b[39m       display help for command\r\n",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -150,7 +172,7 @@
 			"command": "wts restack --help",
 			"cwd": "<fixture>",
 			"code": 0,
-			"raw": "\u001b[1mUsage:\u001b[22m \u001b[36mwts\u001b[39m \u001b[36mrestack\u001b[39m \u001b[32m[options]\u001b[39m\r\n\r\n線形スタックを rebase し lease 付きで一括 push します\r\n\r\n\u001b[1mOptions:\u001b[22m\r\n  \u001b[32m--dry-run\u001b[39m               変更せず実行予定を表示します (default: false)\r\n  \u001b[32m--base-branch <branch>\u001b[39m  ベースブランチ（既定: origin/main） (env: BASE_BRANCH)\r\n  \u001b[32m--push-only\u001b[39m             保存した lease を使い push だけ行います (default: false)\r\n  \u001b[32m--push\u001b[39m                  push の確認を省略します (default: false)\r\n  \u001b[32m-h, --help\u001b[39m              display help for command\r\n",
+			"raw": "\u001b[1mUsage:\u001b[22m \u001b[36mwts\u001b[39m \u001b[36mrestack\u001b[39m \u001b[32m[options]\u001b[39m\r\n\r\n線形スタックを rebase し lease 付きで一括 push します\r\n\r\n\u001b[1mOptions:\u001b[22m\r\n  \u001b[32m--dry-run\u001b[39m               変更せず実行予定を表示します（DRY_RUN=1 で有効、解除は unset） (default: false)\r\n  \u001b[32m--base-branch <branch>\u001b[39m  ベースブランチ（省略時は設定の origin/<baseBranch>、未設定なら対話） (env: BASE_BRANCH)\r\n  \u001b[32m--push-only\u001b[39m             保存した lease を使い push だけ行います（PUSH_ONLY=1 で有効、解除は unset） (default: false)\r\n  \u001b[32m--push\u001b[39m                  push の確認を省略します（PUSH=1 で有効、解除は unset） (default: false)\r\n  \u001b[32m-h, --help\u001b[39m              display help for command\r\n",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -217,6 +239,17 @@
 			"cwd": "<fixture>",
 			"code": 1,
 			"raw": "  \u001b[31m✗\u001b[39m option '--pr-number <number>' argument missing\r\n",
+			"frames": [],
+			"mode": "TTY 実測",
+			"input": []
+		},
+		{
+			"title": "引数エラー: discard",
+			"args": ["discard"],
+			"command": "wts discard",
+			"cwd": "<fixture>",
+			"code": 1,
+			"raw": "  \u001b[31m✗\u001b[39m missing required argument 'path'\r\n",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -354,7 +387,7 @@
 			"command": "wts doctor --check",
 			"cwd": "<fixture>",
 			"code": 0,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mdoctor\u001b[22m\r\n\r\n  \u001b[32mOK\u001b[39m: 実行環境 darwin / arm64（対応: Apple Silicon macOS）\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m Git のバージョンを確認しています…\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m Git のバージョンを確認しています…\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠹\u001b[39m Git のバージョンを確認しています…\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠸\u001b[39m Git のバージョンを確認しています…\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠼\u001b[39m Git のバージョンを確認しています…\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[32mOK\u001b[39m: Git 2.38（restack に必要な 2.38 以上）\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m GitHub CLI を確認しています…\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m GitHub CLI を確認しています…\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠹\u001b[39m GitHub CLI を確認しています…\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[32mOK\u001b[39m: GitHub CLI\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m GitHub CLI の認証を確認しています…\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[32mOK\u001b[39m: GitHub CLI 認証\r\n  \u001b[32mOK\u001b[39m: Claude CLI（任意・Claude 用命名スクリプトを設定した場合に使用）\r\n",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mdoctor\u001b[22m\r\n\r\n  \u001b[32mOK\u001b[39m: 実行環境 darwin / arm64（対応: Apple Silicon macOS）\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m Git のバージョンを確認しています…\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m Git のバージョンを確認しています…\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠹\u001b[39m Git のバージョンを確認しています…\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠸\u001b[39m Git のバージョンを確認しています…\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠼\u001b[39m Git のバージョンを確認しています…\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[32mOK\u001b[39m: Git 2.38（restack に必要な 2.38 以上）\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m GitHub CLI を確認しています…\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m GitHub CLI を確認しています…\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠹\u001b[39m GitHub CLI を確認しています…\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠸\u001b[39m GitHub CLI を確認しています…\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[32mOK\u001b[39m: GitHub CLI\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m GitHub CLI の認証を確認しています…\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[32mOK\u001b[39m: GitHub CLI 認証\r\n  \u001b[32mOK\u001b[39m: Claude CLI（任意・Claude 用命名スクリプトを設定した場合に使用）\r\n",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -387,7 +420,7 @@
 			"command": "wts doctor --check",
 			"cwd": "<fixture>",
 			"code": 1,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mdoctor\u001b[22m\r\n\r\n  \u001b[32mOK\u001b[39m: 実行環境 darwin / arm64（対応: Apple Silicon macOS）\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m Git のバージョンを確認しています…\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m Git のバージョンを確認しています…\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m Git のバージョンを確認しています…\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠹\u001b[39m Git のバージョンを確認しています…\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠸\u001b[39m Git のバージョンを確認しています…\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[31mNG\u001b[39m: Git 2.38 以上が必要です。導入・更新: brew install git（導入済みなら brew upgrade git）。PATH も確認してください。\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m GitHub CLI を確認しています…\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m GitHub CLI を確認しています…\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[32mOK\u001b[39m: GitHub CLI\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m GitHub CLI の認証を確認しています…\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[32mOK\u001b[39m: GitHub CLI 認証\r\n  \u001b[36m•\u001b[39m 任意: Claude CLI は未導入です。日付＋UUID によるブランチ命名を利用できます。\r\n",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mdoctor\u001b[22m\r\n\r\n  \u001b[32mOK\u001b[39m: 実行環境 darwin / arm64（対応: Apple Silicon macOS）\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m Git のバージョンを確認しています…\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m Git のバージョンを確認しています…\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠹\u001b[39m Git のバージョンを確認しています…\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠸\u001b[39m Git のバージョンを確認しています…\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠼\u001b[39m Git のバージョンを確認しています…\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[31mNG\u001b[39m: Git 2.38 以上が必要です。導入・更新: brew install git（導入済みなら brew upgrade git）。PATH も確認してください。\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m GitHub CLI を確認しています…\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m GitHub CLI を確認しています…\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[32mOK\u001b[39m: GitHub CLI\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m GitHub CLI の認証を確認しています…\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[32mOK\u001b[39m: GitHub CLI 認証\r\n  \u001b[36m•\u001b[39m 任意: Claude CLI は未導入です。日付＋UUID によるブランチ命名を利用できます。\r\n",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -398,7 +431,7 @@
 			"command": "wts doctor --check",
 			"cwd": "<fixture>",
 			"code": 1,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mdoctor\u001b[22m\r\n\r\n  \u001b[32mOK\u001b[39m: 実行環境 darwin / arm64（対応: Apple Silicon macOS）\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m Git のバージョンを確認しています…\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m Git のバージョンを確認しています…\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[32mOK\u001b[39m: Git 2.38（restack に必要な 2.38 以上）\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m GitHub CLI を確認しています…\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m GitHub CLI を確認しています…\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[32mOK\u001b[39m: GitHub CLI\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m GitHub CLI の認証を確認しています…\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[31mNG\u001b[39m: GitHub CLI の認証を確認できません。gh auth login とネットワーク接続を確認してください。\r\n  \u001b[36m•\u001b[39m 任意: Claude CLI は未導入です。日付＋UUID によるブランチ命名を利用できます。\r\n",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mdoctor\u001b[22m\r\n\r\n  \u001b[32mOK\u001b[39m: 実行環境 darwin / arm64（対応: Apple Silicon macOS）\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m Git のバージョンを確認しています…\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m Git のバージョンを確認しています…\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[32mOK\u001b[39m: Git 2.38（restack に必要な 2.38 以上）\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m GitHub CLI を確認しています…\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m GitHub CLI を確認しています…\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠹\u001b[39m GitHub CLI を確認しています…\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠸\u001b[39m GitHub CLI を確認しています…\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[32mOK\u001b[39m: GitHub CLI\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m GitHub CLI の認証を確認しています…\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[31mNG\u001b[39m: GitHub CLI の認証を確認できません。gh auth login とネットワーク接続を確認してください。\r\n  \u001b[36m•\u001b[39m 任意: Claude CLI は未導入です。日付＋UUID によるブランチ命名を利用できます。\r\n",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -420,7 +453,7 @@
 			"command": "wts doctor --check",
 			"cwd": "<fixture>",
 			"code": 1,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mdoctor\u001b[22m\r\n\r\n  \u001b[32mOK\u001b[39m: 実行環境 darwin / arm64（対応: Apple Silicon macOS）\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m Git のバージョンを確認しています…\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m Git のバージョンを確認しています…\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠹\u001b[39m Git のバージョンを確認しています…\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠸\u001b[39m Git のバージョンを確認しています…\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[31mNG\u001b[39m: Git 2.38 以上が必要です。導入・更新: brew install git（導入済みなら brew upgrade git）。PATH も確認してください。\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m GitHub CLI を確認しています…\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m GitHub CLI を確認しています…\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠹\u001b[39m GitHub CLI を確認しています…\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[32mOK\u001b[39m: GitHub CLI\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m GitHub CLI の認証を確認しています…\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[32mOK\u001b[39m: GitHub CLI 認証\r\n  \u001b[32mOK\u001b[39m: Claude CLI（任意・Claude 用命名スクリプトを設定した場合に使用）\r\n",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mdoctor\u001b[22m\r\n\r\n  \u001b[32mOK\u001b[39m: 実行環境 darwin / arm64（対応: Apple Silicon macOS）\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m Git のバージョンを確認しています…\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m Git のバージョンを確認しています…\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠹\u001b[39m Git のバージョンを確認しています…\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠸\u001b[39m Git のバージョンを確認しています…\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[31mNG\u001b[39m: Git 2.38 以上が必要です。導入・更新: brew install git（導入済みなら brew upgrade git）。PATH も確認してください。\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m GitHub CLI を確認しています…\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m GitHub CLI を確認しています…\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[32mOK\u001b[39m: GitHub CLI\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m GitHub CLI の認証を確認しています…\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[32mOK\u001b[39m: GitHub CLI 認証\r\n  \u001b[32mOK\u001b[39m: Claude CLI（任意・Claude 用命名スクリプトを設定した場合に使用）\r\n",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -464,7 +497,7 @@
 			"command": "wts config check",
 			"cwd": "<fixture>/config-fixture/repo",
 			"code": 0,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mconfig check\u001b[22m\r\n\r\n  \u001b[32m✓\u001b[39m 設定 OK\r\n    \u001b[2mConfig   \u001b[22m  <fixture>/config-fixture/repo/.wts.json\r\n    \u001b[2mWorktrees\u001b[22m  <fixture>/config-fixture/repo-worktrees\r\n",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mconfig check\u001b[22m\r\n\r\n  \u001b[32m✓\u001b[39m 設定 OK\r\n    \u001b[2mConfig         \u001b[22m  <fixture>/config-fixture/repo/.wts.json\r\n    \u001b[2mWorktrees      \u001b[22m  <fixture>/config-fixture/repo-worktrees\r\n    \u001b[2mBase           \u001b[22m  未設定（start・restack はベース入力が必要）\r\n    \u001b[2mCleanup base   \u001b[22m  main を保護 / origin/main で取り込みを判定\r\n    \u001b[2mBranch naming  \u001b[22m  日付＋UUID\r\n    \u001b[2mWorktree naming\u001b[22m  ブランチ名\r\n",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -475,7 +508,7 @@
 			"command": "wts config check <fixture>/config-fixture/repo/.wts.json",
 			"cwd": "<fixture>",
 			"code": 0,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mconfig check\u001b[22m\r\n\r\n  \u001b[32m✓\u001b[39m 設定 OK\r\n    \u001b[2mConfig   \u001b[22m  <fixture>/config-fixture/repo/.wts.json\r\n    \u001b[2mWorktrees\u001b[22m  <fixture>/config-fixture/repo-worktrees\r\n",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mconfig check\u001b[22m\r\n\r\n  \u001b[32m✓\u001b[39m 設定 OK\r\n    \u001b[2mConfig         \u001b[22m  <fixture>/config-fixture/repo/.wts.json\r\n    \u001b[2mWorktrees      \u001b[22m  <fixture>/config-fixture/repo-worktrees\r\n    \u001b[2mBase           \u001b[22m  未設定（start・restack はベース入力が必要）\r\n    \u001b[2mCleanup base   \u001b[22m  main を保護 / origin/main で取り込みを判定\r\n    \u001b[2mBranch naming  \u001b[22m  日付＋UUID\r\n    \u001b[2mWorktree naming\u001b[22m  ブランチ名\r\n",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -520,6 +553,39 @@
 			"cwd": "<fixture>/config-fixture/repo",
 			"code": 1,
 			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mconfig check\u001b[22m\r\n\r\n  \u001b[31m✗\u001b[39m 不明な設定キー: .wts.json.unknown\r\n",
+			"frames": [],
+			"mode": "TTY 実測",
+			"input": []
+		},
+		{
+			"title": "config check baseBranch型不正",
+			"args": ["config", "check"],
+			"command": "wts config check",
+			"cwd": "<fixture>/config-fixture/repo",
+			"code": 1,
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mconfig check\u001b[22m\r\n\r\n  \u001b[31m✗\u001b[39m baseBranch は文字列で指定してください。\r\n",
+			"frames": [],
+			"mode": "TTY 実測",
+			"input": []
+		},
+		{
+			"title": "config check baseBranch NUL",
+			"args": ["config", "check"],
+			"command": "wts config check",
+			"cwd": "<fixture>/config-fixture/repo",
+			"code": 1,
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mconfig check\u001b[22m\r\n\r\n  \u001b[31m✗\u001b[39m baseBranch に NUL は使用できません。\r\n",
+			"frames": [],
+			"mode": "TTY 実測",
+			"input": []
+		},
+		{
+			"title": "config check baseBranch名不正",
+			"args": ["config", "check"],
+			"command": "wts config check",
+			"cwd": "<fixture>/config-fixture/repo",
+			"code": 1,
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mconfig check\u001b[22m\r\n\r\n  \u001b[31m✗\u001b[39m baseBranch は有効な Git ブランチ名で指定してください。\r\n",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -812,8 +878,8 @@
 		},
 		{
 			"title": "restack Gitコマンドなし",
-			"args": ["restack"],
-			"command": "wts restack",
+			"args": ["restack", "--push"],
+			"command": "wts restack --push",
 			"cwd": "<fixture>/config-fixture/repo",
 			"code": 1,
 			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mrestack\u001b[22m\r\n\r\n  \u001b[31m✗\u001b[39m git コマンドが見つかりません。PATH を確認してください。\r\n",
@@ -1003,7 +1069,7 @@
 			"command": "wts config check",
 			"cwd": "<fixture>/config-validation/repo",
 			"code": 0,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mconfig check\u001b[22m\r\n\r\n  \u001b[32m✓\u001b[39m 設定 OK\r\n    \u001b[2mConfig   \u001b[22m  <fixture>/config-validation/repo/.wts.json\r\n    \u001b[2mWorktrees\u001b[22m  <fixture>/config-validation/repo-worktrees\r\n",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mconfig check\u001b[22m\r\n\r\n  \u001b[32m✓\u001b[39m 設定 OK\r\n    \u001b[2mConfig         \u001b[22m  <fixture>/config-validation/repo/.wts.json\r\n    \u001b[2mWorktrees      \u001b[22m  <fixture>/config-validation/repo-worktrees\r\n    \u001b[2mBase           \u001b[22m  未設定（start・restack はベース入力が必要）\r\n    \u001b[2mCleanup base   \u001b[22m  main を保護 / origin/main で取り込みを判定\r\n    \u001b[2mBranch naming  \u001b[22m  <fixture>/config-validation/repo/namer\r\n    \u001b[2mWorktree naming\u001b[22m  <fixture>/config-validation/repo/namer\r\n",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -1065,8 +1131,8 @@
 		},
 		{
 			"title": "restack Gitリポジトリ外",
-			"args": ["restack"],
-			"command": "wts restack",
+			"args": ["restack", "--push"],
+			"command": "wts restack --push",
 			"cwd": "<fixture>",
 			"code": 1,
 			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mrestack\u001b[22m\r\n\r\n  \u001b[31m✗\u001b[39m git rev-parse に失敗しました。\r\n    fatal: not a git repository (or any of the parent directories): .git\r\n",
@@ -1075,12 +1141,23 @@
 			"input": []
 		},
 		{
+			"title": "start: 設定のベースで対話なし成功",
+			"args": ["start", "--task", ""],
+			"command": "wts start --task ''",
+			"cwd": "<fixture>/session-start/repo",
+			"code": 0,
+			"raw": "Worktree 準備完了\nBranch  configured-base\nPath  <fixture>/session-start/repo-worktrees/configured-base\nNext  cd <fixture>/session-start/repo-worktrees/configured-base\n",
+			"frames": [],
+			"mode": "PIPE 実測",
+			"input": []
+		},
+		{
 			"title": "start: dry-run",
 			"args": ["start", "--base-branch", "main", "--task", "", "--dry-run"],
 			"command": "wts start --base-branch main --task '' --dry-run",
 			"cwd": "<fixture>/session-start/repo",
 			"code": 0,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mstart\u001b[22m\r\n\r\n  \u001b[36m•\u001b[39m DRY_RUN: Worktree は作成しません\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m ブランチ名を生成しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m ブランチ名を生成しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠹\u001b[39m ブランチ名を生成しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠸\u001b[39m ブランチ名を生成しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠼\u001b[39m ブランチ名を生成しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[36m→\u001b[39m git worktree add -b feature-demo <fixture>/session-start/repo-worktrees/feature-demo main\r\n  \u001b[36m•\u001b[39m Worktree の作成予定 (dry-run)\r\n    \u001b[2mBranch\u001b[22m  feature-demo\r\n    \u001b[2mPath  \u001b[22m  <fixture>/session-start/repo-worktrees/feature-demo\r\n",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mstart\u001b[22m\r\n\r\n  \u001b[36m•\u001b[39m DRY_RUN: Worktree は作成しません\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m ブランチ名を生成しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[36m→\u001b[39m git worktree add -b feature-demo <fixture>/session-start/repo-worktrees/feature-demo main\r\n  \u001b[36m•\u001b[39m Worktree の作成予定 (dry-run)\r\n    \u001b[2mBranch\u001b[22m  feature-demo\r\n    \u001b[2mPath  \u001b[22m  <fixture>/session-start/repo-worktrees/feature-demo\r\n",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -1230,7 +1307,7 @@
 			"command": "wts start --base-branch main --task ''",
 			"cwd": "<fixture>/session-start/repo",
 			"code": 1,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mstart\u001b[22m\r\n\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m ブランチ名を生成しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m ブランチ名を生成しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[31m✗\u001b[39m branch 命名スクリプトは名前を 1 行で出力してください\r\n\u001b[?25h",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mstart\u001b[22m\r\n\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m ブランチ名を生成しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[31m✗\u001b[39m branch 命名スクリプトは名前を 1 行で出力してください\r\n\u001b[?25h",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -1252,7 +1329,7 @@
 			"command": "wts start --base-branch main --task ''",
 			"cwd": "<fixture>/session-start/repo",
 			"code": 1,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mstart\u001b[22m\r\n\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m ブランチ名を生成しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m ブランチ名を生成しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[31m✗\u001b[39m branch 命名スクリプトが失敗しました\r\n\u001b[?25h",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mstart\u001b[22m\r\n\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m ブランチ名を生成しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[31m✗\u001b[39m branch 命名スクリプトが失敗しました\r\n\u001b[?25h",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -1263,7 +1340,7 @@
 			"command": "wts start --base-branch main --task ''",
 			"cwd": "<fixture>/session-start/repo",
 			"code": 1,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mstart\u001b[22m\r\n\r\n  \u001b[31m✗\u001b[39m branch 命名スクリプトを実行できませんでした\r\n",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mstart\u001b[22m\r\n\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m ブランチ名を生成しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[31m✗\u001b[39m branch 命名スクリプトを実行できませんでした\r\n\u001b[?25h",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -1274,7 +1351,7 @@
 			"command": "wts start --base-branch main --task ''",
 			"cwd": "<fixture>/session-start/repo",
 			"code": 1,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mstart\u001b[22m\r\n\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m ブランチ名を生成しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m Worktree 名を生成しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m Worktree 名を生成しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠹\u001b[39m Worktree 名を生成しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠸\u001b[39m Worktree 名を生成しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠼\u001b[39m Worktree 名を生成しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠴\u001b[39m Worktree 名を生成しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[31m✗\u001b[39m 不正な worktree 名: .git\r\n\u001b[?25h",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mstart\u001b[22m\r\n\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m ブランチ名を生成しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m Worktree 名を生成しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m Worktree 名を生成しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠹\u001b[39m Worktree 名を生成しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠸\u001b[39m Worktree 名を生成しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[31m✗\u001b[39m 不正な worktree 名: .git\r\n\u001b[?25h",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -1285,7 +1362,7 @@
 			"command": "wts start --base-branch main --task ''",
 			"cwd": "<fixture>/session-start/repo",
 			"code": 1,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mstart\u001b[22m\r\n\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m ブランチ名を生成しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m Worktree 名を生成しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m Worktree 名を生成しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[31m✗\u001b[39m worktree 命名スクリプトは名前を 1 行で出力してください\r\n\u001b[?25h",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mstart\u001b[22m\r\n\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m ブランチ名を生成しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m Worktree 名を生成しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[31m✗\u001b[39m worktree 命名スクリプトは名前を 1 行で出力してください\r\n\u001b[?25h",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -1307,7 +1384,7 @@
 			"command": "wts start --base-branch main --task ''",
 			"cwd": "<fixture>/session-start/repo",
 			"code": 1,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mstart\u001b[22m\r\n\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m ブランチ名を生成しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[31m✗\u001b[39m worktree 命名スクリプトを実行できませんでした\r\n\u001b[?25h",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mstart\u001b[22m\r\n\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m ブランチ名を生成しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m Worktree 名を生成しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[31m✗\u001b[39m worktree 命名スクリプトを実行できませんでした\r\n\u001b[?25h",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -1318,7 +1395,7 @@
 			"command": "wts start --base-branch main --task '' --dry-run",
 			"cwd": "<fixture>/session-start/repo",
 			"code": 0,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mstart\u001b[22m\r\n\r\n  \u001b[36m•\u001b[39m DRY_RUN: Worktree は作成しません\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m ブランチ名を生成しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[36m→\u001b[39m git worktree add -b copy-dry <fixture>/session-start/repo-worktrees/copy-dry main\r\n  \u001b[36m→\u001b[39m コピー (dry-run): config.txt\r\n  \u001b[33m!\u001b[39m 不正なエントリをスキップ: ../outside\r\n  \u001b[33m!\u001b[39m 不正なエントリをスキップ: .git\r\n  \u001b[36m→\u001b[39m コピー (dry-run): inside-link\r\n  \u001b[36m→\u001b[39m コピー (dry-run): outside-link\r\n  \u001b[36m→\u001b[39m コピー (dry-run): special\r\n  \u001b[36m→\u001b[39m コピー (dry-run): folder\r\n  \u001b[36m•\u001b[39m Worktree の作成予定 (dry-run)\r\n    \u001b[2mBranch\u001b[22m  copy-dry\r\n    \u001b[2mPath  \u001b[22m  <fixture>/session-start/repo-worktrees/copy-dry\r\n",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mstart\u001b[22m\r\n\r\n  \u001b[36m•\u001b[39m DRY_RUN: Worktree は作成しません\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m ブランチ名を生成しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[36m→\u001b[39m git worktree add -b copy-dry <fixture>/session-start/repo-worktrees/copy-dry main\r\n  \u001b[36m→\u001b[39m コピー (dry-run): config.txt\r\n  \u001b[33m!\u001b[39m 本実行で拒否: ../outside: 不正なエントリ\r\n  \u001b[33m!\u001b[39m 本実行で拒否: .git: 不正なエントリ\r\n  \u001b[33m!\u001b[39m 本実行で拒否: inside-link: Error: シンボリックリンクはコピーできません: <fixture>/session-start/repo/inside-link\r\n  \u001b[33m!\u001b[39m 本実行で拒否: outside-link: Error: シンボリックリンクはコピーできません: <fixture>/session-start/repo/outside-link\r\n  \u001b[33m!\u001b[39m 本実行で拒否: special: Error: 通常のファイル・ディレクトリ以外はコピーできません\r\n  \u001b[36m→\u001b[39m コピー (dry-run): folder\r\n  \u001b[33m!\u001b[39m 本実行で拒否: folder/.git: Error: .git はコピーできません\r\n  \u001b[36m•\u001b[39m Worktree の作成予定 (dry-run)\r\n    \u001b[2mBranch\u001b[22m  copy-dry\r\n    \u001b[2mPath  \u001b[22m  <fixture>/session-start/repo-worktrees/copy-dry\r\n",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -1329,7 +1406,7 @@
 			"command": "wts start --base-branch main --task ''",
 			"cwd": "<fixture>/session-start/repo",
 			"code": 0,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mstart\u001b[22m\r\n\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m ブランチ名を生成しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m Worktree を作成しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[36m•\u001b[39m コピー: config.txt\r\n  \u001b[33m!\u001b[39m 不正なエントリをスキップ: ../outside\r\n  \u001b[33m!\u001b[39m 不正なエントリをスキップ: .git\r\n  \u001b[33m!\u001b[39m コピーをスキップ: inside-link: Error: シンボリックリンクはコピーできません\r\n  \u001b[33m!\u001b[39m コピーをスキップ: outside-link: Error: コピー元が指定ディレクトリ外です\r\n  \u001b[33m!\u001b[39m コピーをスキップ: special: Error: 通常のファイル・ディレクトリ以外はコピーできません\r\n  \u001b[33m!\u001b[39m コピーをスキップ: folder/.git: Error: .git はコピーできません\r\n  \u001b[36m•\u001b[39m コピー: folder\r\n  \u001b[32m✓\u001b[39m Worktree 準備完了\r\n    \u001b[2mBranch\u001b[22m  copy-real\r\n    \u001b[2mPath  \u001b[22m  <fixture>/session-start/repo-worktrees/copy-real\r\n    \u001b[2mNext  \u001b[22m  cd <fixture>/session-start/repo-worktrees/copy-real\r\n",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mstart\u001b[22m\r\n\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m ブランチ名を生成しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m Worktree を作成しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[36m•\u001b[39m コピー: config.txt\r\n  \u001b[33m!\u001b[39m コピーをスキップ: ../outside: 不正なエントリ\r\n  \u001b[33m!\u001b[39m コピーをスキップ: .git: 不正なエントリ\r\n  \u001b[33m!\u001b[39m コピーをスキップ: inside-link: Error: シンボリックリンクはコピーできません: <fixture>/session-start/repo/inside-link\r\n  \u001b[33m!\u001b[39m コピーをスキップ: outside-link: Error: シンボリックリンクはコピーできません: <fixture>/session-start/repo/outside-link\r\n  \u001b[33m!\u001b[39m コピーをスキップ: special: Error: 通常のファイル・ディレクトリ以外はコピーできません\r\n  \u001b[36m•\u001b[39m コピー: folder\r\n  \u001b[33m!\u001b[39m コピーをスキップ: folder/.git: Error: .git はコピーできません\r\n  \u001b[32m✓\u001b[39m Worktree 準備完了\r\n    \u001b[2mBranch\u001b[22m  copy-real\r\n    \u001b[2mPath  \u001b[22m  <fixture>/session-start/repo-worktrees/copy-real\r\n    \u001b[2mNext  \u001b[22m  cd <fixture>/session-start/repo-worktrees/copy-real\r\n",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -1381,26 +1458,26 @@
 			"command": "wts stack --dry-run",
 			"cwd": "<fixture>/session-start/repo-worktrees/feature-demo",
 			"code": 0,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mstack\u001b[22m\r\n\r\n  \u001b[36m•\u001b[39m DRY_RUN: ブランチは作成しません\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  作業内容 (Enter でスキップ)\r\n\u001b[36m│\u001b[39m  \u001b[7m\u001b[8m_\u001b[28m\u001b[27m\r\n\u001b[36m└\u001b[39m\r\n\u001b[999D\u001b[4A\u001b[2B\u001b[2K\u001b[G\u001b[36m│\u001b[39m  n█\u001b[2B\u001b[999D\u001b[4A\u001b[2B\u001b[2K\u001b[G\u001b[36m│\u001b[39m  ne█\u001b[2B\u001b[999D\u001b[4A\u001b[2B\u001b[2K\u001b[G\u001b[36m│\u001b[39m  nex█\u001b[2B\u001b[999D\u001b[4A\u001b[2B\u001b[2K\u001b[G\u001b[36m│\u001b[39m  next█\u001b[2B\u001b[999D\u001b[4A\u001b[1B\u001b[J\u001b[32m◇\u001b[39m  作業内容 (Enter でスキップ)\r\n\u001b[90m│\u001b[39m  \u001b[2mnext\u001b[22m\r\n\u001b[?25h\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  PR 番号\r\n\u001b[36m│\u001b[39m  \u001b[7m2\u001b[27m\u001b[2m\u001b[22m\r\n\u001b[36m└\u001b[39m\r\n\u001b[999D\u001b[4A\u001b[1B\u001b[J\u001b[32m◇\u001b[39m  PR 番号\r\n\u001b[90m│\u001b[39m  \u001b[2m2\u001b[22m\r\n\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m ブランチ名を生成しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[36m→\u001b[39m git checkout -b feature-demo-pr2-feature-demo\r\n  \u001b[36m•\u001b[39m スタックブランチの作成予定 (dry-run)\r\n    \u001b[2mBranch\u001b[22m  feature-demo-pr2-feature-demo\r\n",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mstack\u001b[22m\r\n\r\n  \u001b[36m•\u001b[39m DRY_RUN: ブランチは作成しません\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  作業内容 (Enter でスキップ)\r\n\u001b[36m│\u001b[39m  \u001b[7m\u001b[8m_\u001b[28m\u001b[27m\r\n\u001b[36m└\u001b[39m\r\n\u001b[999D\u001b[4A\u001b[2B\u001b[2K\u001b[G\u001b[36m│\u001b[39m  n█\u001b[2B\u001b[999D\u001b[4A\u001b[2B\u001b[2K\u001b[G\u001b[36m│\u001b[39m  ne█\u001b[2B\u001b[999D\u001b[4A\u001b[2B\u001b[2K\u001b[G\u001b[36m│\u001b[39m  nex█\u001b[2B\u001b[999D\u001b[4A\u001b[2B\u001b[2K\u001b[G\u001b[36m│\u001b[39m  next█\u001b[2B\u001b[999D\u001b[4A\u001b[1B\u001b[J\u001b[32m◇\u001b[39m  作業内容 (Enter でスキップ)\r\n\u001b[90m│\u001b[39m  \u001b[2mnext\u001b[22m\r\n\u001b[?25h\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  スタック番号（GitHub の PR 番号とは異なります）\r\n\u001b[36m│\u001b[39m  \u001b[7m2\u001b[27m\u001b[2m\u001b[22m\r\n\u001b[36m└\u001b[39m\r\n\u001b[999D\u001b[4A\u001b[1B\u001b[J\u001b[32m◇\u001b[39m  スタック番号（GitHub の PR 番号とは異なります）\r\n\u001b[90m│\u001b[39m  \u001b[2m2\u001b[22m\r\n\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m ブランチ名を生成しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[36m→\u001b[39m git checkout -b feature-demo-pr2-feature-demo\r\n  \u001b[36m•\u001b[39m スタックブランチの作成予定 (dry-run)\r\n    \u001b[2mBranch\u001b[22m  feature-demo-pr2-feature-demo\r\n",
 			"frames": [
 				"\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mstack\u001b[22m\r\n\r\n  \u001b[36m•\u001b[39m DRY_RUN: ブランチは作成しません\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  作業内容 (Enter でスキップ)\r\n\u001b[36m│\u001b[39m  \u001b[7m\u001b[8m_\u001b[28m\u001b[27m\r\n\u001b[36m└\u001b[39m\r\n",
-				"\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mstack\u001b[22m\r\n\r\n  \u001b[36m•\u001b[39m DRY_RUN: ブランチは作成しません\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  作業内容 (Enter でスキップ)\r\n\u001b[36m│\u001b[39m  \u001b[7m\u001b[8m_\u001b[28m\u001b[27m\r\n\u001b[36m└\u001b[39m\r\n\u001b[999D\u001b[4A\u001b[2B\u001b[2K\u001b[G\u001b[36m│\u001b[39m  n█\u001b[2B\u001b[999D\u001b[4A\u001b[2B\u001b[2K\u001b[G\u001b[36m│\u001b[39m  ne█\u001b[2B\u001b[999D\u001b[4A\u001b[2B\u001b[2K\u001b[G\u001b[36m│\u001b[39m  nex█\u001b[2B\u001b[999D\u001b[4A\u001b[2B\u001b[2K\u001b[G\u001b[36m│\u001b[39m  next█\u001b[2B\u001b[999D\u001b[4A\u001b[1B\u001b[J\u001b[32m◇\u001b[39m  作業内容 (Enter でスキップ)\r\n\u001b[90m│\u001b[39m  \u001b[2mnext\u001b[22m\r\n\u001b[?25h\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  PR 番号\r\n\u001b[36m│\u001b[39m  \u001b[7m2\u001b[27m\u001b[2m\u001b[22m\r\n\u001b[36m└\u001b[39m\r\n"
+				"\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mstack\u001b[22m\r\n\r\n  \u001b[36m•\u001b[39m DRY_RUN: ブランチは作成しません\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  作業内容 (Enter でスキップ)\r\n\u001b[36m│\u001b[39m  \u001b[7m\u001b[8m_\u001b[28m\u001b[27m\r\n\u001b[36m└\u001b[39m\r\n\u001b[999D\u001b[4A\u001b[2B\u001b[2K\u001b[G\u001b[36m│\u001b[39m  n█\u001b[2B\u001b[999D\u001b[4A\u001b[2B\u001b[2K\u001b[G\u001b[36m│\u001b[39m  ne█\u001b[2B\u001b[999D\u001b[4A\u001b[2B\u001b[2K\u001b[G\u001b[36m│\u001b[39m  nex█\u001b[2B\u001b[999D\u001b[4A\u001b[2B\u001b[2K\u001b[G\u001b[36m│\u001b[39m  next█\u001b[2B\u001b[999D\u001b[4A\u001b[1B\u001b[J\u001b[32m◇\u001b[39m  作業内容 (Enter でスキップ)\r\n\u001b[90m│\u001b[39m  \u001b[2mnext\u001b[22m\r\n\u001b[?25h\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  スタック番号（GitHub の PR 番号とは異なります）\r\n\u001b[36m│\u001b[39m  \u001b[7m2\u001b[27m\u001b[2m\u001b[22m\r\n\u001b[36m└\u001b[39m\r\n"
 			],
 			"mode": "TTY 実測",
-			"input": [["作業内容", "next\r"], ["PR 番号", "\r"]]
+			"input": [["作業内容", "next\r"], ["スタック番号", "\r"]]
 		},
 		{
-			"title": "stack: PR番号入力 Ctrl-C",
+			"title": "stack: スタック番号入力 Ctrl-C",
 			"args": ["stack", "--task", ""],
 			"command": "wts stack --task ''",
 			"cwd": "<fixture>/session-start/repo-worktrees/feature-demo",
 			"code": 0,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mstack\u001b[22m\r\n\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  PR 番号\r\n\u001b[36m│\u001b[39m  \u001b[7m2\u001b[27m\u001b[2m\u001b[22m\r\n\u001b[36m└\u001b[39m\r\n\u001b[999D\u001b[4A\u001b[1B\u001b[J\u001b[31m■\u001b[39m  PR 番号\r\n\u001b[90m│\u001b[39m  \u001b[9m\u001b[2m2\u001b[22m\u001b[29m\r\n\u001b[90m│\u001b[39m\r\n\u001b[?25h  \u001b[33m−\u001b[39m キャンセルしました。\r\n",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mstack\u001b[22m\r\n\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  スタック番号（GitHub の PR 番号とは異なります）\r\n\u001b[36m│\u001b[39m  \u001b[7m2\u001b[27m\u001b[2m\u001b[22m\r\n\u001b[36m└\u001b[39m\r\n\u001b[999D\u001b[4A\u001b[1B\u001b[J\u001b[31m■\u001b[39m  スタック番号（GitHub の PR 番号とは異なります）\r\n\u001b[90m│\u001b[39m  \u001b[9m\u001b[2m2\u001b[22m\u001b[29m\r\n\u001b[90m│\u001b[39m\r\n\u001b[?25h  \u001b[33m−\u001b[39m キャンセルしました。\r\n",
 			"frames": [
-				"\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mstack\u001b[22m\r\n\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  PR 番号\r\n\u001b[36m│\u001b[39m  \u001b[7m2\u001b[27m\u001b[2m\u001b[22m\r\n\u001b[36m└\u001b[39m\r\n"
+				"\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mstack\u001b[22m\r\n\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  スタック番号（GitHub の PR 番号とは異なります）\r\n\u001b[36m│\u001b[39m  \u001b[7m2\u001b[27m\u001b[2m\u001b[22m\r\n\u001b[36m└\u001b[39m\r\n"
 			],
 			"mode": "TTY 実測",
-			"input": [["PR 番号", "\u0003"]]
+			"input": [["スタック番号", "\u0003"]]
 		},
 		{
 			"title": "stack: 非TTYで対話要求",
@@ -1414,12 +1491,12 @@
 			"input": []
 		},
 		{
-			"title": "stack: 不正なPR番号",
+			"title": "stack: 不正なスタック番号",
 			"args": ["stack", "--task", "", "--pr-number", "1"],
 			"command": "wts stack --task '' --pr-number 1",
 			"cwd": "<fixture>/session-start/repo-worktrees/feature-demo",
 			"code": 1,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mstack\u001b[22m\r\n\r\n  \u001b[31m✗\u001b[39m 不正な PR 番号: 1。2 以上の整数を指定してください\r\n",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mstack\u001b[22m\r\n\r\n  \u001b[31m✗\u001b[39m 不正な スタック番号: 1。2 以上の整数を指定してください\r\n",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -1436,12 +1513,12 @@
 			"input": []
 		},
 		{
-			"title": "stack: 既存PR番号",
+			"title": "stack: 既存スタック番号",
 			"args": ["stack", "--task", "", "--pr-number", "2"],
 			"command": "wts stack --task '' --pr-number 2",
 			"cwd": "<fixture>/session-start/repo-worktrees/feature-demo",
 			"code": 1,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mstack\u001b[22m\r\n\r\n  \u001b[31m✗\u001b[39m PR 番号 2 は既に使われています\r\n",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mstack\u001b[22m\r\n\r\n  \u001b[31m✗\u001b[39m スタック番号 2 は既に使われています\r\n",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -1540,7 +1617,7 @@
 			"command": "wts cleanup --yes",
 			"cwd": "<fixture>/session-cleanup/repo",
 			"code": 0,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mcleanup\u001b[22m\r\n\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m GitHub リポジトリを確認しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m GitHub リポジトリを確認しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠹\u001b[39m GitHub リポジトリを確認しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠸\u001b[39m GitHub リポジトリを確認しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠼\u001b[39m GitHub リポジトリを確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main を取得しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m origin/main を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m merged のマージ済み PR を確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[36m•\u001b[39m 自動削除できるブランチはありません\r\n",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mcleanup\u001b[22m\r\n\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m GitHub リポジトリを確認しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m GitHub リポジトリを確認しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠹\u001b[39m GitHub リポジトリを確認しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠸\u001b[39m GitHub リポジトリを確認しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠼\u001b[39m GitHub リポジトリを確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m merged のマージ済み PR を確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[36m•\u001b[39m 自動削除できるブランチはありません\r\n",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -1573,7 +1650,7 @@
 			"command": "wts cleanup --yes",
 			"cwd": "<fixture>/session-cleanup/repo",
 			"code": 1,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mcleanup\u001b[22m\r\n\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m GitHub リポジトリを確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m merged のマージ済み PR を確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[31m✗\u001b[39m マージ済み PR を取得できません: merged\r\n    \u001b[0m\u001b[31mfixture: PR lookup failed\u001b[0m\r\n\u001b[?25h",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mcleanup\u001b[22m\r\n\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m GitHub リポジトリを確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m merged のマージ済み PR を確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[31m✗\u001b[39m マージ済み PR を取得できません: merged\r\n\u001b[?25h",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -1665,7 +1742,7 @@
 			"command": "wts cleanup",
 			"cwd": "<fixture>/session-cleanup/repo",
 			"code": 0,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mcleanup\u001b[22m\r\n\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m GitHub リポジトリを確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m merged のマージ済み PR を確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[36m•\u001b[39m 削除対象: merged\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  これらを削除しますか？\r\n\u001b[36m│\u001b[39m  \u001b[2m○\u001b[22m \u001b[2mはい\u001b[22m \u001b[2m/\u001b[22m \u001b[32m●\u001b[39m いいえ\r\n\u001b[36m└\u001b[39m\r\n\u001b[1A\r\n\u001b[?25h\u001b[999D\u001b[4A\u001b[1B\u001b[J\u001b[32m◇\u001b[39m  これらを削除しますか？\r\n\u001b[90m│\u001b[39m  \u001b[2mはい\u001b[22m\r\n  \u001b[32m✓\u001b[39m 完了しました (1 ブランチ・0 Worktree)\r\n",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mcleanup\u001b[22m\r\n\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m GitHub リポジトリを確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m merged のマージ済み PR を確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[36m•\u001b[39m 削除対象: merged\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  これらを削除しますか？\r\n\u001b[36m│\u001b[39m  \u001b[2m○\u001b[22m \u001b[2mはい\u001b[22m \u001b[2m/\u001b[22m \u001b[32m●\u001b[39m いいえ\r\n\u001b[36m└\u001b[39m\r\n\u001b[1A\r\n\u001b[?25h\u001b[999D\u001b[4A\u001b[1B\u001b[J\u001b[32m◇\u001b[39m  これらを削除しますか？\r\n\u001b[90m│\u001b[39m  \u001b[2mはい\u001b[22m\r\n  \u001b[36m•\u001b[39m 完了済み: 1 ブランチ・0 Worktree\r\n  \u001b[32m✓\u001b[39m 完了しました (1 ブランチ・0 Worktree)\r\n",
 			"frames": [
 				"\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mcleanup\u001b[22m\r\n\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m GitHub リポジトリを確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m merged のマージ済み PR を確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[36m•\u001b[39m 削除対象: merged\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  これらを削除しますか？\r\n\u001b[36m│\u001b[39m  \u001b[2m○\u001b[22m \u001b[2mはい\u001b[22m \u001b[2m/\u001b[22m \u001b[32m●\u001b[39m いいえ\r\n\u001b[36m└\u001b[39m\r\n"
 			],
@@ -1689,7 +1766,7 @@
 			"command": "wts cleanup --yes",
 			"cwd": "<fixture>/session-cleanup/repo",
 			"code": 1,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mcleanup\u001b[22m\r\n\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m GitHub リポジトリを確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main を取得しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m origin/main を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m tree のマージ済み PR を確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[36m•\u001b[39m 削除対象: tree (<fixture>/session-cleanup/repo-worktrees/tree)\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m tree の Worktree を削除しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[31m✗\u001b[39m 削除に失敗したブランチ: tree\r\n\u001b[?25h",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mcleanup\u001b[22m\r\n\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m GitHub リポジトリを確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m tree のマージ済み PR を確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[36m•\u001b[39m 削除対象: tree (<fixture>/session-cleanup/repo-worktrees/tree)\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m tree の Worktree を削除しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[36m•\u001b[39m 完了済み: 0 ブランチ・0 Worktree\r\n  \u001b[33m!\u001b[39m worktree 削除: tree (<fixture>/session-cleanup/repo-worktrees/tree): Worktree を削除できませんでした\r\n  残存対象: tree\r\n    git worktree remove --force <fixture>/session-cleanup/repo-worktrees/tree\r\n    git branch -D tree\r\n  \u001b[31m✗\u001b[39m cleanup の一部処理に失敗しました (1 件)\r\n\u001b[?25h",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -1700,7 +1777,7 @@
 			"command": "wts cleanup --yes",
 			"cwd": "<fixture>/session-cleanup/repo",
 			"code": 0,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mcleanup\u001b[22m\r\n\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m GitHub リポジトリを確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m tree のマージ済み PR を確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[36m•\u001b[39m 削除対象: tree (<fixture>/session-cleanup/repo-worktrees/tree)\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m tree の Worktree を削除しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[32m✓\u001b[39m 完了しました (1 ブランチ・1 Worktree)\r\n",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mcleanup\u001b[22m\r\n\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m GitHub リポジトリを確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m tree のマージ済み PR を確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[36m•\u001b[39m 削除対象: tree (<fixture>/session-cleanup/repo-worktrees/tree)\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m tree の Worktree を削除しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[36m•\u001b[39m 完了済み: 1 ブランチ・1 Worktree\r\n  \u001b[32m✓\u001b[39m 完了しました (1 ブランチ・1 Worktree)\r\n",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -1711,7 +1788,7 @@
 			"command": "wts cleanup --dry-run",
 			"cwd": "<fixture>/session-cleanup/repo",
 			"code": 0,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mcleanup\u001b[22m\r\n\r\n  \u001b[36m•\u001b[39m DRY_RUN: 削除は行いません\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m GitHub リポジトリを確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m review のマージ済み PR を確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m review の変更を比較しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m review の変更を比較しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[33m!\u001b[39m 要確認: review (パッチ非同値 1 件)\r\n    git branch -D 'review'\r\n  \u001b[36m•\u001b[39m 自動削除できるブランチはありません\r\n",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mcleanup\u001b[22m\r\n\r\n  \u001b[36m•\u001b[39m DRY_RUN: 削除は行いません\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m GitHub リポジトリを確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m review のマージ済み PR を確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m review の変更を比較しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m review の変更を比較しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[33m!\u001b[39m 要確認: review (パッチ非同値 1 件)\r\n    git branch -D review\r\n  \u001b[36m•\u001b[39m 自動削除できるブランチはありません\r\n",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -1722,7 +1799,7 @@
 			"command": "wts cleanup --dry-run",
 			"cwd": "<fixture>/session-cleanup/repo",
 			"code": 0,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mcleanup\u001b[22m\r\n\r\n  \u001b[36m•\u001b[39m DRY_RUN: 削除は行いません\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m GitHub リポジトリを確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m review のマージ済み PR を確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m review の変更を比較しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m review の変更を比較しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[33m!\u001b[39m 要確認: review (tip が origin に無い（未 push）、パッチ非同値 1 件)\r\n    git branch -D 'review'\r\n  \u001b[36m•\u001b[39m 自動削除できるブランチはありません\r\n",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mcleanup\u001b[22m\r\n\r\n  \u001b[36m•\u001b[39m DRY_RUN: 削除は行いません\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m GitHub リポジトリを確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m review のマージ済み PR を確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m review の変更を比較しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m review の変更を比較しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[33m!\u001b[39m 要確認: review (tip が origin に無い（未 push）、パッチ非同値 1 件)\r\n    git branch -D review\r\n  \u001b[36m•\u001b[39m 自動削除できるブランチはありません\r\n",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -1733,7 +1810,7 @@
 			"command": "wts cleanup --dry-run",
 			"cwd": "<fixture>/session-cleanup/repo",
 			"code": 0,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mcleanup\u001b[22m\r\n\r\n  \u001b[36m•\u001b[39m DRY_RUN: 削除は行いません\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m GitHub リポジトリを確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m review のマージ済み PR を確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m review の変更を比較しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m review の変更を比較しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[33m!\u001b[39m 要確認: review (origin にブランチが残っている、パッチ非同値 1 件)\r\n    git branch -D 'review'\r\n  \u001b[36m•\u001b[39m 自動削除できるブランチはありません\r\n",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mcleanup\u001b[22m\r\n\r\n  \u001b[36m•\u001b[39m DRY_RUN: 削除は行いません\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m GitHub リポジトリを確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m review のマージ済み PR を確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m review の変更を比較しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m review の変更を比較しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[33m!\u001b[39m 要確認: review (origin にブランチが残っている、パッチ非同値 1 件)\r\n    git branch -D review\r\n  \u001b[36m•\u001b[39m 自動削除できるブランチはありません\r\n",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -1744,7 +1821,7 @@
 			"command": "wts cleanup --dry-run",
 			"cwd": "<fixture>/session-cleanup/repo",
 			"code": 0,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mcleanup\u001b[22m\r\n\r\n  \u001b[36m•\u001b[39m DRY_RUN: 削除は行いません\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m GitHub リポジトリを確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m review のマージ済み PR を確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m review の変更を比較しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m review の変更を比較しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[33m!\u001b[39m 要確認: review (origin にブランチが残っている、パッチ非同値 1 件)\r\n    git worktree remove '<fixture>/session-cleanup/repo-worktrees/review'\r\n    git branch -D 'review'\r\n  \u001b[36m•\u001b[39m 自動削除できるブランチはありません\r\n",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mcleanup\u001b[22m\r\n\r\n  \u001b[36m•\u001b[39m DRY_RUN: 削除は行いません\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m GitHub リポジトリを確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m review のマージ済み PR を確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m review の変更を比較しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m review の変更を比較しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[33m!\u001b[39m 要確認: review (origin にブランチが残っている、パッチ非同値 1 件)\r\n    git worktree remove <fixture>/session-cleanup/repo-worktrees/review\r\n    git branch -D review\r\n  \u001b[36m•\u001b[39m 自動削除できるブランチはありません\r\n",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -1755,7 +1832,7 @@
 			"command": "wts cleanup --yes",
 			"cwd": "<fixture>/session-cleanup/repo",
 			"code": 0,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mcleanup\u001b[22m\r\n\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m GitHub リポジトリを確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[33m!\u001b[39m origin/main の fetch に失敗しました（判定が古い状態で行われます）\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m review のマージ済み PR を確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m review の変更を比較しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m review の変更を比較しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[33m!\u001b[39m 要確認: review (origin のブランチ有無を確認できない、パッチ非同値 1 件)\r\n    git worktree remove '<fixture>/session-cleanup/repo-worktrees/review'\r\n    git branch -D 'review'\r\n  \u001b[36m•\u001b[39m 自動削除できるブランチはありません\r\n",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mcleanup\u001b[22m\r\n\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m GitHub リポジトリを確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[33m!\u001b[39m origin/main の fetch に失敗しました（判定が古い状態で行われます）\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m review のマージ済み PR を確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m review の変更を比較しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m review の変更を比較しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[33m!\u001b[39m 要確認: review (origin のブランチ有無を確認できない、パッチ非同値 1 件)\r\n    git worktree remove <fixture>/session-cleanup/repo-worktrees/review\r\n    git branch -D review\r\n  \u001b[36m•\u001b[39m 自動削除できるブランチはありません\r\n",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -1766,7 +1843,7 @@
 			"command": "wts cleanup --dry-run",
 			"cwd": "<fixture>/session-cleanup/repo",
 			"code": 0,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mcleanup\u001b[22m\r\n\r\n  \u001b[36m•\u001b[39m DRY_RUN: 削除は行いません\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m GitHub リポジトリを確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m review のマージ済み PR を確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m review の変更を比較しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m review の変更を比較しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠹\u001b[39m review の変更を比較しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[33m!\u001b[39m 要確認: review (origin のブランチ有無を確認できない、独自 merge commit 2 件)\r\n    git worktree remove '<fixture>/session-cleanup/repo-worktrees/review'\r\n    git branch -D 'review'\r\n  \u001b[36m•\u001b[39m 自動削除できるブランチはありません\r\n",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mcleanup\u001b[22m\r\n\r\n  \u001b[36m•\u001b[39m DRY_RUN: 削除は行いません\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m GitHub リポジトリを確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m review のマージ済み PR を確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m review の変更を比較しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m review の変更を比較しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠹\u001b[39m review の変更を比較しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[33m!\u001b[39m 要確認: review (origin のブランチ有無を確認できない、独自 merge commit 2 件)\r\n    git worktree remove <fixture>/session-cleanup/repo-worktrees/review\r\n    git branch -D review\r\n  \u001b[36m•\u001b[39m 自動削除できるブランチはありません\r\n",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -1777,7 +1854,7 @@
 			"command": "wts cleanup --dry-run",
 			"cwd": "<fixture>/session-cleanup/repo",
 			"code": 0,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mcleanup\u001b[22m\r\n\r\n  \u001b[36m•\u001b[39m DRY_RUN: 削除は行いません\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m GitHub リポジトリを確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m review のマージ済み PR を確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m review の変更を比較しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[33m!\u001b[39m 要確認: review (origin のブランチ有無を確認できない、パッチ比較に失敗)\r\n    git worktree remove '<fixture>/session-cleanup/repo-worktrees/review'\r\n    git branch -D 'review'\r\n  \u001b[36m•\u001b[39m 自動削除できるブランチはありません\r\n",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mcleanup\u001b[22m\r\n\r\n  \u001b[36m•\u001b[39m DRY_RUN: 削除は行いません\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m GitHub リポジトリを確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m review のマージ済み PR を確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m review の変更を比較しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[33m!\u001b[39m 要確認: review (origin のブランチ有無を確認できない、パッチ比較に失敗)\r\n    git worktree remove <fixture>/session-cleanup/repo-worktrees/review\r\n    git branch -D review\r\n  \u001b[36m•\u001b[39m 自動削除できるブランチはありません\r\n",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -1788,7 +1865,7 @@
 			"command": "wts cleanup --yes",
 			"cwd": "<fixture>/session-cleanup/repo",
 			"code": 1,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mcleanup\u001b[22m\r\n\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m GitHub リポジトリを確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[33m!\u001b[39m origin/main の fetch に失敗しました（判定が古い状態で行われます）\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m review のマージ済み PR を確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[36m•\u001b[39m 削除対象: review (<fixture>/session-cleanup/repo-worktrees/review)\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m review の Worktree を削除しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[31m✗\u001b[39m 削除に失敗したブランチ: review\r\n\u001b[?25h",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mcleanup\u001b[22m\r\n\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m GitHub リポジトリを確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[33m!\u001b[39m origin/main の fetch に失敗しました（判定が古い状態で行われます）\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m review のマージ済み PR を確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[36m•\u001b[39m 削除対象: review (<fixture>/session-cleanup/repo-worktrees/review)\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m review の Worktree を削除しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[36m•\u001b[39m 完了済み: 0 ブランチ・1 Worktree\r\n  \u001b[33m!\u001b[39m 参照削除: review (<fixture>/session-cleanup/repo-worktrees/review): OID の照合または参照削除に失敗しました\r\n  残存対象: review\r\n    git worktree remove --force <fixture>/session-cleanup/repo-worktrees/review\r\n    git branch -D review\r\n  \u001b[31m✗\u001b[39m cleanup の一部処理に失敗しました (1 件)\r\n\u001b[?25h",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -1799,7 +1876,7 @@
 			"command": "wts cleanup --yes",
 			"cwd": "<fixture>/session-cleanup/repo",
 			"code": 1,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mcleanup\u001b[22m\r\n\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m GitHub リポジトリを確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[33m!\u001b[39m origin/main の fetch に失敗しました（判定が古い状態で行われます）\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m review のマージ済み PR を確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[36m•\u001b[39m 削除対象: review\r\n  \u001b[31m✗\u001b[39m git worktree に失敗しました。\r\n    \u001b[0m\u001b[31mfixture: prune failed\u001b[0m\r\n\u001b[?25h",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mcleanup\u001b[22m\r\n\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m GitHub リポジトリを確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[33m!\u001b[39m origin/main の fetch に失敗しました（判定が古い状態で行われます）\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m review のマージ済み PR を確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[36m•\u001b[39m 削除対象: review\r\n  \u001b[36m•\u001b[39m 完了済み: 1 ブランチ・0 Worktree\r\n  \u001b[33m!\u001b[39m prune: worktree: Worktree 登録情報の整理に失敗しました\r\n    git worktree prune\r\n  \u001b[31m✗\u001b[39m cleanup の一部処理に失敗しました (1 件)\r\n\u001b[?25h",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -1818,7 +1895,7 @@
 			"command": "wts start --task '' --base-branch main --copy-from <fixture>/session-failures/copy",
 			"cwd": "<fixture>/session-failures/repo",
 			"code": 0,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mstart\u001b[22m\r\n\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m ブランチ名を生成しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m ブランチ名を生成しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠹\u001b[39m ブランチ名を生成しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠸\u001b[39m ブランチ名を生成しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠼\u001b[39m ブランチ名を生成しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m Worktree を作成しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[33m!\u001b[39m コピーをスキップ: escape: Error: コピー先がシンボリックリンクです: <fixture>/session-failures/repo-worktrees/demo/escape\r\n  \u001b[32m✓\u001b[39m Worktree 準備完了\r\n    \u001b[2mBranch\u001b[22m  demo\r\n    \u001b[2mPath  \u001b[22m  <fixture>/session-failures/repo-worktrees/demo\r\n    \u001b[2mNext  \u001b[22m  cd <fixture>/session-failures/repo-worktrees/demo\r\n",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mstart\u001b[22m\r\n\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m ブランチ名を生成しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m ブランチ名を生成しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠹\u001b[39m ブランチ名を生成しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m Worktree を作成しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[33m!\u001b[39m コピーをスキップ: escape: Error: シンボリックリンクはコピーできません: <fixture>/session-failures/repo-worktrees/demo/escape\r\n  \u001b[32m✓\u001b[39m Worktree 準備完了\r\n    \u001b[2mBranch\u001b[22m  demo\r\n    \u001b[2mPath  \u001b[22m  <fixture>/session-failures/repo-worktrees/demo\r\n    \u001b[2mNext  \u001b[22m  cd <fixture>/session-failures/repo-worktrees/demo\r\n",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -1829,7 +1906,7 @@
 			"command": "wts start --task '' --base-branch main",
 			"cwd": "<fixture>/session-failures/repo",
 			"code": 1,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mstart\u001b[22m\r\n\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m ブランチ名を生成しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m Worktree を作成しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[31m✗\u001b[39m EISDIR: illegal operation on a directory, read\r\n\u001b[?25h",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mstart\u001b[22m\r\n\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m ブランチ名を生成しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[31m✗\u001b[39m コピーリストを読み込めません: <fixture>/session-failures/repo/.worktree-copy\r\n\u001b[?25h",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -1840,7 +1917,7 @@
 			"command": "wts start --task '' --base-branch main",
 			"cwd": "<fixture>/session-failures/repo",
 			"code": 1,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mstart\u001b[22m\r\n\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m ブランチ名を生成しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m Worktree を作成しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[31m✗\u001b[39m git worktree に失敗しました。\r\n    \u001b[0m\u001b[31mfixture: worktree add failed\u001b[0m\r\n\u001b[?25h",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mstart\u001b[22m\r\n\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m ブランチ名を生成しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m Worktree を作成しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h    \u001b[2mPath          \u001b[22m  <fixture>/session-failures/repo-worktrees/git-error\r\n    \u001b[2mBranch        \u001b[22m  git-error\r\n    \u001b[2mWorktree      \u001b[22m  未作成\r\n    \u001b[2mブランチ      \u001b[22m  未作成\r\n    \u001b[2mセッション記録\u001b[22m  未作成\r\n  \u001b[31m✗\u001b[39m git worktree に失敗しました。\r\n    \u001b[0m\u001b[31mfixture: worktree add failed\u001b[0m\r\n\u001b[?25h",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -1870,12 +1947,12 @@
 			"input": [["作業内容", "\u0003"]]
 		},
 		{
-			"title": "stack: 非数字PR番号",
+			"title": "stack: 非数字スタック番号",
 			"args": ["stack", "--task", "", "--pr-number", "abc"],
 			"command": "wts stack --task '' --pr-number abc",
 			"cwd": "<fixture>/session-failures/repo-worktrees/demo",
 			"code": 1,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mstack\u001b[22m\r\n\r\n  \u001b[31m✗\u001b[39m 不正な PR 番号: abc。2 以上の整数を指定してください\r\n",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mstack\u001b[22m\r\n\r\n  \u001b[31m✗\u001b[39m 不正な スタック番号: abc。2 以上の整数を指定してください\r\n",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -1919,7 +1996,7 @@
 			"command": "wts stack --task '' --pr-number 2",
 			"cwd": "<fixture>/session-failures/repo-worktrees/demo",
 			"code": 1,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mstack\u001b[22m\r\n\r\n  \u001b[31m✗\u001b[39m branch 命名スクリプトを実行できませんでした\r\n",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mstack\u001b[22m\r\n\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m ブランチ名を生成しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[31m✗\u001b[39m branch 命名スクリプトを実行できませんでした\r\n\u001b[?25h",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -1958,6 +2035,17 @@
 			"input": []
 		},
 		{
+			"title": "restack / 設定のベースで対話なしdry-run",
+			"args": ["restack", "--dry-run"],
+			"command": "wts restack --dry-run",
+			"cwd": "<fixture>/restack-configured/repo-worktrees/session",
+			"code": 0,
+			"raw": "DRY_RUN: rebase・push は行いません\nスタック  session, session-pr2-second\ngit checkout session-pr2-second\ngit rebase --update-refs origin/master\ngit push --atomic --force-with-lease=refs/heads/session: --force-with-lease=refs/heads/session-pr2-second: origin refs/heads/session:refs/heads/session refs/heads/session-pr2-second:refs/heads/session-pr2-second\n",
+			"frames": [],
+			"mode": "PIPE 実測",
+			"input": []
+		},
+		{
 			"title": "restack / dry-run（未公開branchの空lease）",
 			"args": ["restack", "--base-branch", "origin/main", "--dry-run"],
 			"command": "wts restack --base-branch origin/main --dry-run",
@@ -1974,7 +2062,7 @@
 			"command": "wts restack",
 			"cwd": "<fixture>/restack-normal/repo-worktrees/session",
 			"code": 0,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mrestack\u001b[22m\r\n\r\n    \u001b[2mスタック\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  ベースブランチ\r\n\u001b[36m│\u001b[39m  \u001b[7mo\u001b[27m\u001b[2mrigin/main\u001b[22m\r\n\u001b[36m└\u001b[39m\r\n\u001b[999D\u001b[4A\u001b[1B\u001b[J\u001b[32m◇\u001b[39m  ベースブランチ\r\n\u001b[90m│\u001b[39m  \u001b[2morigin/main\u001b[22m\r\n\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin の lease を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main をベースに rebase しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h    \u001b[2mpush 対象\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  これらを push しますか？\r\n\u001b[36m│\u001b[39m  \u001b[2m○\u001b[22m \u001b[2mはい\u001b[22m \u001b[2m/\u001b[22m \u001b[32m●\u001b[39m いいえ\r\n\u001b[36m└\u001b[39m\r\n\u001b[1A\r\n\u001b[?25h\u001b[999D\u001b[4A\u001b[1B\u001b[J\u001b[32m◇\u001b[39m  これらを push しますか？\r\n\u001b[90m│\u001b[39m  \u001b[2mはい\u001b[22m\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m スタックを push しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m スタックを push しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[32m✓\u001b[39m restack 完了\r\n",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mrestack\u001b[22m\r\n\r\n    \u001b[2mスタック\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  ベースブランチ\r\n\u001b[36m│\u001b[39m  \u001b[7mo\u001b[27m\u001b[2mrigin/main\u001b[22m\r\n\u001b[36m└\u001b[39m\r\n\u001b[999D\u001b[4A\u001b[1B\u001b[J\u001b[32m◇\u001b[39m  ベースブランチ\r\n\u001b[90m│\u001b[39m  \u001b[2morigin/main\u001b[22m\r\n\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin の lease を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main をベースに rebase しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h    \u001b[2mpush 対象\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  これらを push しますか？\r\n\u001b[36m│\u001b[39m  \u001b[2m○\u001b[22m \u001b[2mはい\u001b[22m \u001b[2m/\u001b[22m \u001b[32m●\u001b[39m いいえ\r\n\u001b[36m└\u001b[39m\r\n\u001b[1A\r\n\u001b[?25h\u001b[999D\u001b[4A\u001b[1B\u001b[J\u001b[32m◇\u001b[39m  これらを push しますか？\r\n\u001b[90m│\u001b[39m  \u001b[2mはい\u001b[22m\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m スタックを push しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[32m✓\u001b[39m restack 完了\r\n",
 			"frames": [
 				"\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mrestack\u001b[22m\r\n\r\n    \u001b[2mスタック\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  ベースブランチ\r\n\u001b[36m│\u001b[39m  \u001b[7mo\u001b[27m\u001b[2mrigin/main\u001b[22m\r\n\u001b[36m└\u001b[39m\r\n",
 				"\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mrestack\u001b[22m\r\n\r\n    \u001b[2mスタック\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  ベースブランチ\r\n\u001b[36m│\u001b[39m  \u001b[7mo\u001b[27m\u001b[2mrigin/main\u001b[22m\r\n\u001b[36m└\u001b[39m\r\n\u001b[999D\u001b[4A\u001b[1B\u001b[J\u001b[32m◇\u001b[39m  ベースブランチ\r\n\u001b[90m│\u001b[39m  \u001b[2morigin/main\u001b[22m\r\n\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin の lease を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main をベースに rebase しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h    \u001b[2mpush 対象\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  これらを push しますか？\r\n\u001b[36m│\u001b[39m  \u001b[2m○\u001b[22m \u001b[2mはい\u001b[22m \u001b[2m/\u001b[22m \u001b[32m●\u001b[39m いいえ\r\n\u001b[36m└\u001b[39m\r\n"
@@ -1988,7 +2076,7 @@
 			"command": "wts restack --base-branch origin/main --push",
 			"cwd": "<fixture>/restack-normal/repo-worktrees/session",
 			"code": 0,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mrestack\u001b[22m\r\n\r\n    \u001b[2mスタック\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main を取得しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m origin/main を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin の lease を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main をベースに rebase しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[32m✓\u001b[39m push が必要なブランチはありません\r\n",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mrestack\u001b[22m\r\n\r\n    \u001b[2mスタック\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin の lease を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main をベースに rebase しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[32m✓\u001b[39m push が必要なブランチはありません\r\n",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -2048,7 +2136,7 @@
 			"command": "wts restack --base-branch origin/main --push-only --push",
 			"cwd": "<fixture>/restack-cancel/repo-worktrees/session",
 			"code": 0,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mrestack\u001b[22m\r\n\r\n    \u001b[2mスタック\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h    \u001b[2mpush 対象\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m スタックを push しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m スタックを push しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[32m✓\u001b[39m restack 完了\r\n",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mrestack\u001b[22m\r\n\r\n    \u001b[2mスタック\u001b[22m  session, session-pr2-second\r\n    \u001b[2mpush 対象\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m スタックを push しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[32m✓\u001b[39m restack 完了\r\n",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -2068,11 +2156,11 @@
 		},
 		{
 			"title": "restack / ベース入力非TTY",
-			"args": ["restack"],
-			"command": "wts restack",
+			"args": ["restack", "--dry-run"],
+			"command": "wts restack --dry-run",
 			"cwd": "<fixture>/restack-cancel/repo-worktrees/session",
 			"code": 1,
-			"raw": "スタック  session, session-pr2-second\nエラー: 対話入力には TTY 端末が必要です。オプションで値を指定してください。\n",
+			"raw": "DRY_RUN: rebase・push は行いません\nスタック  session, session-pr2-second\nエラー: 対話入力には TTY 端末が必要です。オプションで値を指定してください。\n",
 			"frames": [],
 			"mode": "PIPE 実測",
 			"input": []
@@ -2083,7 +2171,7 @@
 			"command": "wts restack --base-branch origin/main",
 			"cwd": "<fixture>/restack-errors/repo-worktrees/session",
 			"code": 1,
-			"raw": "スタック  session, session-pr2-second\npush 対象  session, session-pr2-second\nエラー: 対話入力には TTY 端末が必要です。オプションで値を指定してください。\n",
+			"raw": "エラー: 非対話実行には --push または PUSH=1 が必要です。wts restack --push で再実行してください。\n",
 			"frames": [],
 			"mode": "PIPE 実測",
 			"input": []
@@ -2094,7 +2182,7 @@
 			"command": "wts restack --base-branch origin/main --push-only",
 			"cwd": "<fixture>/restack-errors/repo-worktrees/session",
 			"code": 1,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mrestack\u001b[22m\r\n\r\n    \u001b[2mスタック\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[31m✗\u001b[39m rebase 開始時の lease 記録（<fixture>/restack-errors/repo/.git/worktrees/session/restack-lease）がありません\r\n\u001b[?25h",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mrestack\u001b[22m\r\n\r\n    \u001b[2mスタック\u001b[22m  session, session-pr2-second\r\n  \u001b[31m✗\u001b[39m rebase 開始時の lease 記録（<fixture>/restack-errors/repo/.git/worktrees/session/restack-lease）がありません\r\n",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -2105,7 +2193,7 @@
 			"command": "wts restack --base-branch origin/main --push-only",
 			"cwd": "<fixture>/restack-errors/repo-worktrees/session",
 			"code": 1,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mrestack\u001b[22m\r\n\r\n    \u001b[2mスタック\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[31m✗\u001b[39m ブランチ session-pr2-second の lease 記録がありません\r\n\u001b[?25h",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mrestack\u001b[22m\r\n\r\n    \u001b[2mスタック\u001b[22m  session, session-pr2-second\r\n  \u001b[31m✗\u001b[39m ブランチ session-pr2-second の lease 記録がありません\r\n",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -2281,7 +2369,7 @@
 			"command": "wts restack --base-branch origin/main --push",
 			"cwd": "<fixture>/restack-injected/repo-worktrees/session",
 			"code": 1,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mrestack\u001b[22m\r\n\r\n    \u001b[2mスタック\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main を取得しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m origin/main を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin の lease を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[31m✗\u001b[39m origin の lease を取得できません: \u001b[0m\u001b[31mpreview: simulated ls-remote failure\u001b[0m\r\n\u001b[?25h",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mrestack\u001b[22m\r\n\r\n    \u001b[2mスタック\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin の lease を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[31m✗\u001b[39m origin の lease を取得できません: \u001b[0m\u001b[31mpreview: simulated ls-remote failure\u001b[0m\r\n\u001b[?25h",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -2292,7 +2380,7 @@
 			"command": "wts restack --base-branch origin/main --push",
 			"cwd": "<fixture>/restack-injected/repo-worktrees/session",
 			"code": 1,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mrestack\u001b[22m\r\n\r\n    \u001b[2mスタック\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main を取得しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m origin/main を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin の lease を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[31m✗\u001b[39m git checkout に失敗しました。\r\n    \u001b[0m\u001b[31mpreview: simulated checkout failure\u001b[0m\r\n\u001b[?25h",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mrestack\u001b[22m\r\n\r\n    \u001b[2mスタック\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin の lease を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[31m✗\u001b[39m git checkout に失敗しました。\r\n    \u001b[0m\u001b[31mpreview: simulated checkout failure\u001b[0m\r\n\u001b[?25h",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -2303,7 +2391,7 @@
 			"command": "wts restack --base-branch origin/main --push",
 			"cwd": "<fixture>/restack-injected/repo-worktrees/session",
 			"code": 1,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mrestack\u001b[22m\r\n\r\n    \u001b[2mスタック\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main を取得しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m origin/main を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin の lease を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main をベースに rebase しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h    \u001b[2mpush 対象\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m スタックを push しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[31m✗\u001b[39m git push に失敗しました。\r\n    \u001b[0m\u001b[31mpreview: simulated push failure\u001b[0m\r\n\u001b[?25h",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mrestack\u001b[22m\r\n\r\n    \u001b[2mスタック\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin の lease を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main をベースに rebase しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h    \u001b[2mpush 対象\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m スタックを push しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[31m✗\u001b[39m git push に失敗しました。\r\n    \u001b[0m\u001b[31mpreview: simulated push failure\u001b[0m\r\n\u001b[?25h",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -2347,7 +2435,7 @@
 			"command": "wts restack --base-branch origin/main --push-only",
 			"cwd": "<fixture>/restack-filesystem/repo-worktrees/session",
 			"code": 1,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mrestack\u001b[22m\r\n\r\n    \u001b[2mスタック\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[31m✗\u001b[39m EISDIR: illegal operation on a directory, read\r\n\u001b[?25h",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mrestack\u001b[22m\r\n\r\n    \u001b[2mスタック\u001b[22m  session, session-pr2-second\r\n  \u001b[31m✗\u001b[39m EISDIR: illegal operation on a directory, read\r\n",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -2430,32 +2518,101 @@
 			"command": "wts restack --base-branch origin/main --push-only --push",
 			"cwd": "<fixture>/restack-conflict/repo-worktrees/session",
 			"code": 1,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mrestack\u001b[22m\r\n\r\n    \u001b[2mスタック\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h    \u001b[2mpush 対象\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m スタックを push しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[31m✗\u001b[39m git push に失敗しました。\r\n    error: atomic push failed for ref refs/heads/session. status: 7\r\n    To <fixture>/restack-conflict/origin.git\r\n     ! [rejected]        session -> session (stale info)\r\n     ! [rejected]        session-pr2-second -> session-pr2-second (atomic push failed)\r\n    error: failed to push some refs to '<fixture>/restack-conflict/origin.git'\r\n\u001b[?25h",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mrestack\u001b[22m\r\n\r\n    \u001b[2mスタック\u001b[22m  session, session-pr2-second\r\n    \u001b[2mpush 対象\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m スタックを push しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[31m✗\u001b[39m git push に失敗しました。\r\n    error: atomic push failed for ref refs/heads/session. status: 7\r\n    To <fixture>/restack-conflict/origin.git\r\n     ! [rejected]        session -> session (stale info)\r\n     ! [rejected]        session-pr2-second -> session-pr2-second (atomic push failed)\r\n    error: failed to push some refs to '<fixture>/restack-conflict/origin.git'\r\n\u001b[?25h",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
 		},
 		{
-			"title": "ヘルプ / バージョン: discard --help",
-			"args": ["discard", "--help"],
-			"command": "wts discard --help",
-			"cwd": "<fixture>",
+			"title": "restack / rebase後push確認 肯定",
+			"args": ["restack", "--base-branch", "origin/main"],
+			"command": "wts restack --base-branch origin/main",
+			"cwd": "<fixture>/restack-push-contract-肯定/repo-worktrees/session",
 			"code": 0,
-			"raw": "\u001b[1mUsage:\u001b[22m \u001b[36mwts\u001b[39m \u001b[36mdiscard\u001b[39m \u001b[32m[options]\u001b[39m <path>\r\n\r\n指定したセッションの worktree とブランチを破棄します\r\n\r\n\u001b[1mOptions:\u001b[22m\r\n  \u001b[32m--dry-run\u001b[39m        変更せず実行予定を表示します (default: false)\r\n  \u001b[32m--yes\u001b[39m            表示した削除対象の確認を省略します\r\n  \u001b[32m--force\u001b[39m          未コミット・未追跡・無視されたファイルも破棄します\r\n  \u001b[32m--remote <name>\u001b[39m  指定リモートの同名セッションブランチも削除します\r\n  \u001b[32m-h, --help\u001b[39m       display help for command\r\n",
-			"frames": [],
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mrestack\u001b[22m\r\n\r\n    \u001b[2mスタック\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin の lease を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main をベースに rebase しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h    \u001b[2mpush 対象\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  これらを push しますか？\r\n\u001b[36m│\u001b[39m  \u001b[2m○\u001b[22m \u001b[2mはい\u001b[22m \u001b[2m/\u001b[22m \u001b[32m●\u001b[39m いいえ\r\n\u001b[36m└\u001b[39m\r\n\u001b[1A\r\n\u001b[?25h\u001b[999D\u001b[4A\u001b[1B\u001b[J\u001b[32m◇\u001b[39m  これらを push しますか？\r\n\u001b[90m│\u001b[39m  \u001b[2mはい\u001b[22m\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m スタックを push しています\u001b[?2026l\u001b[?2026h\u001b[1G\u001b[0K\u001b[3G\u001b[36m⠙\u001b[39m スタックを push しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[32m✓\u001b[39m restack 完了\r\n",
+			"frames": [
+				"\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mrestack\u001b[22m\r\n\r\n    \u001b[2mスタック\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin の lease を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main をベースに rebase しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h    \u001b[2mpush 対象\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  これらを push しますか？\r\n\u001b[36m│\u001b[39m  \u001b[2m○\u001b[22m \u001b[2mはい\u001b[22m \u001b[2m/\u001b[22m \u001b[32m●\u001b[39m いいえ\r\n\u001b[36m└\u001b[39m\r\n"
+			],
 			"mode": "TTY 実測",
-			"input": []
+			"input": [["これらを push しますか？", "y\r"]]
 		},
 		{
-			"title": "引数エラー: discard",
-			"args": ["discard"],
-			"command": "wts discard",
-			"cwd": "<fixture>",
-			"code": 1,
-			"raw": "  \u001b[31m✗\u001b[39m missing required argument 'path'\r\n",
-			"frames": [],
+			"title": "restack / rebase後push確認 否定",
+			"args": ["restack", "--base-branch", "origin/main"],
+			"command": "wts restack --base-branch origin/main",
+			"cwd": "<fixture>/restack-push-contract-否定/repo-worktrees/session",
+			"code": 0,
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mrestack\u001b[22m\r\n\r\n    \u001b[2mスタック\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin の lease を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main をベースに rebase しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h    \u001b[2mpush 対象\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  これらを push しますか？\r\n\u001b[36m│\u001b[39m  \u001b[2m○\u001b[22m \u001b[2mはい\u001b[22m \u001b[2m/\u001b[22m \u001b[32m●\u001b[39m いいえ\r\n\u001b[36m└\u001b[39m\r\n\u001b[999D\u001b[4A\u001b[1B\u001b[J\u001b[32m◇\u001b[39m  これらを push しますか？\r\n\u001b[90m│\u001b[39m  \u001b[2mいいえ\u001b[22m\r\n\u001b[?25h  \u001b[33m−\u001b[39m キャンセルしました。\r\n",
+			"frames": [
+				"\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mrestack\u001b[22m\r\n\r\n    \u001b[2mスタック\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin の lease を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main をベースに rebase しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h    \u001b[2mpush 対象\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  これらを push しますか？\r\n\u001b[36m│\u001b[39m  \u001b[2m○\u001b[22m \u001b[2mはい\u001b[22m \u001b[2m/\u001b[22m \u001b[32m●\u001b[39m いいえ\r\n\u001b[36m└\u001b[39m\r\n"
+			],
 			"mode": "TTY 実測",
-			"input": []
+			"input": [["これらを push しますか？", "\r"]]
+		},
+		{
+			"title": "restack / rebase後push確認 Ctrl-C",
+			"args": ["restack", "--base-branch", "origin/main"],
+			"command": "wts restack --base-branch origin/main",
+			"cwd": "<fixture>/restack-push-contract-Ctrl-C/repo-worktrees/session",
+			"code": 0,
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mrestack\u001b[22m\r\n\r\n    \u001b[2mスタック\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin の lease を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main をベースに rebase しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h    \u001b[2mpush 対象\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  これらを push しますか？\r\n\u001b[36m│\u001b[39m  \u001b[2m○\u001b[22m \u001b[2mはい\u001b[22m \u001b[2m/\u001b[22m \u001b[32m●\u001b[39m いいえ\r\n\u001b[36m└\u001b[39m\r\n\u001b[999D\u001b[4A\u001b[1B\u001b[J\u001b[31m■\u001b[39m  これらを push しますか？\r\n\u001b[90m│\u001b[39m  \u001b[9m\u001b[2mいいえ\u001b[22m\u001b[29m\r\n\u001b[90m│\u001b[39m\r\n\u001b[?25h  \u001b[33m−\u001b[39m キャンセルしました。\r\n",
+			"frames": [
+				"\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mrestack\u001b[22m\r\n\r\n    \u001b[2mスタック\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin の lease を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main をベースに rebase しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h    \u001b[2mpush 対象\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  これらを push しますか？\r\n\u001b[36m│\u001b[39m  \u001b[2m○\u001b[22m \u001b[2mはい\u001b[22m \u001b[2m/\u001b[22m \u001b[32m●\u001b[39m いいえ\r\n\u001b[36m└\u001b[39m\r\n"
+			],
+			"mode": "TTY 実測",
+			"input": [["これらを push しますか？", "\u0003"]]
+		},
+		{
+			"title": "restack / ベース候補 origin/HEAD=false Enter",
+			"args": ["restack", "--dry-run"],
+			"command": "wts restack --dry-run",
+			"cwd": "<fixture>/restack-base-contract-false-Enter/repo-worktrees/session",
+			"code": 0,
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mrestack\u001b[22m\r\n\r\n  \u001b[36m•\u001b[39m DRY_RUN: rebase・push は行いません\r\n    \u001b[2mスタック\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  ベースブランチ\r\n\u001b[36m│\u001b[39m  \u001b[7mo\u001b[27m\u001b[2mrigin/main\u001b[22m\r\n\u001b[36m└\u001b[39m\r\n\u001b[999D\u001b[4A\u001b[1B\u001b[J\u001b[32m◇\u001b[39m  ベースブランチ\r\n\u001b[90m│\u001b[39m  \u001b[2morigin/main\u001b[22m\r\n\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin の lease を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[36m→\u001b[39m git checkout session-pr2-second\r\n  \u001b[36m→\u001b[39m git rebase --update-refs origin/main\r\n  \u001b[36m→\u001b[39m git push --atomic --force-with-lease=refs/heads/session: --force-with-lease=refs/heads/session-pr2-second: origin refs/heads/session:refs/heads/session refs/heads/session-pr2-second:refs/heads/session-pr2-second\r\n",
+			"frames": [
+				"\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mrestack\u001b[22m\r\n\r\n  \u001b[36m•\u001b[39m DRY_RUN: rebase・push は行いません\r\n    \u001b[2mスタック\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  ベースブランチ\r\n\u001b[36m│\u001b[39m  \u001b[7mo\u001b[27m\u001b[2mrigin/main\u001b[22m\r\n\u001b[36m└\u001b[39m\r\n"
+			],
+			"mode": "TTY 実測",
+			"input": [["origin/main", "\r"]]
+		},
+		{
+			"title": "restack / ベース候補 origin/HEAD=false Ctrl-C",
+			"args": ["restack", "--dry-run"],
+			"command": "wts restack --dry-run",
+			"cwd": "<fixture>/restack-base-contract-false-Ctrl-C/repo-worktrees/session",
+			"code": 0,
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mrestack\u001b[22m\r\n\r\n  \u001b[36m•\u001b[39m DRY_RUN: rebase・push は行いません\r\n    \u001b[2mスタック\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  ベースブランチ\r\n\u001b[36m│\u001b[39m  \u001b[7mo\u001b[27m\u001b[2mrigin/main\u001b[22m\r\n\u001b[36m└\u001b[39m\r\n\u001b[999D\u001b[4A\u001b[1B\u001b[J\u001b[31m■\u001b[39m  ベースブランチ\r\n\u001b[90m│\u001b[39m  \u001b[9m\u001b[2morigin/main\u001b[22m\u001b[29m\r\n\u001b[90m│\u001b[39m\r\n\u001b[?25h  \u001b[33m−\u001b[39m キャンセルしました。\r\n",
+			"frames": [
+				"\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mrestack\u001b[22m\r\n\r\n  \u001b[36m•\u001b[39m DRY_RUN: rebase・push は行いません\r\n    \u001b[2mスタック\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  ベースブランチ\r\n\u001b[36m│\u001b[39m  \u001b[7mo\u001b[27m\u001b[2mrigin/main\u001b[22m\r\n\u001b[36m└\u001b[39m\r\n"
+			],
+			"mode": "TTY 実測",
+			"input": [["origin/main", "\u0003"]]
+		},
+		{
+			"title": "restack / ベース候補 origin/HEAD=true Enter",
+			"args": ["restack", "--dry-run"],
+			"command": "wts restack --dry-run",
+			"cwd": "<fixture>/restack-base-contract-true-Enter/repo-worktrees/session",
+			"code": 0,
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mrestack\u001b[22m\r\n\r\n  \u001b[36m•\u001b[39m DRY_RUN: rebase・push は行いません\r\n    \u001b[2mスタック\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  ベースブランチ\r\n\u001b[36m│\u001b[39m  \u001b[7mo\u001b[27m\u001b[2mrigin/trunk\u001b[22m\r\n\u001b[36m└\u001b[39m\r\n\u001b[999D\u001b[4A\u001b[1B\u001b[J\u001b[32m◇\u001b[39m  ベースブランチ\r\n\u001b[90m│\u001b[39m  \u001b[2morigin/trunk\u001b[22m\r\n\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin の lease を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[36m→\u001b[39m git checkout session-pr2-second\r\n  \u001b[36m→\u001b[39m git rebase --update-refs origin/trunk\r\n  \u001b[36m→\u001b[39m git push --atomic --force-with-lease=refs/heads/session: --force-with-lease=refs/heads/session-pr2-second: origin refs/heads/session:refs/heads/session refs/heads/session-pr2-second:refs/heads/session-pr2-second\r\n",
+			"frames": [
+				"\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mrestack\u001b[22m\r\n\r\n  \u001b[36m•\u001b[39m DRY_RUN: rebase・push は行いません\r\n    \u001b[2mスタック\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  ベースブランチ\r\n\u001b[36m│\u001b[39m  \u001b[7mo\u001b[27m\u001b[2mrigin/trunk\u001b[22m\r\n\u001b[36m└\u001b[39m\r\n"
+			],
+			"mode": "TTY 実測",
+			"input": [["origin/trunk", "\r"]]
+		},
+		{
+			"title": "restack / ベース候補 origin/HEAD=true Ctrl-C",
+			"args": ["restack", "--dry-run"],
+			"command": "wts restack --dry-run",
+			"cwd": "<fixture>/restack-base-contract-true-Ctrl-C/repo-worktrees/session",
+			"code": 0,
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mrestack\u001b[22m\r\n\r\n  \u001b[36m•\u001b[39m DRY_RUN: rebase・push は行いません\r\n    \u001b[2mスタック\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  ベースブランチ\r\n\u001b[36m│\u001b[39m  \u001b[7mo\u001b[27m\u001b[2mrigin/trunk\u001b[22m\r\n\u001b[36m└\u001b[39m\r\n\u001b[999D\u001b[4A\u001b[1B\u001b[J\u001b[31m■\u001b[39m  ベースブランチ\r\n\u001b[90m│\u001b[39m  \u001b[9m\u001b[2morigin/trunk\u001b[22m\u001b[29m\r\n\u001b[90m│\u001b[39m\r\n\u001b[?25h  \u001b[33m−\u001b[39m キャンセルしました。\r\n",
+			"frames": [
+				"\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mrestack\u001b[22m\r\n\r\n  \u001b[36m•\u001b[39m DRY_RUN: rebase・push は行いません\r\n    \u001b[2mスタック\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  ベースブランチ\r\n\u001b[36m│\u001b[39m  \u001b[7mo\u001b[27m\u001b[2mrigin/trunk\u001b[22m\r\n\u001b[36m└\u001b[39m\r\n"
+			],
+			"mode": "TTY 実測",
+			"input": [["origin/trunk", "\u0003"]]
 		},
 		{
 			"title": "discard: リモートを含む削除予定",
@@ -2469,7 +2626,7 @@
 			"command": "wts discard <fixture>/discard/repo-worktrees/discard-demo --remote origin --dry-run",
 			"cwd": "<fixture>/discard/repo",
 			"code": 0,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mdiscard\u001b[22m\r\n\r\n    \u001b[2mWorktree\u001b[22m  <fixture>/discard/repo-worktrees/discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo-pr2-next\r\n    \u001b[2mRemote\u001b[22m  origin\r\n    \u001b[2mRemote branch\u001b[22m  refs/heads/discard-demo\r\n    \u001b[2mRemote branch\u001b[22m  refs/heads/discard-demo-pr2-next\r\n  \u001b[36m•\u001b[39m 表示したリモートブランチも未マージの変更ごと削除します。\r\n  \u001b[36m•\u001b[39m 未コミット・未追跡・無視対象のファイルはありません。\r\n  \u001b[36m•\u001b[39m このセッションのローカルブランチを未マージの変更ごと削除します。\r\n  \u001b[36m•\u001b[39m DRY_RUN: 削除は行いません\r\n",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mdiscard\u001b[22m\r\n\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m リモートブランチを確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h    \u001b[2mWorktree\u001b[22m  <fixture>/discard/repo-worktrees/discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo-pr2-next\r\n    \u001b[2mRemote\u001b[22m  origin\r\n    \u001b[2mRemote branch\u001b[22m  refs/heads/discard-demo\r\n    \u001b[2mRemote branch\u001b[22m  refs/heads/discard-demo-pr2-next\r\n  \u001b[36m•\u001b[39m 表示したリモートブランチも未マージの変更ごと削除します。\r\n  \u001b[36m•\u001b[39m 未コミット・未追跡・無視対象のファイルはありません。\r\n  \u001b[36m•\u001b[39m このセッションのローカルブランチを未マージの変更ごと削除します。\r\n  \u001b[36m•\u001b[39m DRY_RUN: 削除は行いません\r\n",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -2502,9 +2659,9 @@
 			"command": "wts discard <fixture>/discard/repo-worktrees/discard-demo --remote origin",
 			"cwd": "<fixture>/discard/repo",
 			"code": 0,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mdiscard\u001b[22m\r\n\r\n    \u001b[2mWorktree\u001b[22m  <fixture>/discard/repo-worktrees/discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo-pr2-next\r\n    \u001b[2mRemote\u001b[22m  origin\r\n    \u001b[2mRemote branch\u001b[22m  refs/heads/discard-demo\r\n    \u001b[2mRemote branch\u001b[22m  refs/heads/discard-demo-pr2-next\r\n  \u001b[36m•\u001b[39m 表示したリモートブランチも未マージの変更ごと削除します。\r\n  \u001b[36m•\u001b[39m 未コミット・未追跡・無視対象のファイルはありません。\r\n  \u001b[36m•\u001b[39m このセッションのローカルブランチを未マージの変更ごと削除します。\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  このセッションを破棄しますか？\r\n\u001b[36m│\u001b[39m  \u001b[2m○\u001b[22m \u001b[2mはい\u001b[22m \u001b[2m/\u001b[22m \u001b[32m●\u001b[39m いいえ\r\n\u001b[36m└\u001b[39m\r\n\u001b[999D\u001b[4A\u001b[1B\u001b[J\u001b[32m◇\u001b[39m  このセッションを破棄しますか？\r\n\u001b[90m│\u001b[39m  \u001b[2mいいえ\u001b[22m\r\n\u001b[?25h  \u001b[33m−\u001b[39m キャンセルしました。\r\n",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mdiscard\u001b[22m\r\n\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m リモートブランチを確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h    \u001b[2mWorktree\u001b[22m  <fixture>/discard/repo-worktrees/discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo-pr2-next\r\n    \u001b[2mRemote\u001b[22m  origin\r\n    \u001b[2mRemote branch\u001b[22m  refs/heads/discard-demo\r\n    \u001b[2mRemote branch\u001b[22m  refs/heads/discard-demo-pr2-next\r\n  \u001b[36m•\u001b[39m 表示したリモートブランチも未マージの変更ごと削除します。\r\n  \u001b[36m•\u001b[39m 未コミット・未追跡・無視対象のファイルはありません。\r\n  \u001b[36m•\u001b[39m このセッションのローカルブランチを未マージの変更ごと削除します。\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  このセッションを破棄しますか？\r\n\u001b[36m│\u001b[39m  \u001b[2m○\u001b[22m \u001b[2mはい\u001b[22m \u001b[2m/\u001b[22m \u001b[32m●\u001b[39m いいえ\r\n\u001b[36m└\u001b[39m\r\n\u001b[999D\u001b[4A\u001b[1B\u001b[J\u001b[32m◇\u001b[39m  このセッションを破棄しますか？\r\n\u001b[90m│\u001b[39m  \u001b[2mいいえ\u001b[22m\r\n\u001b[?25h  \u001b[33m−\u001b[39m キャンセルしました。\r\n",
 			"frames": [
-				"\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mdiscard\u001b[22m\r\n\r\n    \u001b[2mWorktree\u001b[22m  <fixture>/discard/repo-worktrees/discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo-pr2-next\r\n    \u001b[2mRemote\u001b[22m  origin\r\n    \u001b[2mRemote branch\u001b[22m  refs/heads/discard-demo\r\n    \u001b[2mRemote branch\u001b[22m  refs/heads/discard-demo-pr2-next\r\n  \u001b[36m•\u001b[39m 表示したリモートブランチも未マージの変更ごと削除します。\r\n  \u001b[36m•\u001b[39m 未コミット・未追跡・無視対象のファイルはありません。\r\n  \u001b[36m•\u001b[39m このセッションのローカルブランチを未マージの変更ごと削除します。\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  このセッションを破棄しますか？\r\n\u001b[36m│\u001b[39m  \u001b[2m○\u001b[22m \u001b[2mはい\u001b[22m \u001b[2m/\u001b[22m \u001b[32m●\u001b[39m いいえ\r\n\u001b[36m└\u001b[39m\r\n"
+				"\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mdiscard\u001b[22m\r\n\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m リモートブランチを確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h    \u001b[2mWorktree\u001b[22m  <fixture>/discard/repo-worktrees/discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo-pr2-next\r\n    \u001b[2mRemote\u001b[22m  origin\r\n    \u001b[2mRemote branch\u001b[22m  refs/heads/discard-demo\r\n    \u001b[2mRemote branch\u001b[22m  refs/heads/discard-demo-pr2-next\r\n  \u001b[36m•\u001b[39m 表示したリモートブランチも未マージの変更ごと削除します。\r\n  \u001b[36m•\u001b[39m 未コミット・未追跡・無視対象のファイルはありません。\r\n  \u001b[36m•\u001b[39m このセッションのローカルブランチを未マージの変更ごと削除します。\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  このセッションを破棄しますか？\r\n\u001b[36m│\u001b[39m  \u001b[2m○\u001b[22m \u001b[2mはい\u001b[22m \u001b[2m/\u001b[22m \u001b[32m●\u001b[39m いいえ\r\n\u001b[36m└\u001b[39m\r\n"
 			],
 			"mode": "TTY 実測",
 			"input": [["このセッションを破棄しますか", "\r"]]
@@ -2645,9 +2802,9 @@
 			"command": "wts discard <fixture>/discard/repo-worktrees/discard-demo --force --remote origin",
 			"cwd": "<fixture>/discard/repo",
 			"code": 0,
-			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mdiscard\u001b[22m\r\n\r\n    \u001b[2mWorktree\u001b[22m  <fixture>/discard/repo-worktrees/discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo-pr2-next\r\n    \u001b[2mRemote\u001b[22m  origin\r\n    \u001b[2mRemote branch\u001b[22m  refs/heads/discard-demo\r\n    \u001b[2mRemote branch\u001b[22m  refs/heads/discard-demo-pr2-next\r\n  \u001b[36m•\u001b[39m 表示したリモートブランチも未マージの変更ごと削除します。\r\n  \u001b[36m•\u001b[39m 未コミット・未追跡・無視対象のファイルがあります。破棄には --force が必要です。\r\n  \u001b[36m•\u001b[39m このセッションのローカルブランチを未マージの変更ごと削除します。\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  このセッションを破棄しますか？\r\n\u001b[36m│\u001b[39m  \u001b[2m○\u001b[22m \u001b[2mはい\u001b[22m \u001b[2m/\u001b[22m \u001b[32m●\u001b[39m いいえ\r\n\u001b[36m└\u001b[39m\r\n\u001b[1A\r\n\u001b[?25h\u001b[999D\u001b[4A\u001b[1B\u001b[J\u001b[32m◇\u001b[39m  このセッションを破棄しますか？\r\n\u001b[90m│\u001b[39m  \u001b[2mはい\u001b[22m\r\n  \u001b[32m✓\u001b[39m 完了しました (2 ブランチ・1 Worktree・2 リモートブランチ)\r\n",
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mdiscard\u001b[22m\r\n\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m リモートブランチを確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h    \u001b[2mWorktree\u001b[22m  <fixture>/discard/repo-worktrees/discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo-pr2-next\r\n    \u001b[2mRemote\u001b[22m  origin\r\n    \u001b[2mRemote branch\u001b[22m  refs/heads/discard-demo\r\n    \u001b[2mRemote branch\u001b[22m  refs/heads/discard-demo-pr2-next\r\n  \u001b[36m•\u001b[39m 表示したリモートブランチも未マージの変更ごと削除します。\r\n  \u001b[36m•\u001b[39m 未コミット・未追跡・無視対象のファイルがあります。破棄には --force が必要です。\r\n  \u001b[36m•\u001b[39m このセッションのローカルブランチを未マージの変更ごと削除します。\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  このセッションを破棄しますか？\r\n\u001b[36m│\u001b[39m  \u001b[2m○\u001b[22m \u001b[2mはい\u001b[22m \u001b[2m/\u001b[22m \u001b[32m●\u001b[39m いいえ\r\n\u001b[36m└\u001b[39m\r\n\u001b[1A\r\n\u001b[?25h\u001b[999D\u001b[4A\u001b[1B\u001b[J\u001b[32m◇\u001b[39m  このセッションを破棄しますか？\r\n\u001b[90m│\u001b[39m  \u001b[2mはい\u001b[22m\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m リモートブランチを確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m リモートブランチを削除しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m Worktree を削除しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[32m✓\u001b[39m 完了しました (2 ブランチ・1 Worktree・2 リモートブランチ)\r\n",
 			"frames": [
-				"\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mdiscard\u001b[22m\r\n\r\n    \u001b[2mWorktree\u001b[22m  <fixture>/discard/repo-worktrees/discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo-pr2-next\r\n    \u001b[2mRemote\u001b[22m  origin\r\n    \u001b[2mRemote branch\u001b[22m  refs/heads/discard-demo\r\n    \u001b[2mRemote branch\u001b[22m  refs/heads/discard-demo-pr2-next\r\n  \u001b[36m•\u001b[39m 表示したリモートブランチも未マージの変更ごと削除します。\r\n  \u001b[36m•\u001b[39m 未コミット・未追跡・無視対象のファイルがあります。破棄には --force が必要です。\r\n  \u001b[36m•\u001b[39m このセッションのローカルブランチを未マージの変更ごと削除します。\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  このセッションを破棄しますか？\r\n\u001b[36m│\u001b[39m  \u001b[2m○\u001b[22m \u001b[2mはい\u001b[22m \u001b[2m/\u001b[22m \u001b[32m●\u001b[39m いいえ\r\n\u001b[36m└\u001b[39m\r\n"
+				"\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mdiscard\u001b[22m\r\n\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m リモートブランチを確認しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h    \u001b[2mWorktree\u001b[22m  <fixture>/discard/repo-worktrees/discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo-pr2-next\r\n    \u001b[2mRemote\u001b[22m  origin\r\n    \u001b[2mRemote branch\u001b[22m  refs/heads/discard-demo\r\n    \u001b[2mRemote branch\u001b[22m  refs/heads/discard-demo-pr2-next\r\n  \u001b[36m•\u001b[39m 表示したリモートブランチも未マージの変更ごと削除します。\r\n  \u001b[36m•\u001b[39m 未コミット・未追跡・無視対象のファイルがあります。破棄には --force が必要です。\r\n  \u001b[36m•\u001b[39m このセッションのローカルブランチを未マージの変更ごと削除します。\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  このセッションを破棄しますか？\r\n\u001b[36m│\u001b[39m  \u001b[2m○\u001b[22m \u001b[2mはい\u001b[22m \u001b[2m/\u001b[22m \u001b[32m●\u001b[39m いいえ\r\n\u001b[36m└\u001b[39m\r\n"
 			],
 			"mode": "TTY 実測",
 			"input": [["このセッションを破棄しますか", "y\r"]]
@@ -2678,6 +2835,28 @@
 			"cwd": "<fixture>/discard/repo",
 			"code": 1,
 			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mdiscard\u001b[22m\r\n\r\n  \u001b[31m✗\u001b[39m 登録済み worktree のルートを指定してください: <fixture>/discard/repo-worktrees/unmanaged/child\r\n",
+			"frames": [],
+			"mode": "TTY 実測",
+			"input": []
+		},
+		{
+			"title": "list 空の管理範囲",
+			"args": ["list"],
+			"command": "wts list",
+			"cwd": "<fixture>/list/repo",
+			"code": 0,
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mlist\u001b[22m\r\n\r\n  \u001b[36m•\u001b[39m 管理範囲に worktree はありません。\r\n",
+			"frames": [],
+			"mode": "TTY 実測",
+			"input": []
+		},
+		{
+			"title": "list セッションと未管理 worktree",
+			"args": ["list"],
+			"command": "wts list",
+			"cwd": "<fixture>/list/repo",
+			"code": 0,
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mlist\u001b[22m\r\n\r\n    \u001b[2mPath\u001b[22m  <fixture>/list/repo-worktrees/broken\r\n    \u001b[2mSession\u001b[22m  未管理\r\n    \u001b[2mCurrent\u001b[22m  broken\r\n    \u001b[2mPath\u001b[22m  <fixture>/list/repo-worktrees/clean\r\n    \u001b[2mRoot\u001b[22m  clean\r\n    \u001b[2mStack\u001b[22m  1: clean\r\n    \u001b[2mCurrent\u001b[22m  clean\r\n    \u001b[2mDirty\u001b[22m  なし\r\n    \u001b[2mPath\u001b[22m  <fixture>/list/repo-worktrees/manual\r\n    \u001b[2mSession\u001b[22m  未管理\r\n    \u001b[2mCurrent\u001b[22m  manual\r\n    \u001b[2mPath\u001b[22m  <fixture>/list/repo-worktrees/session\r\n    \u001b[2mRoot\u001b[22m  session\r\n    \u001b[2mStack\u001b[22m  1: session\r\n    \u001b[2mStack\u001b[22m  2: session-pr2-followup\r\n    \u001b[2mCurrent\u001b[22m  session-pr2-followup\r\n    \u001b[2mDirty\u001b[22m  あり（破棄には --force が必要）\r\n",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []

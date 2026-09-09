@@ -10,7 +10,7 @@ import {
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
-const cli = resolve(import.meta.dir, "../src/cli.ts");
+import { runCli } from "./helpers/cli";
 const sample = resolve(import.meta.dir, "../docs/examples/name-with-claude.py");
 
 test("config check validates an explicit file without running its script or creating directories", () => {
@@ -27,19 +27,17 @@ test("config check validates an explicit file without running its script or crea
 				naming: { branch: { script } },
 			}),
 		);
-		const run = () =>
-			Bun.spawnSync([process.execPath, cli, "config", "check", file], {
-				cwd: directory,
-			});
+		const run = () => runCli(directory, ["config", "check", file]);
 		const valid = run();
-		expect(valid.exitCode).toBe(0);
-		expect(valid.stdout.toString()).toContain("設定 OK");
+		expect(valid.code).toBe(0);
+		expect(valid.out).toContain("設定 OK");
+		expect(valid.out).toContain(script);
 		expect(existsSync(marker)).toBe(false);
 		expect(existsSync(join(directory, "sessions"))).toBe(false);
 		writeFileSync(file, JSON.stringify({ worktreeDirecotry: "typo" }));
 		const invalid = run();
-		expect(invalid.exitCode).toBe(1);
-		expect(invalid.stderr.toString()).toContain("worktreeDirecotry");
+		expect(invalid.code).toBe(1);
+		expect(invalid.err).toContain("worktreeDirecotry");
 	} finally {
 		rmSync(directory, { recursive: true, force: true });
 	}

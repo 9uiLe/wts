@@ -7,7 +7,8 @@ import {
 	statSync,
 	writeFileSync,
 } from "node:fs";
-import { basename, dirname, join, relative, resolve, sep } from "node:path";
+import { basename, dirname, join, relative, resolve } from "node:path";
+import { isSameOrDescendant } from "./path";
 import { Git } from "./git";
 
 export type NamingRule = { script: string; prompt?: string };
@@ -144,16 +145,6 @@ function canonicalDestination(path: string): string {
 	}
 }
 
-function inside(path: string, parent: string): boolean {
-	const suffix = relative(parent, path);
-	return (
-		!suffix ||
-		(suffix !== ".." &&
-			!suffix.startsWith(`..${sep}`) &&
-			!suffix.startsWith(sep))
-	);
-}
-
 function gitMetadata(directory: string): string[] {
 	const entry = join(directory, ".git");
 	if (!present(entry)) return [entry];
@@ -183,7 +174,7 @@ function loaded(
 		);
 	if (
 		[...gitMetadata(canonicalMain), ...gitMetadata(directory)].some(
-			(metadata) => inside(worktreesBase, metadata),
+			(metadata) => isSameOrDescendant(worktreesBase, metadata),
 		)
 	) {
 		throw new Error(
@@ -224,12 +215,17 @@ export function loadProjectConfig(root: string, main: string): LoadedConfig {
 	throw new Error(".wts.json がありません。wts init を実行してください。");
 }
 
-export function initializeConfig(root: string, main: string): string {
+export function initializeConfig(
+	root: string,
+	main: string,
+	base?: string,
+): string {
 	const path = join(root, ".wts.json");
 	const config: ProjectConfig = {
 		worktreeDirectory: `../${basename(main)}-worktrees`,
 		naming: {},
 	};
+	if (base !== undefined) config.baseBranch = baseBranch(base, root);
 	try {
 		writeFileSync(path, `${JSON.stringify(config, null, 2)}\n`, { flag: "wx" });
 	} catch (error) {

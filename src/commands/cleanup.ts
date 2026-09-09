@@ -1,26 +1,16 @@
-import { existsSync } from "node:fs";
-import { sep } from "node:path";
-import { commandAsync, type Git, requireCommand, worktrees } from "../git";
+import { type Git, worktrees } from "../git";
+import { isSameOrDescendant } from "../path";
+import { commandAsync, requireCommand } from "../process";
 import { projectBase, repository } from "../project";
 import { confirmAction } from "../prompts";
-import { ui } from "../ui";
+import { commandLine, ui } from "../ui";
 
 async function patchIds(git: Git, range: string): Promise<Set<string>> {
 	// 差分末尾の空白も patch-id --verbatim の比較対象なので出力を trim しない。
 	async function pipe(args: string[], input?: string) {
-		const result = Bun.spawn(["git", ...args], {
-			cwd: git.cwd,
-			stdin: input === undefined ? "ignore" : Buffer.from(input),
-			stdout: "pipe",
-			stderr: "pipe",
-		});
-		const [code, out, err] = await Promise.all([
-			result.exited,
-			new Response(result.stdout).text(),
-			new Response(result.stderr).text(),
-		]);
-		if (code !== 0) throw new Error(err);
-		return out;
+		const result = await commandAsync("git", args, git.cwd, input);
+		if (result.code !== 0) throw new Error("パッチ比較に失敗");
+		return result.out;
 	}
 	const commits = await pipe(["rev-list", "--no-merges", range]);
 	const diff = await pipe(["diff-tree", "--stdin", "-p"], commits);
@@ -109,28 +99,47 @@ async function mergedHeads(
 		git.cwd,
 	);
 	if (result.code !== 0) {
-		throw new Error(`マージ済み PR を取得できません: ${branch}\n${result.err}`);
+		throw new Error(`マージ済み PR を取得できません: ${branch}`);
 	}
 	const data: unknown = JSON.parse(result.out);
 	if (!Array.isArray(data)) throw new Error("gh が不正な PR 情報を返しました");
-	return data
-		.filter(
-			(pr) =>
-				pr?.headRepository?.nameWithOwner === owner &&
-				typeof pr.headRefOid === "string",
+	const heads: string[] = [];
+	for (const pr of data) {
+		if (
+			typeof pr !== "object" ||
+			pr === null ||
+			!("headRefOid" in pr) ||
+			typeof pr.headRefOid !== "string" ||
+			!("headRepository" in pr) ||
+			(pr.headRepository !== null &&
+				(typeof pr.headRepository !== "object" ||
+					!("nameWithOwner" in pr.headRepository) ||
+					typeof pr.headRepository.nameWithOwner !== "string"))
 		)
-		.map((pr) => pr.headRefOid);
+			throw new Error("gh が不正な PR 情報を返しました");
+		if (pr.headRepository?.nameWithOwner === owner) heads.push(pr.headRefOid);
+	}
+	return heads;
 }
 
-export async function cleanupSessionBranches(options: {
-	dryRun?: boolean;
-	yes?: boolean;
-}): Promise<void> {
-	ui.heading("cleanup");
-	const { git, worktreesBase, config } = await repository();
-	const { branch: baseBranch, remoteRef: remoteBase } = projectBase(
-		config.config,
-	);
+interface CleanupTarget {
+	branch: string;
+	oid: string;
+	path: string | undefined;
+}
+
+interface CleanupFailure {
+	branch: string;
+	path: string | undefined;
+	phase: "再検証" | "worktree 削除" | "参照削除" | "ブランチ設定除去" | "prune";
+	diagnostic: string;
+}
+
+function cleanupCandidates(
+	git: Git,
+	worktreesBase: string,
+	baseBranch: string,
+) {
 	const trees = worktrees(git);
 	const current = git.run(["rev-parse", "--abbrev-ref", "HEAD"]).trim();
 	const candidates = git
@@ -145,14 +154,14 @@ export async function cleanupSessionBranches(options: {
 				!trees.some(
 					(tree) =>
 						tree.branch === branch &&
-						!tree.path.startsWith(`${worktreesBase}${sep}`),
+						(tree.path === worktreesBase ||
+							!isSameOrDescendant(tree.path, worktreesBase)),
 				),
 		);
-	if (options.dryRun) ui.info("DRY_RUN: 削除は行いません");
-	if (!candidates.length) {
-		ui.info("削除対象のブランチはありません");
-		return;
-	}
+	return { candidates, trees };
+}
+
+async function githubRepository(git: Git): Promise<string> {
 	requireCommand("gh");
 	const repo = await ui.task("GitHub リポジトリを確認しています", () =>
 		commandAsync(
@@ -165,19 +174,17 @@ export async function cleanupSessionBranches(options: {
 	if (repo.code !== 0 || !owner) {
 		throw new Error("gh repo view でリポジトリ情報を取得できませんでした");
 	}
-	if (
-		!options.dryRun &&
-		(
-			await ui.task(`${remoteBase} を取得しています`, () =>
-				git.tryRunAsync(["fetch", "-q", "origin", baseBranch]),
-			)
-		).code !== 0
-	) {
-		ui.warn(
-			`${remoteBase} の fetch に失敗しました（判定が古い状態で行われます）`,
-		);
-	}
-	const automatic: { branch: string; path: string | undefined }[] = [];
+	return owner;
+}
+
+async function classifyBranches(
+	git: Git,
+	owner: string,
+	remoteBase: string,
+	candidates: string[],
+	trees: ReturnType<typeof worktrees>,
+): Promise<CleanupTarget[]> {
+	const automatic: CleanupTarget[] = [];
 	for (const branch of candidates) {
 		const oid = git
 			.run(["rev-parse", "--verify", `refs/heads/${branch}`])
@@ -198,13 +205,226 @@ export async function cleanupSessionBranches(options: {
 		if (reasons.length) {
 			ui.warn(`要確認: ${branch} (${reasons.join("、")})`);
 			if (path)
-				ui.line(`  git worktree remove '${path.replaceAll("'", "'\\''")}'`);
-			ui.line(`  git branch -D '${branch.replaceAll("'", "'\\''")}'`);
+				ui.line(`  ${commandLine(["git", "worktree", "remove", path])}`);
+			ui.line(`  ${commandLine(["git", "branch", "-D", branch])}`);
 		} else {
-			automatic.push({ branch, path });
+			automatic.push({ branch, oid, path });
 			ui.info(`削除対象: ${branch}${path ? ` (${path})` : ""}`);
 		}
 	}
+	return automatic;
+}
+
+function targetChanged(
+	git: Git,
+	{ branch, oid, path }: CleanupTarget,
+): boolean {
+	const tip = git.tryRun(["rev-parse", "--verify", `refs/heads/${branch}`]);
+	const registered = worktrees(git);
+	const current = git.run(["rev-parse", "--abbrev-ref", "HEAD"]);
+	const users = registered.filter((tree) => tree.branch === branch);
+	return (
+		tip.code !== 0 ||
+		tip.out !== oid ||
+		current === branch ||
+		(path
+			? users.length !== 1 ||
+				users[0]?.path !== path ||
+				registered.some((tree) => tree.path === path && tree.branch !== branch)
+			: users.length !== 0)
+	);
+}
+
+interface CleanupResult {
+	failures: CleanupFailure[];
+	removedTrees: number;
+	removedBranches: number;
+}
+
+async function removeTarget(
+	git: Git,
+	target: CleanupTarget,
+	result: CleanupResult,
+): Promise<void> {
+	const { failures } = result;
+
+	const { branch, oid, path } = target;
+	let phase: CleanupFailure["phase"] = "再検証";
+	try {
+		if (targetChanged(git, target)) {
+			failures.push({
+				...target,
+				phase,
+				diagnostic: "分類後に OID または worktree の対応が変わりました",
+			});
+			return;
+		}
+		if (path) {
+			phase = "worktree 削除";
+			const removal = await ui.task(
+				`${branch} の Worktree を削除しています`,
+				() => git.tryRunAsync(["worktree", "remove", "--force", path]),
+			);
+			if (removal.code !== 0) {
+				failures.push({
+					...target,
+					phase,
+					diagnostic: "Worktree を削除できませんでした",
+				});
+				return;
+			}
+			result.removedTrees++;
+		}
+		phase = "参照削除";
+		if (worktrees(git).some((tree) => tree.branch === branch)) {
+			failures.push({
+				...target,
+				phase,
+				diagnostic: "ブランチが worktree で使用中です",
+			});
+			return;
+		}
+		const deletion = await git.tryRunAsync([
+			"update-ref",
+			"-d",
+			`refs/heads/${branch}`,
+			oid,
+		]);
+		if (deletion.code !== 0) {
+			failures.push({
+				...target,
+				phase,
+				diagnostic: "OID の照合または参照削除に失敗しました",
+			});
+			return;
+		}
+		result.removedBranches++;
+		phase = "ブランチ設定除去";
+		const settings = git.tryRun([
+			"config",
+			"--local",
+			"--remove-section",
+			`branch.${branch}`,
+		]);
+		const absent =
+			settings.code !== 0 &&
+			git.tryRun([
+				"config",
+				"--local",
+				"--get-regexp",
+				`^branch\\.${branch.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\.`,
+			]).code === 1;
+		if (settings.code !== 0 && !absent)
+			failures.push({
+				...target,
+				phase,
+				diagnostic: "参照削除済み・設定残存",
+			});
+	} catch {
+		failures.push({
+			...target,
+			phase,
+			diagnostic:
+				phase === "ブランチ設定除去"
+					? "参照削除済み・設定残存"
+					: "処理を完了できませんでした",
+		});
+	}
+}
+
+async function pruneWorktrees(
+	git: Git,
+	failures: CleanupFailure[],
+): Promise<void> {
+	try {
+		if ((await git.tryRunAsync(["worktree", "prune"])).code !== 0)
+			failures.push({
+				branch: "",
+				path: undefined,
+				phase: "prune",
+				diagnostic: "Worktree 登録情報の整理に失敗しました",
+			});
+	} catch {
+		failures.push({
+			branch: "",
+			path: undefined,
+			phase: "prune",
+			diagnostic: "Worktree 登録情報の整理に失敗しました",
+		});
+	}
+}
+
+function reportCleanup({
+	failures,
+	removedTrees,
+	removedBranches,
+}: CleanupResult): void {
+	ui.info(`完了済み: ${removedBranches} ブランチ・${removedTrees} Worktree`);
+	for (const failure of failures) {
+		ui.warn(
+			`${failure.phase}: ${failure.branch || "worktree"}${failure.path ? ` (${failure.path})` : ""}: ${failure.diagnostic}`,
+		);
+		if (failure.phase === "prune") {
+			ui.line(`  ${commandLine(["git", "worktree", "prune"])}`);
+		} else if (failure.phase === "ブランチ設定除去") {
+			ui.line(
+				`  ${commandLine(["git", "config", "--local", "--remove-section", `branch.${failure.branch}`])}`,
+			);
+		} else {
+			ui.line(`残存対象: ${failure.branch}`);
+			if (failure.path)
+				ui.line(
+					`  ${commandLine(["git", "worktree", "remove", "--force", failure.path])}`,
+				);
+			ui.line(`  ${commandLine(["git", "branch", "-D", failure.branch])}`);
+		}
+	}
+	if (failures.length)
+		throw new Error(`cleanup の一部処理に失敗しました (${failures.length} 件)`);
+	ui.success(
+		`完了しました (${removedBranches} ブランチ・${removedTrees} Worktree)`,
+	);
+}
+
+export async function cleanupSessionBranches(options: {
+	dryRun?: boolean;
+	yes?: boolean;
+}): Promise<void> {
+	ui.heading("cleanup");
+	const { git, worktreesBase, config } = await repository();
+	const { branch: baseBranch, remoteRef: remoteBase } = projectBase(
+		config.config,
+	);
+	const { candidates, trees } = cleanupCandidates(
+		git,
+		worktreesBase,
+		baseBranch,
+	);
+	if (options.dryRun) ui.info("DRY_RUN: 削除は行いません");
+	if (!candidates.length) {
+		ui.info("削除対象のブランチはありません");
+		return;
+	}
+	const owner = await githubRepository(git);
+	if (
+		!options.dryRun &&
+		(
+			await ui.task(`${remoteBase} を取得しています`, () =>
+				git.tryRunAsync(["fetch", "-q", "origin", baseBranch]),
+			)
+		).code !== 0
+	) {
+		ui.warn(
+			`${remoteBase} の fetch に失敗しました（判定が古い状態で行われます）`,
+		);
+	}
+	const automatic = await classifyBranches(
+		git,
+		owner,
+		remoteBase,
+		candidates,
+		trees,
+	);
 	if (!automatic.length) {
 		ui.info("自動削除できるブランチはありません");
 		return;
@@ -216,31 +436,12 @@ export async function cleanupSessionBranches(options: {
 	if (!options.yes && !(await confirmAction("これらを削除しますか？"))) {
 		return;
 	}
-	const failed: string[] = [];
-	let removedTrees = 0;
-	let removedBranches = 0;
-	for (const { branch, path } of automatic) {
-		if (path && existsSync(path)) {
-			if (
-				(
-					await ui.task(`${branch} の Worktree を削除しています`, () =>
-						git.tryRunAsync(["worktree", "remove", "--force", path]),
-					)
-				).code !== 0
-			) {
-				failed.push(branch);
-				continue;
-			}
-			removedTrees++;
-		}
-		// 書き換え前の tip は基準ブランチの祖先ではないため、分類で証明した上で -D を使う。
-		if (git.tryRun(["branch", "-D", branch]).code !== 0) failed.push(branch);
-		else removedBranches++;
-	}
-	git.run(["worktree", "prune"]);
-	if (failed.length)
-		throw new Error(`削除に失敗したブランチ: ${failed.join(", ")}`);
-	ui.success(
-		`完了しました (${removedBranches} ブランチ・${removedTrees} Worktree)`,
-	);
+	const result: CleanupResult = {
+		failures: [],
+		removedTrees: 0,
+		removedBranches: 0,
+	};
+	for (const target of automatic) await removeTarget(git, target, result);
+	await pruneWorktrees(git, result.failures);
+	reportCleanup(result);
 }

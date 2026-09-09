@@ -190,7 +190,11 @@ export async function configCases(): Promise<Capture[]> {
 	])
 		await take(
 			`${command} Gitコマンドなし`,
-			command === "config" ? ["config", "check"] : [command],
+			command === "config"
+				? ["config", "check"]
+				: command === "restack"
+					? [command, "--push"]
+					: [command],
 			repo,
 			1,
 			{ env: { PATH: "" } },
@@ -281,7 +285,11 @@ async function configurationValidationCases(): Promise<Capture[]> {
 	for (const command of ["config", "start", "stack", "cleanup", "restack"])
 		await take(
 			`${command} Gitリポジトリ外`,
-			command === "config" ? ["config", "check"] : [command],
+			command === "config"
+				? ["config", "check"]
+				: command === "restack"
+					? [command, "--push"]
+					: [command],
 			1,
 			context.root,
 		);

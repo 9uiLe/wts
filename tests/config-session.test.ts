@@ -9,42 +9,20 @@ import {
 	writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { runCli } from "./helpers/cli";
+import { git, initRepository, initBareOrigin } from "./helpers/git";
+import { join } from "node:path";
 
 const directories: string[] = [];
-const cli = resolve(import.meta.dir, "../src/cli.ts");
-const env = {
-	...process.env,
-	GIT_CONFIG_NOSYSTEM: "1",
-	GIT_CONFIG_GLOBAL: "/dev/null",
-	GIT_AUTHOR_NAME: "Test",
-	GIT_AUTHOR_EMAIL: "test@example.invalid",
-	GIT_COMMITTER_NAME: "Test",
-	GIT_COMMITTER_EMAIL: "test@example.invalid",
-	GIT_EDITOR: "true",
-};
-
 afterEach(() => {
 	for (const directory of directories.splice(0))
 		rmSync(directory, { recursive: true, force: true });
 });
 
-function git(cwd: string, ...args: string[]) {
-	const result = Bun.spawnSync(["git", ...args], { cwd, env });
-	if (result.exitCode !== 0) throw new Error(result.stderr.toString());
-	return result.stdout.toString().trim();
-}
-
 function run(cwd: string, ...args: string[]) {
-	const result = Bun.spawnSync([process.execPath, cli, ...args], {
-		cwd,
-		env: { ...env, PATH: `${join(cwd, "../bin")}:${process.env.PATH}` },
+	return runCli(cwd, args, {
+		PATH: `${join(cwd, "../bin")}:${process.env.PATH}`,
 	});
-	return {
-		code: result.exitCode,
-		out: result.stdout.toString(),
-		err: result.stderr.toString(),
-	};
 }
 
 function script(path: string, body: string) {
@@ -56,13 +34,11 @@ test("configured directory and independent names support stack, restack and prot
 	directories.push(dir);
 	const main = join(dir, "repo");
 	const origin = join(dir, "origin.git");
-	git(dir, "init", "--bare", origin);
-	git(dir, "init", "-b", "main", main);
+	initRepository(main);
 	writeFileSync(join(main, "initial"), "initial\n");
 	git(main, "add", ".");
 	git(main, "commit", "-m", "initial");
-	git(main, "remote", "add", "origin", origin);
-	git(main, "push", "-u", "origin", "main");
+	initBareOrigin(main, origin);
 	const branchScript = join(dir, "branch-name");
 	const worktreeScript = join(dir, "worktree-name");
 	const branchInput = join(dir, "branch-input.json");

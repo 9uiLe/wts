@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { LoadedConfig } from "./config";
 import type { Git } from "./git";
+import { commandAsync, type CommandResult } from "./process";
 import { ui } from "./ui";
 
 export type NamingContext = {
@@ -38,36 +39,26 @@ export async function generateName(
 ): Promise<string> {
 	const rule = config.config.naming?.[context.kind];
 	if (!rule) return context.defaultName;
-	let child: Bun.Subprocess<Buffer, "pipe", "pipe">;
+	let result: CommandResult;
 	try {
-		child = Bun.spawn([rule.script], {
-			cwd: config.directory,
-			stdin: Buffer.from(
-				JSON.stringify({
-					...context,
-					prompt: rule.prompt ?? "",
-				}),
-			),
-			stdout: "pipe",
-			stderr: "pipe",
-		});
+		result = await ui.task(
+			context.kind === "branch"
+				? "ブランチ名を生成しています"
+				: "Worktree 名を生成しています",
+			() =>
+				commandAsync(
+					rule.script,
+					[],
+					config.directory,
+					JSON.stringify({ ...context, prompt: rule.prompt ?? "" }),
+				),
+		);
 	} catch {
 		throw new Error(`${context.kind} 命名スクリプトを実行できませんでした`);
 	}
-	const [exitCode, stdout] = await ui.task(
-		context.kind === "branch"
-			? "ブランチ名を生成しています"
-			: "Worktree 名を生成しています",
-		() =>
-			Promise.all([
-				child.exited,
-				new Response(child.stdout).text(),
-				new Response(child.stderr).text(),
-			]),
-	);
-	if (exitCode !== 0 || child.signalCode) {
+	if (result.code !== 0)
 		throw new Error(`${context.kind} 命名スクリプトが失敗しました`);
-	}
+	const stdout = result.out;
 	const name = stdout.replace(/\r?\n$/, "");
 	if (!name.trim() || /[\r\n\0]/.test(name)) {
 		throw new Error(

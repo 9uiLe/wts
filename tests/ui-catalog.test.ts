@@ -204,3 +204,37 @@ test("catalog makes review scope, search, and empty-state recovery discoverable"
 	expect(page).toContain("絞り込みを解除");
 	expect(page).toContain("終了コード");
 });
+
+test("catalog derives command filters from recorded cases including discard and skills", () => {
+	const page = renderPage(
+		[
+			...["discard", "skills", "list", "future-command"].map((command) => ({
+				current: snapshot({ title: command, args: [command] }),
+				changed: true,
+			})),
+			{ previous: snapshot({ args: ["removed-command"] }), changed: true },
+			{ current: snapshot({ args: ["--help"] }), changed: true },
+		],
+		false,
+	);
+	expect(
+		[...page.matchAll(/data-filter="([^"]+)"/g)].map((match) => match[1]),
+	).toEqual([
+		"すべて",
+		"discard",
+		"skills",
+		"list",
+		"future-command",
+		"removed-command",
+		"共通",
+	]);
+	for (const group of [
+		"discard",
+		"skills",
+		"list",
+		"future-command",
+		"removed-command",
+		"共通",
+	])
+		expect(page).toContain(`data-group="${group}"`);
+});

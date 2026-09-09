@@ -186,21 +186,21 @@ export async function sessionCases(): Promise<Capture[]> {
 	await cap("stack: タスクと番号を対話入力", ["stack", "--dry-run"], 0, wt, {
 		steps: [
 			["作業内容", "next\r"],
-			["PR 番号", "\r"],
+			["スタック番号", "\r"],
 		],
 	});
-	await cap("stack: PR番号入力 Ctrl-C", ["stack", "--task", ""], 0, wt, {
-		steps: [["PR 番号", "\x03"]],
+	await cap("stack: スタック番号入力 Ctrl-C", ["stack", "--task", ""], 0, wt, {
+		steps: [["スタック番号", "\x03"]],
 	});
 	await cap("stack: 非TTYで対話要求", ["stack"], 1, wt, { pipe: true });
 	await cap(
-		"stack: 不正なPR番号",
+		"stack: 不正なスタック番号",
 		["stack", "--task", "", "--pr-number", "1"],
 		1,
 		wt,
 	);
 	await cap("stack: 通常成功", stack, 0, wt);
-	await cap("stack: 既存PR番号", stack, 1, wt);
+	await cap("stack: 既存スタック番号", stack, 1, wt);
 	writeFileSync(join(wt, "dirty"), "dirty");
 	await cap(
 		"stack: 作業ツリーが非clean",
@@ -344,7 +344,7 @@ export async function sessionCases(): Promise<Capture[]> {
 	await clean("fetch失敗とorigin確認不能（gh疑似応答）");
 	gitWrapper(
 		join(bin, "git"),
-		`const mode = process.env.PREVIEW_GIT_FAIL;\nif(mode === "merge" && args[0] === "rev-list") { console.log("2"); process.exit(0); }\nif(mode === "patch" && args[0] === "merge-base") process.exit(1);\nif(mode === "branch" && args[0] === "branch") process.exit(1);\nif(mode === "prune" && args[0] === "worktree" && args[1] === "prune") { console.error("fixture: prune failed"); process.exit(1); }`,
+		`const mode = process.env.PREVIEW_GIT_FAIL;\nif(mode === "merge" && args[0] === "rev-list") { console.log("2"); process.exit(0); }\nif(mode === "patch" && args[0] === "merge-base") process.exit(1);\nif(mode === "branch" && args[0] === "update-ref") process.exit(1);\nif(mode === "prune" && args[0] === "worktree" && args[1] === "prune") { console.error("fixture: prune failed"); process.exit(1); }`,
 	);
 	await clean(
 		"独自merge commit（git/gh疑似応答）",
@@ -356,12 +356,29 @@ export async function sessionCases(): Promise<Capture[]> {
 		PREVIEW_GIT_FAIL: "patch",
 	});
 	env.GH_OID = reviewoid;
-	await clean("ブランチ削除失敗（git/gh疑似応答）", 1, undefined, {
-		PREVIEW_GIT_FAIL: "branch",
-	});
-	await clean("worktree prune失敗（git/gh疑似応答）", 1, undefined, {
-		PREVIEW_GIT_FAIL: "prune",
-	});
+	const refFailure = await clean(
+		"ブランチ削除失敗（git/gh疑似応答）",
+		1,
+		undefined,
+		{
+			PREVIEW_GIT_FAIL: "branch",
+		},
+	);
+	assert.match(Bun.stripANSI(refFailure.raw), /参照削除: review/);
+	assert.equal(git(c, "rev-parse", "review"), reviewoid);
+	const pruneFailure = await clean(
+		"worktree prune失敗（git/gh疑似応答）",
+		1,
+		undefined,
+		{
+			PREVIEW_GIT_FAIL: "prune",
+		},
+	);
+	assert.match(
+		Bun.stripANSI(pruneFailure.raw),
+		/完了済み: 1 ブランチ・0 Worktree/,
+	);
+	assert.match(Bun.stripANSI(pruneFailure.raw), /prune: worktree/);
 
 	const failureRepo = fixture("session-failures");
 	const ad = dirname(failureRepo);
@@ -418,7 +435,7 @@ export async function sessionCases(): Promise<Capture[]> {
 		steps: [["作業内容", "\x03"]],
 	});
 	await cap(
-		"stack: 非数字PR番号",
+		"stack: 非数字スタック番号",
 		["stack", "--task", "", "--pr-number", "abc"],
 		1,
 		awt,

@@ -5,6 +5,7 @@ import { cleanupSessionBranches } from "./commands/cleanup";
 import { checkConfig } from "./commands/config";
 import { discardSession } from "./commands/discard";
 import { doctor } from "./commands/doctor";
+import { listSessions } from "./commands/list";
 import { init } from "./commands/init";
 import { restack } from "./commands/restack";
 import { getSkill, installSkill } from "./commands/skills";
@@ -47,7 +48,13 @@ program
 program
 	.command("init")
 	.description("プロジェクトの .wts.json を生成します")
+	.option("--base-branch <name>", "設定に保存するローカルのベースブランチ名")
 	.action(init);
+
+program
+	.command("list")
+	.description("管理範囲のセッションと未管理 worktree を一覧します")
+	.action(listSessions);
 
 program
 	.command("config")
@@ -75,9 +82,10 @@ skills
 
 function dryRun(command: Command): Command {
 	return command.addOption(
-		new Option("--dry-run", "変更せず実行予定を表示します").default(
-			process.env.DRY_RUN === "1",
-		),
+		new Option(
+			"--dry-run",
+			"変更せず実行予定を表示します（DRY_RUN=1 で有効、解除は unset）",
+		).default(process.env.DRY_RUN === "1"),
 	);
 }
 
@@ -115,9 +123,10 @@ dryRun(
 		"命名スクリプトへ渡す作業内容（既定の命名は日付＋UUID）",
 	)
 	.addOption(
-		new Option("--pr-number <number>", "スタック内の番号（2 以上）").env(
-			"PR_NUMBER",
-		),
+		new Option(
+			"--pr-number <number>",
+			"スタック番号（2 以上、GitHub の PR 番号とは異なります）",
+		).env("PR_NUMBER"),
 	)
 	.action(startStackBranch);
 
@@ -148,13 +157,14 @@ dryRun(
 	.addOption(
 		new Option(
 			"--push-only",
-			"保存した lease を使い push だけ行います",
+			"保存した lease を使い push だけ行います（PUSH_ONLY=1 で有効、解除は unset）",
 		).default(process.env.PUSH_ONLY === "1"),
 	)
 	.addOption(
-		new Option("--push", "push の確認を省略します").default(
-			process.env.PUSH === "1",
-		),
+		new Option(
+			"--push",
+			"push の確認を省略します（PUSH=1 で有効、解除は unset）",
+		).default(process.env.PUSH === "1"),
 	)
 	.action(restack);
 

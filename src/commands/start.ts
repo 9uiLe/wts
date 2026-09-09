@@ -1,7 +1,7 @@
 import { lstatSync, mkdirSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { copyUnmanaged } from "../copy";
-import { fetchBase, validateRef, worktrees } from "../git";
+import { copyUnmanaged, readCopyList } from "../copy";
+import { fetchBase, type Git, validateRef, worktrees } from "../git";
 import {
 	defaultNaming,
 	generateName,
@@ -13,15 +13,27 @@ import { askText } from "../prompts";
 import { recordSession } from "../session";
 import { commandLine, ui } from "../ui";
 
-export async function startWorktreeSession(options: {
+type Repository = Awaited<ReturnType<typeof repository>>;
+
+interface StartOptions {
 	dryRun?: boolean;
 	task?: string;
 	baseBranch?: string;
 	copyFrom?: string;
-}): Promise<void> {
-	ui.heading("start");
-	if (options.dryRun) ui.info("DRY_RUN: Worktree は作成しません");
-	const repo = await repository();
+}
+
+interface SessionCreation {
+	branch: string;
+	target: string;
+	base: string;
+	source: string;
+	copyList: string[];
+}
+
+async function resolveCreation(
+	repo: Repository,
+	options: StartOptions,
+): Promise<SessionCreation> {
 	const task =
 		options.task ??
 		(repo.config.config.naming?.branch || repo.config.config.naming?.worktree
@@ -53,27 +65,79 @@ export async function startWorktreeSession(options: {
 	}
 	if (worktrees(repo.git).some((wt) => wt.path === target))
 		throw new Error(`Worktree は既に登録されています: ${target}`);
-	const dryRun = options.dryRun ?? false;
-	await fetchBase(repo.git, base, dryRun);
+	const copyList = readCopyList(join(repo.root, ".worktree-copy"));
+
 	const source = options.copyFrom
 		? resolve(repo.root, options.copyFrom)
 		: (!base.startsWith("origin/") &&
 				worktrees(repo.git).find((wt) => wt.branch === base)?.path) ||
 			repo.main;
-	if (dryRun) {
-		ui.plan(
-			commandLine(["git", "worktree", "add", "-b", branch, target, base]),
-		);
-	} else {
+	return { branch, target, base, source, copyList };
+}
+
+function reportCreationState(
+	git: Git,
+	target: string,
+	branch: string,
+	sessionRecorded: boolean,
+): void {
+	ui.details([
+		["Path", target],
+		["Branch", branch],
+		[
+			"Worktree",
+			worktrees(git).some((wt) => wt.path === target) ? "作成済み" : "未作成",
+		],
+		[
+			"ブランチ",
+			git.tryRun(["show-ref", "--verify", `refs/heads/${branch}`]).code === 0
+				? "作成済み"
+				: "未作成",
+		],
+		["セッション記録", sessionRecorded ? "作成済み" : "未作成"],
+	]);
+}
+
+async function createSession(
+	repo: Repository,
+	creation: SessionCreation,
+): Promise<void> {
+	const { branch, target, base, source, copyList } = creation;
+	let sessionRecorded = false;
+	try {
 		mkdirSync(repo.worktreesBase, { recursive: true });
 		await ui.task("Worktree を作成しています", () =>
 			repo.git.runAsync(["worktree", "add", "-b", branch, target, base]),
 		);
 		recordSession(repo.git, target, branch);
+		sessionRecorded = true;
+		copyUnmanaged(copyList, source, target, false);
+	} catch (error) {
+		reportCreationState(repo.git, target, branch, sessionRecorded);
+		throw error;
 	}
-	copyUnmanaged(join(repo.root, ".worktree-copy"), source, target, dryRun);
-	if (dryRun) ui.info("Worktree の作成予定 (dry-run)");
-	else ui.success("Worktree 準備完了");
+}
+
+export async function startWorktreeSession(
+	options: StartOptions,
+): Promise<void> {
+	ui.heading("start");
+	if (options.dryRun) ui.info("DRY_RUN: Worktree は作成しません");
+	const repo = await repository();
+	const creation = await resolveCreation(repo, options);
+	const { branch, target, base, source, copyList } = creation;
+	const dryRun = options.dryRun ?? false;
+	await fetchBase(repo.git, base, dryRun);
+	if (dryRun) {
+		ui.plan(
+			commandLine(["git", "worktree", "add", "-b", branch, target, base]),
+		);
+		copyUnmanaged(copyList, source, target, true);
+		ui.info("Worktree の作成予定 (dry-run)");
+	} else {
+		await createSession(repo, creation);
+		ui.success("Worktree 準備完了");
+	}
 	ui.details([
 		["Branch", branch],
 		["Path", target],

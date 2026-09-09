@@ -1,8 +1,7 @@
 import { expect, test } from "bun:test";
-import { resolve } from "node:path";
+import { cli, cliEnvironment } from "./helpers/cli";
 
 const terminalTest = process.platform === "darwin" ? test : test.skip;
-const cli = resolve(import.meta.dir, "../src/cli.ts");
 
 async function doctorTerminal(input: string, env: Record<string, string> = {}) {
 	let output = "";
@@ -10,14 +9,13 @@ async function doctorTerminal(input: string, env: Record<string, string> = {}) {
 	const decoder = new TextDecoder();
 	const closed = Promise.withResolvers<void>();
 	const child = Bun.spawn([process.execPath, cli, "doctor", "--interactive"], {
-		env: {
-			...process.env,
+		env: cliEnvironment({
 			CI: undefined,
 			NO_COLOR: undefined,
 			FORCE_COLOR: "1",
 			TERM: "xterm-256color",
 			...env,
-		},
+		}),
 		terminal: {
 			data(terminal, data) {
 				output += decoder.decode(data, { stream: true });

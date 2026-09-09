@@ -1,4 +1,12 @@
-import { mkdirSync, rmdirSync, unlinkSync, writeFileSync } from "node:fs";
+import assert from "node:assert/strict";
+import {
+	existsSync,
+	mkdirSync,
+	readFileSync,
+	rmdirSync,
+	unlinkSync,
+	writeFileSync,
+} from "node:fs";
 import { dirname, join } from "node:path";
 import { type Capture, capture, context, fixture, git } from "./capture";
 
@@ -127,10 +135,12 @@ export async function restackCases(): Promise<Capture[]> {
 	await take("ベース入力Ctrl-C", [], cancel.worktree, 0, {
 		steps: [["ベースブランチ", "\u0003"]],
 	});
-	await take("ベース入力非TTY", [], cancel.worktree, 1, { pipe: true });
+	await take("ベース入力非TTY", ["--dry-run"], cancel.worktree, 1, {
+		pipe: true,
+	});
 	const errors = setup("errors");
 	await take("push確認非TTY", base, errors.worktree, 1, { pipe: true });
-	unlinkSync(join(errors.gitDir, "restack-lease"));
+	assert.equal(existsSync(join(errors.gitDir, "restack-lease")), false);
 	await take(
 		"push-only leaseファイルなし",
 		[...base, "--push-only"],
@@ -262,5 +272,65 @@ const result=Bun.spawnSync([${JSON.stringify(context.gitPath)},...args],{stdin:'
 		[...base, "--push-only", "--push"],
 		conflict.worktree,
 	);
+	for (const [label, input] of [
+		["肯定", "y\r"],
+		["否定", "\r"],
+		["Ctrl-C", "\u0003"],
+	] as const) {
+		const f = setup(`push-contract-${label}`);
+		git(f.repo, "push", "origin", "session", "session-pr2-second");
+		const before = git(f.repo, "rev-parse", "session");
+		writeFileSync(join(f.repo, "upstream"), "upstream\n");
+		git(f.repo, "add", "upstream");
+		git(f.repo, "commit", "-m", "advance upstream");
+		git(f.repo, "push", "origin", "main");
+		await take(`rebase後push確認 ${label}`, base, f.worktree, 0, {
+			steps: [["これらを push しますか？", input]],
+		});
+		const after = git(f.repo, "rev-parse", "session");
+		assert.notEqual(after, before);
+		assert.equal(git(f.worktree, "branch", "--show-current"), "session");
+		const remote = git(
+			f.repo,
+			"ls-remote",
+			"origin",
+			"refs/heads/session",
+		).split(/\s+/)[0];
+		assert.equal(remote, label === "肯定" ? after : before);
+		assert.equal(existsSync(join(f.gitDir, "restack-lease")), label !== "肯定");
+	}
+	for (const configuredHead of [false, true]) {
+		for (const [label, input] of [
+			["Enter", "\r"],
+			["Ctrl-C", "\u0003"],
+		] as const) {
+			const f = setup(`base-contract-${configuredHead}-${label}`);
+			if (configuredHead) {
+				git(f.repo, "update-ref", "refs/remotes/origin/trunk", "origin/main");
+				git(
+					f.repo,
+					"symbolic-ref",
+					"refs/remotes/origin/HEAD",
+					"refs/remotes/origin/trunk",
+				);
+			}
+			const refs = git(f.repo, "show-ref");
+			writeFileSync(join(f.gitDir, "restack-lease"), "unchanged");
+			await take(
+				`ベース候補 origin/HEAD=${configuredHead} ${label}`,
+				["--dry-run"],
+				f.worktree,
+				0,
+				{
+					steps: [[configuredHead ? "origin/trunk" : "origin/main", input]],
+				},
+			);
+			assert.equal(git(f.repo, "show-ref"), refs);
+			assert.equal(
+				readFileSync(join(f.gitDir, "restack-lease"), "utf8"),
+				"unchanged",
+			);
+		}
+	}
 	return items;
 }

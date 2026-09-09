@@ -33,8 +33,12 @@ async function withPromptOutput<T>(
 	}
 }
 
+export function isInteractive(): boolean {
+	return Boolean(process.stdin.isTTY && process.stdout.isTTY);
+}
+
 export function requireTTY(): void {
-	if (!process.stdin.isTTY || !process.stdout.isTTY)
+	if (!isInteractive())
 		throw new Error(
 			"対話入力には TTY 端末が必要です。オプションで値を指定してください。",
 		);

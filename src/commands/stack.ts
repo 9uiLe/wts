@@ -30,14 +30,18 @@ export async function startStackBranch(options: {
 			? await askText("作業内容 (Enter でスキップ)")
 			: "");
 	const number =
-		options.prNumber || (await askText("PR 番号", String(tip.number + 1n)));
+		options.prNumber ||
+		(await askText(
+			"スタック番号（GitHub の PR 番号とは異なります）",
+			String(tip.number + 1n),
+		));
 	if (!/^\d+$/.test(number) || BigInt(number) < 2n) {
 		throw new Error(
-			`不正な PR 番号: ${number}。2 以上の整数を指定してください`,
+			`不正な スタック番号: ${number}。2 以上の整数を指定してください`,
 		);
 	}
 	if (branches.some((branch) => branch.number === BigInt(number))) {
-		throw new Error(`PR 番号 ${number} は既に使われています`);
+		throw new Error(`スタック番号 ${number} は既に使われています`);
 	}
 	const suffix = await generateName(repo.config, {
 		...defaultNaming(),

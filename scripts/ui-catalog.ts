@@ -2,6 +2,7 @@ import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { type Capture, context } from "./ui-catalog/capture";
+import { listCases } from "./ui-catalog/list-cases";
 import { commonCases } from "./ui-catalog/common-cases";
 import { configCases } from "./ui-catalog/config-cases";
 import { discardCases } from "./ui-catalog/discard-cases";
@@ -73,6 +74,7 @@ try {
 		sessionCases,
 		restackCases,
 		discardCases,
+		listCases,
 	]) {
 		const group = await cases();
 		captures.push(...group);

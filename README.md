@@ -1,8 +1,12 @@
 # wts
 
-wts（Git Worktree Session）は、作業用の Git worktree と、依存関係のあるブランチの列を管理する Apple Silicon macOS 向け CLI です。
+wts（Git Worktree Session）は、Git worktree と依存関係のあるブランチの列を管理する Apple Silicon macOS 向け CLI です。プロジェクト設定を共有し、作業場所の作成、ブランチの積み重ね、ベースの取り込み、一覧、整理・破棄を行います。
 
-プロジェクトごとに `.wts.json` でベースブランチ、worktree の配置先、命名方法を共有します。`init` で設定ファイルを用意し、`start` で作業場所を作ります。作業を分けてレビューしたいときは `stack` でブランチを積み重ね、`restack` でベースの更新を取り込みます。マージ後は `cleanup` でブランチと worktree を整理します。
+## 対応環境と配布状態
+
+対象は Apple Silicon macOS です。[GitHub Releases](https://github.com/9uiLe/wts/releases) では検証用 Pre-release を配布します。最低対応 macOS は未確定で、GitHub Actions の macOS 15 ARM64 上で起動を検証します。Intel Mac、Linux、Windows は対象外です。
+
+Developer ID 署名・公証は行っていません。ダウンロードしたバイナリは Gatekeeper によって起動が制限される場合があり、その許可手順は未検証です。チェックサムの一致は起動制限を解消しません。配布経路を通した実機での導入・更新・実動作は未検証です。確認手順は [実機での配布経路の検証](docs/development.md#実機での配布経路の検証)、各バージョンの検証範囲は Release の説明と `BUILD_INFO` を参照してください。
 
 ## インストール
 
@@ -39,7 +43,7 @@ wts doctor --check
 
 ### 更新と配置先の指定
 
-更新時は実行中の wts を終了し、同じインストールコマンドを再実行してください。取得・検証・配置に失敗した場合は既存のバイナリを保持して終了します。配置先の `wts` がシンボリックリンクやディレクトリの場合は置き換えません。
+更新時は実行中の wts を終了し、同じインストールコマンドを再実行してください。取得・検証・配置に失敗した場合は既存のバイナリを保持して終了します。配置先の `wts` は通常ファイルかつ非シンボリックリンクである必要があります。
 
 バージョンを固定する場合は先頭 `v` なしの SemVer を、配置先を変える場合は `--install-dir` を指定します。次のバージョンは指定形式の例です。公開済みのバージョンは [Releases](https://github.com/9uiLe/wts/releases) で確認してください。
 
@@ -69,30 +73,6 @@ curl -fsSL https://9uile.github.io/wts/install.sh | bash -s -- --version 0.2.0-r
 ./scripts/install.sh
 ```
 
-## AI 向けスキル
-
-`wts-cli` は、AI が wts のセッション操作に使用するスキルです。AI の実行環境の PATH に `wts` を配置し、スキルの読み込み先へ導入してください。
-
-```bash
-wts skills install wts-cli
-```
-
-既定の配置先は `~/.agents/skills/wts-cli/SKILL.md` です。読み込み先を変更する場合は、`--path` にスキルの親ディレクトリを指定します。[Claude Code の個人用スキル](https://code.claude.com/docs/en/skills#where-skills-live)として使う場合は、次のコマンドで導入します。
-
-```bash
-wts skills install wts-cli --path "$HOME/.claude/skills"
-```
-
-利用する AI にスキルを読み込ませ、`wts-cli` でセッションを操作するよう依頼してください。Claude Code では `/wts-cli` で呼び出せます。スキルは、操作前に `wts skills get wts-cli` を実行して、そのバイナリの操作ガイドを読みます。スキルの導入とガイド取得には、Git・Bun・ソースファイル・ネットワーク接続は不要です。セッション操作に必要な環境は [インストール](#インストール)を参照してください。
-
-バイナリ更新後は、更新したバイナリのガイドが取得されます。インストール済みの `SKILL.md` を更新する場合は、導入コマンドを再実行してください。同じ内容なら変更せず成功します。内容が異なる場合は上書きを拒否するため、既存の編集内容を確認してから `--force` を付けて実行してください。他のファイルは変更しません。
-
-## 対応環境と配布状態
-
-対象は Apple Silicon macOS です。[GitHub Releases](https://github.com/9uiLe/wts/releases) では検証用 Pre-release を配布します。最低対応 macOS は未確定で、GitHub Actions の macOS 15 ARM64 上で起動を検証します。Intel Mac、Linux、Windows は対象外です。
-
-Developer ID 署名・公証は行っていません。ダウンロードしたバイナリは Gatekeeper によって起動が制限される場合があり、その許可手順は未検証です。チェックサムの一致は起動制限を解消しません。配布経路を通した実機での導入・更新・実動作は未検証です。確認手順は [実機での配布経路の検証](docs/development.md#実機での配布経路の検証)、各バージョンの検証範囲は Release の説明と `BUILD_INFO` を参照してください。
-
 ## 環境の検査
 
 ```bash
@@ -111,14 +91,6 @@ Git リポジトリ外や非対話環境でも実行できます。認証確認�
 | `wts doctor --interactive` | 確認入力後に OS と CPU アーキテクチャを表示 |
 
 対話には標準入力・標準出力の両方に TTY が必要です。否定回答と Ctrl-C によるキャンセルは終了コード `0`、TTY の不足と未知のコマンドは `1` です。`--check` と `--interactive` は併用できません。
-
-## 端末での表示
-
-端末ではコマンド名、操作対象、結果をまとめて表示します。成功・警告・エラーは色と記号で区別し、通信・命名・Worktree 作成・rebase・push の待ち時間には進捗を表示します。`--dry-run` は作成・削除・push の予定として表示し、操作の完了とは区別します。
-
-確認は「はい／いいえ」で選択します。削除と push は「いいえ」が初期選択です。`start` の成功後には作成先へ移動する `cd` コマンド、`init` の成功後には設定検査のコマンドを表示します。
-
-通常の結果は標準出力、警告・エラー・進捗は標準エラーに出力します。リダイレクトした出力には色やスピナーを含めません。`NO_COLOR=1` または `FORCE_COLOR=0` で色を無効にできます。CI と `TERM=dumb` では装飾と進捗アニメーションを抑制します。対話を必要とする操作は、非対話環境ではオプションで入力してください。
 
 ## 作業の単位
 
@@ -139,10 +111,10 @@ Git リポジトリ外や非対話環境でも実行できます。認証確認�
 
 ```bash
 cd /path/to/project
-wts init
+wts init --base-branch main
 ```
 
-`init` は `.wts.json` を生成し、既存ファイルは上書きしません。生成後に `.wts.json` を編集し、プロジェクトのベースブランチを指定します。ベースが `main`、メインチェックアウトの名前が `project` の例です。
+ベースが `main`、メインチェックアウト名が `project` の場合、次の `.wts.json` を生成します。既存ファイルは上書きしません。
 
 ```json
 {
@@ -154,7 +126,9 @@ wts init
 
 `baseBranch` には `master` や `release/stable` など、プロジェクトで使うローカルブランチ名を `origin/` なしで指定します。`start`・`restack` は `origin/<baseBranch>` を使用します。`cleanup` はそのローカルブランチを保護し、`origin/<baseBranch>` を取り込み判定の基準にします。
 
-既定の作成先はメインチェックアウトと同じ親ディレクトリの `<プロジェクト名>-worktrees`、命名は日本時間の日付＋UUID です。設定を検査し、セッションのベースブランチへコミットして共有してください。
+`--base-branch` を省略するとベースを保存せず、ローカルの `origin/HEAD` があれば候補だけを案内します。作業の基準を確認して `baseBranch` を設定してください。
+
+既定の作成先はメインチェックアウトと同じ親ディレクトリの `<プロジェクト名>-worktrees`、命名は日本時間の日付＋UUID です。設定を検査し、セッションのベースブランチへコミットして共有してください。`config check` はパス、ベースと cleanup の基準、branch・worktree の命名方式を表示し、命名スクリプトは実行しません。
 
 ```bash
 wts config check
@@ -162,7 +136,34 @@ git add .wts.json
 git commit -m "Configure wts sessions"
 ```
 
-`start`・`stack`・`restack`・`cleanup`・`discard` は設定ファイルがないとエラーになります。設定の探索規則、省略時の動作、作成先・命名スクリプト・プロンプトの指定方法は [設定資料](docs/configuration.md)を参照してください。
+`start`・`stack`・`restack`・`cleanup`・`discard`・`list` は設定ファイルがないとエラーになります。設定の探索規則、省略時の動作、作成先・命名スクリプト・プロンプトの指定方法は [設定資料](docs/configuration.md)を参照してください。
+
+## コマンドと入力
+
+| コマンド | 主なオプション |
+| --- | --- |
+| `wts start` | `--task <内容>`、`--base-branch <ref>`、`--copy-from <directory>` |
+| `wts stack` | `--task <内容>`、`--pr-number <n>` |
+| `wts restack` | `--base-branch <ref>`、`--push`、`--push-only` |
+| `wts cleanup` | `--yes`（削除確認を省略） |
+| `wts discard <path>` | `--yes`（削除確認を省略）、`--force`（未コミット・管理外ファイルも破棄）、`--remote <名前>`（同名のリモートブランチも削除） |
+
+これらのコマンドは `--dry-run` に対応します。全オプションは `wts <コマンド> --help` で確認できます。
+
+`start`・`restack` のベースは `--base-branch`、`BASE_BRANCH`、設定の `baseBranch` に対応する `origin/<baseBranch>` の順に優先します。操作ごとに別のベースを使う場合は `wts start --base-branch origin/release/stable` のように指定します。これらの上書きは `cleanup` の基準を変更しません。
+
+ベースをいずれの方法でも指定しない場合は対話で入力し、入力の既定候補はローカルの `origin/HEAD` が指す参照で、なければ `origin/main` です。スタック番号も省略時に対話で入力します。命名スクリプトを設定した場合は作業内容も対話で入力します。非対話環境では必要な入力をオプションで渡してください。`baseBranch` を設定していれば、非対話でもベースの指定は不要です。`--task ''` は空の作業内容を明示し、命名スクリプトがあれば空の内容でも実行します。
+
+`BASE_BRANCH`、`COPY_FROM`、`PR_NUMBER`、`PUSH=1`、`PUSH_ONLY=1`、`DRY_RUN=1` を対応するオプションの代わりに使用できます。オプションを優先します。boolean 環境変数は値が `1` の場合だけ有効で、解除には unset を使います。
+
+### 実行予定の確認
+
+セッション操作は `--dry-run` または `DRY_RUN=1` に対応します。fetch、Git ブランチ・worktree の変更、コピー、セッション情報・lease の書き込み、push は行いません。cleanup の GitHub 照会、restack のリモート参照取得、設定済み命名スクリプトの実行は行います。命名スクリプト自身の通信や副作用はその実装に依存します。discard は `--remote` を指定した場合に削除先のリモート参照を照会します。
+
+```bash
+wts start --task '' --dry-run
+wts cleanup --dry-run
+```
 
 ## セッションで作業する
 
@@ -182,43 +183,9 @@ wts restack --push
 
 `stack` は同じ worktree 内で新しいブランチへ切り替えます。現在のブランチがスタックの先端で、未コミット変更がないことが必要です。番号省略時は、使用済みの最大番号＋1 を対話で提示します。
 
-`restack` はスタックを rebase し、確認後に origin へ push します。`--push` は push の確認を省略します。PR の作成・マージは GitHub または gh で行ってください。
+`restack` はスタックを rebase し、確認後に origin へ push します。`--push` は push の確認を省略します。非対話の本実行には `--push` または `PUSH=1` が必要です。指定がなければ push 対象の有無にかかわらず、fetch・lease 保存・rebase の前にエラー終了します。PR の作成・マージは GitHub または gh で行ってください。
 
-セッションを終了するときは、マージ済みの作業を `cleanup` で整理するか、不要なセッションを `discard <path>` で破棄します。どちらもメインチェックアウトなど、削除対象以外の場所から実行します。
-
-```bash
-cd /path/to/project
-wts cleanup
-```
-
-`stack`・`restack` は `start` が作成したセッションで使用します。手作業で作成した worktree は対象になりません。削除範囲と条件は [マージ済みブランチの整理](#マージ済みブランチの整理)と [セッションの破棄](#セッションの破棄)を確認してください。
-
-## コマンドと入力
-
-| コマンド | 主なオプション |
-| --- | --- |
-| `wts start` | `--task <内容>`、`--base-branch <ref>`、`--copy-from <directory>` |
-| `wts stack` | `--task <内容>`、`--pr-number <n>` |
-| `wts restack` | `--base-branch <ref>`、`--push`、`--push-only` |
-| `wts cleanup` | `--yes`（削除確認を省略） |
-| `wts discard <path>` | `--yes`（削除確認を省略）、`--force`（未コミット・管理外ファイルも破棄）、`--remote <名前>`（同名のリモートブランチも削除） |
-
-これらのコマンドは `--dry-run` に対応します。全オプションは `wts <コマンド> --help` で確認できます。
-
-`start`・`restack` のベースは `--base-branch`、`BASE_BRANCH`、設定の `baseBranch` に対応する `origin/<baseBranch>` の順に優先します。操作ごとに別のベースを使う場合は `wts start --base-branch origin/release/stable` のように指定します。これらの上書きは `cleanup` の基準を変更しません。
-
-ベースをいずれの方法でも指定しない場合は対話で入力し、入力の既定値は `origin/main` です。スタック番号も省略時に対話で入力します。命名スクリプトを設定した場合は作業内容も対話で入力します。非対話環境では必要な入力をオプションで渡してください。`baseBranch` を設定していれば、非対話でもベースの指定は不要です。`--task ''` は空の作業内容を明示し、命名スクリプトがあれば空の内容でも実行します。
-
-`BASE_BRANCH`、`COPY_FROM`、`PR_NUMBER`、`PUSH=1`、`PUSH_ONLY=1`、`DRY_RUN=1` を対応するオプションの代わりに使用できます。オプションを優先します。
-
-### 実行予定の確認
-
-セッション操作は `--dry-run` または `DRY_RUN=1` に対応します。fetch、Git ブランチ・worktree の変更、コピー、セッション情報・lease の書き込み、push は行いません。cleanup の GitHub 照会、restack のリモート参照取得、設定済み命名スクリプトの実行は行います。命名スクリプト自身の通信や副作用はその実装に依存します。discard は `--remote` を指定した場合に削除先のリモート参照を照会します。
-
-```bash
-wts start --task '' --dry-run
-wts cleanup --dry-run
-```
+`stack`・`restack` は `start` が作成したセッションで使用します。手作業で作成した worktree は対象になりません。
 
 ### 管理外ファイルのコピー
 
@@ -229,9 +196,32 @@ wts cleanup --dry-run
 .claude/skills/*/skills/
 ```
 
-コピー元は指定したローカルのベースブランチの worktree、存在しなければメインチェックアウトです。`--copy-from` で変更できます。存在しないパスはスキップし、コピー失敗は警告します。worktree 外や Git 管理情報へのコピー、シンボリックリンクのコピーは拒否します。
+コピー元は指定したローカルのベースブランチの worktree、存在しなければメインチェックアウトです。`--copy-from` で変更できます。リストが存在しなければコピーせず、存在するリストを読めなければ worktree・ブランチの作成前に終了します。
 
-### マージ済みブランチの整理
+存在しないパスはスキップします。シンボリックリンク、特殊ファイル、`.git`、コピー元・配置先の境界外は dry-run で「本実行で拒否」と表示し、本実行では警告付きでスキップします。作成後にエラーが起きた場合は自動で元に戻さず、Path・ブランチと worktree・ブランチ・セッション記録の作成状況を表示します。残った作業場所を確認してから次の操作を決めてください。
+
+### rebase と push の再開
+
+スタック操作はクリーンな作業ツリーを要求します。`restack` は非線形スタックと、別 worktree で使用中のスタックブランチを拒否します。rebase 開始時の origin の OID を `restack-lease` に保存し、コンフリクト時は停止します。解消後は次を実行します。
+
+```bash
+git rebase --continue
+wts restack --push-only --push
+```
+
+`--push-only` はベースの入力・fetch・rebase・lease の再取得を行わず、保存した lease で push を再開します。lease がない場合や必要なブランチの記録が不足する場合は拒否し、他者の更新も上書きしません。push 成功時は lease を削除します。
+
+対話で push を否定・Ctrl-C すると正常終了し、rebase 後のローカル参照と lease を保持します。origin は変更しません。rebase 進行中を除き、終了時に元の checkout ブランチへ復帰します。
+
+## セッションを一覧する
+
+```bash
+wts list
+```
+
+管理範囲内の登録済み worktree をローカルの読み取りだけで表示します。セッションの Path、ルートブランチ、番号付きスタック、現在のブランチ、dirty を確認できます。dirty には未コミット・未追跡・無視対象ファイルを含み、破棄には `--force` が必要です。手作業の worktree と壊れたセッション情報は「未管理」と表示します。通信や JSON 出力は行いません。
+
+## マージ済みブランチの整理
 
 `cleanup` は設定の `baseBranch`（省略時は `main`）、実行中のブランチ、設定された作成先の外にある worktree で使用中のブランチを除外します。同一リポジトリのマージ済み PR を確認し、その head と一致するか `origin/<baseBranch>` に到達可能なブランチを削除候補にします。それ以外はリモートブランチの不存在、push 済み tip、独自 merge commit の不存在、ベースとの厳密なパッチ一致を確認します。削除を証明できない候補は理由と手動コマンドを表示します。
 
@@ -239,9 +229,11 @@ wts cleanup --dry-run
 wts cleanup
 ```
 
-削除対象の worktree は強制削除するため、未コミット・管理外ファイルも削除されます。ロックされた worktree は削除せず、失敗を報告します。
+削除対象の worktree は強制削除するため、未コミット・管理外ファイルも削除されます。ロックされた worktree は削除せず、失敗を報告します。削除前にブランチの OID と worktree の path・branch の対応を再検査し、変更されていればその対象を保持します。参照削除直前にも使用状況を確認し、分類時の OID が一致する参照だけを削除します。
 
-### セッションの破棄
+参照削除に成功したブランチの設定を除去します。部分失敗では完了済み件数、残存対象、失敗段階と手動コマンドを表示します。「参照削除済み・設定残存」はブランチ設定だけが残った状態です。表示されたコマンドは残存状態を確認してから使ってください。
+
+## セッションの破棄
 
 `discard <path>` は、指定した wts セッションの worktree と、ルートブランチ・スタックブランチのすべてをマージ状況によらず削除します。メインチェックアウトなど対象の外で実行し、`path` には worktree のルートを指定します。個別のブランチだけを削除するコマンドではありません。
 
@@ -276,16 +268,31 @@ wts discard ../project-worktrees/session-name --remote origin
 
 途中で失敗しても、完了した削除は元に戻りません。worktree 削除の失敗時はローカルブランチを残し、ローカルブランチ削除の失敗時は worktree が削除済みです。ブランチ設定だけの削除に失敗する場合もあります。エラーには完了した段階を表示します。通信障害ではリモートの結果が不明な場合があるため、再実行前に残存ブランチを確認してください。
 
-### rebase と push の再開
+## 端末での表示
 
-スタック操作はクリーンな作業ツリーを要求します。`restack` は非線形スタックと、別 worktree で使用中のスタックブランチを拒否します。rebase 開始時の origin の OID を `restack-lease` に保存し、コンフリクト時は停止します。解消後は次を実行します。
+端末ではコマンド名、操作対象、結果をまとめて表示します。成功・警告・エラーは色と記号で区別し、通信・命名・Worktree 作成・rebase・push の待ち時間には進捗を表示します。`--dry-run` は作成・削除・push の予定として表示し、操作の完了とは区別します。
+
+確認は「はい／いいえ」で選択します。削除と push は「いいえ」が初期選択です。`start` の成功後には作成先へ移動する `cd` コマンド、`init` の成功後には設定検査のコマンドを表示します。
+
+通常の結果は標準出力、警告・エラー・進捗は標準エラーに出力します。リダイレクトした出力には色やスピナーを含めません。`NO_COLOR=1` または `FORCE_COLOR=0` で色を無効にできます。CI と `TERM=dumb` では装飾と進捗アニメーションを抑制します。対話を必要とする操作は、非対話環境ではオプションで入力してください。
+
+## AI 向けスキル
+
+`wts-cli` は、AI が wts のセッション操作に使用するスキルです。AI の実行環境の PATH に `wts` を配置し、スキルの読み込み先へ導入してください。
 
 ```bash
-git rebase --continue
-wts restack --push-only --push
+wts skills install wts-cli
 ```
 
-`--push-only` は保存した lease を使い、他者が push した変更の上書きを拒否します。リモート確認失敗や不足した lease はエラーになります。push の否定・Ctrl-C は正常終了し、lease を残します。通常終了時は元のブランチへ戻ります。
+既定の配置先は `~/.agents/skills/wts-cli/SKILL.md` です。読み込み先を変更する場合は、`--path` にスキルの親ディレクトリを指定します。[Claude Code の個人用スキル](https://code.claude.com/docs/en/skills#where-skills-live)として使う場合は、次のコマンドで導入します。
+
+```bash
+wts skills install wts-cli --path "$HOME/.claude/skills"
+```
+
+利用する AI にスキルを読み込ませ、`wts-cli` でセッションを操作するよう依頼してください。Claude Code では `/wts-cli` で呼び出せます。スキルは、操作前に `wts skills get wts-cli` を実行して、そのバイナリの操作ガイドを読みます。スキルの導入とガイド取得には、Git・Bun・ソースファイル・ネットワーク接続は不要です。セッション操作に必要な環境は [インストール](#インストール)を参照してください。
+
+バイナリ更新後は、更新したバイナリのガイドが取得されます。インストール済みの `SKILL.md` を更新する場合は、導入コマンドを再実行してください。同じ内容なら変更せず成功します。内容が異なる場合は上書きを拒否するため、既存の編集内容を確認してから `--force` を付けて実行してください。他のファイルは変更しません。
 
 ## 資料
 
@@ -293,7 +300,9 @@ wts restack --push-only --push
 - [開発環境・検証・ビルド・公開手順](docs/development.md)
 - [端末 UI カタログの生成とレビュー](docs/development.md#端末-ui-の一覧と変更確認)
 - [責務と不変条件](docs/design.md)
-- [設計判断の記録](docs/decisions.md)
+- [実装仕様と受け入れ基準](docs/specification.md)
+- [検証範囲と結果](docs/verification.md)
+- [設計判断](docs/decisions.md)
 - [作業規約](AGENTS.md)
 
 ## ライセンス
