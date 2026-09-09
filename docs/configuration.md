@@ -39,7 +39,7 @@ git add .wts.json
 git commit -m "Configure worktree sessions"
 ```
 
-`start`・`stack`・`cleanup`・`restack` とファイル指定なしの `config check` は設定ファイルが必要です。`init`・`doctor`・ヘルプ・バージョン表示は設定を必要としません。
+`start`・`stack`・`cleanup`・`restack`・`discard` とファイル指定なしの `config check` は設定ファイルが必要です。`init`・`doctor`・ヘルプ・バージョン表示は設定を必要としません。
 
 ## 設定項目
 
@@ -82,7 +82,7 @@ start・restack のベースは `--base-branch`、`BASE_BRANCH`、明示した `
 
 作成先は存在しなくても指定できます。既存の親パスがディレクトリであり書き込み可能であることを検査します。メインチェックアウトそのものや Git の管理領域は作成先にできません。リポジトリ内に置く場合は、そのディレクトリを `.gitignore` に追加してください。cleanup はこの作成先を管理範囲として使うため、worktree 専用のディレクトリを指定します。
 
-相対の作成先は worktree 内から実行しても常にメインチェックアウト基準です。名前の異なる worktree でも stack・restack を使えるよう、start は worktree 専用の Git ディレクトリに `wts-session.json` を保存します。stack・restack はこの記録を必要とし、手動で作成した worktree は対象にしません。作成先を後から変更した場合、変更前の場所は現在の管理範囲から外れます。
+相対の作成先は worktree 内から実行しても常にメインチェックアウト基準です。名前の異なる worktree でも stack・restack を使えるよう、start は worktree 専用の Git ディレクトリに `wts-session.json` を保存します。stack・restack・discard はこの記録を必要とし、手動で作成した worktree は対象にしません。作成先を後から変更した場合、変更前の場所は現在の管理範囲から外れます。
 
 ### 既定の命名
 

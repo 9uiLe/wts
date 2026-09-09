@@ -7,7 +7,7 @@
 			"command": "wts ",
 			"cwd": "<fixture>",
 			"code": 1,
-			"raw": "\u001b[1mUsage:\u001b[22m \u001b[36mwts\u001b[39m \u001b[32m[options]\u001b[39m [command]\r\n\r\nGit Worktree Session\r\n\r\n\u001b[1mOptions:\u001b[22m\r\n  \u001b[32m-V, --version\u001b[39m      output the version number\r\n  \u001b[32m-h, --help\u001b[39m         display help for command\r\n\r\n\u001b[1mCommands:\u001b[22m\r\n  doctor \u001b[32m[options]\u001b[39m   CLI の起動環境を確認します\r\n  init               プロジェクトの .wts.json を生成します\r\n  config             プロジェクト設定を確認します\r\n  start \u001b[32m[options]\u001b[39m    作業セッションの worktree を作成します\r\n  stack \u001b[32m[options]\u001b[39m    現在の worktree に次のスタックブランチを作成します\r\n  cleanup \u001b[32m[options]\u001b[39m  マージ済みのローカルブランチと worktree を整理します\r\n  restack \u001b[32m[options]\u001b[39m  線形スタックを rebase し lease 付きで一括 push します\r\n  help [command]     display help for command\r\n",
+			"raw": "\u001b[1mUsage:\u001b[22m \u001b[36mwts\u001b[39m \u001b[32m[options]\u001b[39m [command]\r\n\r\nGit Worktree Session\r\n\r\n\u001b[1mOptions:\u001b[22m\r\n  \u001b[32m-V, --version\u001b[39m             output the version number\r\n  \u001b[32m-h, --help\u001b[39m                display help for command\r\n\r\n\u001b[1mCommands:\u001b[22m\r\n  doctor \u001b[32m[options]\u001b[39m          CLI の起動環境を確認します\r\n  init                      プロジェクトの .wts.json を生成します\r\n  config                    プロジェクト設定を確認します\r\n  skills                    AI 向けスキルを表示・導入します\r\n  start \u001b[32m[options]\u001b[39m           作業セッションの worktree を作成します\r\n  stack \u001b[32m[options]\u001b[39m           現在の worktree に次のスタックブランチを作成します\r\n  cleanup \u001b[32m[options]\u001b[39m         マージ済みのローカルブランチと worktree を整理します\r\n  discard \u001b[32m[options]\u001b[39m <path>  指定したセッションの worktree とブランチを破棄します\r\n  restack \u001b[32m[options]\u001b[39m         線形スタックを rebase し lease 付きで一括 push します\r\n  help [command]            display help for command\r\n",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -18,7 +18,7 @@
 			"command": "wts --help",
 			"cwd": "<fixture>",
 			"code": 0,
-			"raw": "\u001b[1mUsage:\u001b[22m \u001b[36mwts\u001b[39m \u001b[32m[options]\u001b[39m [command]\r\n\r\nGit Worktree Session\r\n\r\n\u001b[1mOptions:\u001b[22m\r\n  \u001b[32m-V, --version\u001b[39m      output the version number\r\n  \u001b[32m-h, --help\u001b[39m         display help for command\r\n\r\n\u001b[1mCommands:\u001b[22m\r\n  doctor \u001b[32m[options]\u001b[39m   CLI の起動環境を確認します\r\n  init               プロジェクトの .wts.json を生成します\r\n  config             プロジェクト設定を確認します\r\n  start \u001b[32m[options]\u001b[39m    作業セッションの worktree を作成します\r\n  stack \u001b[32m[options]\u001b[39m    現在の worktree に次のスタックブランチを作成します\r\n  cleanup \u001b[32m[options]\u001b[39m  マージ済みのローカルブランチと worktree を整理します\r\n  restack \u001b[32m[options]\u001b[39m  線形スタックを rebase し lease 付きで一括 push します\r\n  help [command]     display help for command\r\n",
+			"raw": "\u001b[1mUsage:\u001b[22m \u001b[36mwts\u001b[39m \u001b[32m[options]\u001b[39m [command]\r\n\r\nGit Worktree Session\r\n\r\n\u001b[1mOptions:\u001b[22m\r\n  \u001b[32m-V, --version\u001b[39m             output the version number\r\n  \u001b[32m-h, --help\u001b[39m                display help for command\r\n\r\n\u001b[1mCommands:\u001b[22m\r\n  doctor \u001b[32m[options]\u001b[39m          CLI の起動環境を確認します\r\n  init                      プロジェクトの .wts.json を生成します\r\n  config                    プロジェクト設定を確認します\r\n  skills                    AI 向けスキルを表示・導入します\r\n  start \u001b[32m[options]\u001b[39m           作業セッションの worktree を作成します\r\n  stack \u001b[32m[options]\u001b[39m           現在の worktree に次のスタックブランチを作成します\r\n  cleanup \u001b[32m[options]\u001b[39m         マージ済みのローカルブランチと worktree を整理します\r\n  discard \u001b[32m[options]\u001b[39m <path>  指定したセッションの worktree とブランチを破棄します\r\n  restack \u001b[32m[options]\u001b[39m         線形スタックを rebase し lease 付きで一括 push します\r\n  help [command]            display help for command\r\n",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -40,7 +40,7 @@
 			"command": "wts help",
 			"cwd": "<fixture>",
 			"code": 0,
-			"raw": "\u001b[1mUsage:\u001b[22m \u001b[36mwts\u001b[39m \u001b[32m[options]\u001b[39m [command]\r\n\r\nGit Worktree Session\r\n\r\n\u001b[1mOptions:\u001b[22m\r\n  \u001b[32m-V, --version\u001b[39m      output the version number\r\n  \u001b[32m-h, --help\u001b[39m         display help for command\r\n\r\n\u001b[1mCommands:\u001b[22m\r\n  doctor \u001b[32m[options]\u001b[39m   CLI の起動環境を確認します\r\n  init               プロジェクトの .wts.json を生成します\r\n  config             プロジェクト設定を確認します\r\n  start \u001b[32m[options]\u001b[39m    作業セッションの worktree を作成します\r\n  stack \u001b[32m[options]\u001b[39m    現在の worktree に次のスタックブランチを作成します\r\n  cleanup \u001b[32m[options]\u001b[39m  マージ済みのローカルブランチと worktree を整理します\r\n  restack \u001b[32m[options]\u001b[39m  線形スタックを rebase し lease 付きで一括 push します\r\n  help [command]     display help for command\r\n",
+			"raw": "\u001b[1mUsage:\u001b[22m \u001b[36mwts\u001b[39m \u001b[32m[options]\u001b[39m [command]\r\n\r\nGit Worktree Session\r\n\r\n\u001b[1mOptions:\u001b[22m\r\n  \u001b[32m-V, --version\u001b[39m             output the version number\r\n  \u001b[32m-h, --help\u001b[39m                display help for command\r\n\r\n\u001b[1mCommands:\u001b[22m\r\n  doctor \u001b[32m[options]\u001b[39m          CLI の起動環境を確認します\r\n  init                      プロジェクトの .wts.json を生成します\r\n  config                    プロジェクト設定を確認します\r\n  skills                    AI 向けスキルを表示・導入します\r\n  start \u001b[32m[options]\u001b[39m           作業セッションの worktree を作成します\r\n  stack \u001b[32m[options]\u001b[39m           現在の worktree に次のスタックブランチを作成します\r\n  cleanup \u001b[32m[options]\u001b[39m         マージ済みのローカルブランチと worktree を整理します\r\n  discard \u001b[32m[options]\u001b[39m <path>  指定したセッションの worktree とブランチを破棄します\r\n  restack \u001b[32m[options]\u001b[39m         線形スタックを rebase し lease 付きで一括 push します\r\n  help [command]            display help for command\r\n",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
@@ -2431,6 +2431,253 @@
 			"cwd": "<fixture>/restack-conflict/repo-worktrees/session",
 			"code": 1,
 			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mrestack\u001b[22m\r\n\r\n    \u001b[2mスタック\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m origin/main を取得しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h    \u001b[2mpush 対象\u001b[22m  session, session-pr2-second\r\n\u001b[?25l\u001b[?2026h\u001b[1G\u001b[3G\u001b[36m⠋\u001b[39m スタックを push しています\u001b[?2026l\u001b[1G\u001b[0K\u001b[3G\u001b[?25h  \u001b[31m✗\u001b[39m git push に失敗しました。\r\n    error: atomic push failed for ref refs/heads/session. status: 7\r\n    To <fixture>/restack-conflict/origin.git\r\n     ! [rejected]        session -> session (stale info)\r\n     ! [rejected]        session-pr2-second -> session-pr2-second (atomic push failed)\r\n    error: failed to push some refs to '<fixture>/restack-conflict/origin.git'\r\n\u001b[?25h",
+			"frames": [],
+			"mode": "TTY 実測",
+			"input": []
+		},
+		{
+			"title": "ヘルプ / バージョン: discard --help",
+			"args": ["discard", "--help"],
+			"command": "wts discard --help",
+			"cwd": "<fixture>",
+			"code": 0,
+			"raw": "\u001b[1mUsage:\u001b[22m \u001b[36mwts\u001b[39m \u001b[36mdiscard\u001b[39m \u001b[32m[options]\u001b[39m <path>\r\n\r\n指定したセッションの worktree とブランチを破棄します\r\n\r\n\u001b[1mOptions:\u001b[22m\r\n  \u001b[32m--dry-run\u001b[39m        変更せず実行予定を表示します (default: false)\r\n  \u001b[32m--yes\u001b[39m            表示した削除対象の確認を省略します\r\n  \u001b[32m--force\u001b[39m          未コミット・未追跡・無視されたファイルも破棄します\r\n  \u001b[32m--remote <name>\u001b[39m  指定リモートの同名セッションブランチも削除します\r\n  \u001b[32m-h, --help\u001b[39m       display help for command\r\n",
+			"frames": [],
+			"mode": "TTY 実測",
+			"input": []
+		},
+		{
+			"title": "引数エラー: discard",
+			"args": ["discard"],
+			"command": "wts discard",
+			"cwd": "<fixture>",
+			"code": 1,
+			"raw": "  \u001b[31m✗\u001b[39m missing required argument 'path'\r\n",
+			"frames": [],
+			"mode": "TTY 実測",
+			"input": []
+		},
+		{
+			"title": "discard: リモートを含む削除予定",
+			"args": [
+				"discard",
+				"<fixture>/discard/repo-worktrees/discard-demo",
+				"--remote",
+				"origin",
+				"--dry-run"
+			],
+			"command": "wts discard <fixture>/discard/repo-worktrees/discard-demo --remote origin --dry-run",
+			"cwd": "<fixture>/discard/repo",
+			"code": 0,
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mdiscard\u001b[22m\r\n\r\n    \u001b[2mWorktree\u001b[22m  <fixture>/discard/repo-worktrees/discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo-pr2-next\r\n    \u001b[2mRemote\u001b[22m  origin\r\n    \u001b[2mRemote branch\u001b[22m  refs/heads/discard-demo\r\n    \u001b[2mRemote branch\u001b[22m  refs/heads/discard-demo-pr2-next\r\n  \u001b[36m•\u001b[39m 表示したリモートブランチも未マージの変更ごと削除します。\r\n  \u001b[36m•\u001b[39m 未コミット・未追跡・無視対象のファイルはありません。\r\n  \u001b[36m•\u001b[39m このセッションのローカルブランチを未マージの変更ごと削除します。\r\n  \u001b[36m•\u001b[39m DRY_RUN: 削除は行いません\r\n",
+			"frames": [],
+			"mode": "TTY 実測",
+			"input": []
+		},
+		{
+			"title": "discard: 未登録リモートを拒否",
+			"args": [
+				"discard",
+				"<fixture>/discard/repo-worktrees/discard-demo",
+				"--remote",
+				"missing",
+				"--yes"
+			],
+			"command": "wts discard <fixture>/discard/repo-worktrees/discard-demo --remote missing --yes",
+			"cwd": "<fixture>/discard/repo",
+			"code": 1,
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mdiscard\u001b[22m\r\n\r\n  \u001b[31m✗\u001b[39m 設定済みのリモート名を指定してください: missing\r\n",
+			"frames": [],
+			"mode": "TTY 実測",
+			"input": []
+		},
+		{
+			"title": "discard: リモート削除を否定",
+			"args": [
+				"discard",
+				"<fixture>/discard/repo-worktrees/discard-demo",
+				"--remote",
+				"origin"
+			],
+			"command": "wts discard <fixture>/discard/repo-worktrees/discard-demo --remote origin",
+			"cwd": "<fixture>/discard/repo",
+			"code": 0,
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mdiscard\u001b[22m\r\n\r\n    \u001b[2mWorktree\u001b[22m  <fixture>/discard/repo-worktrees/discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo-pr2-next\r\n    \u001b[2mRemote\u001b[22m  origin\r\n    \u001b[2mRemote branch\u001b[22m  refs/heads/discard-demo\r\n    \u001b[2mRemote branch\u001b[22m  refs/heads/discard-demo-pr2-next\r\n  \u001b[36m•\u001b[39m 表示したリモートブランチも未マージの変更ごと削除します。\r\n  \u001b[36m•\u001b[39m 未コミット・未追跡・無視対象のファイルはありません。\r\n  \u001b[36m•\u001b[39m このセッションのローカルブランチを未マージの変更ごと削除します。\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  このセッションを破棄しますか？\r\n\u001b[36m│\u001b[39m  \u001b[2m○\u001b[22m \u001b[2mはい\u001b[22m \u001b[2m/\u001b[22m \u001b[32m●\u001b[39m いいえ\r\n\u001b[36m└\u001b[39m\r\n\u001b[999D\u001b[4A\u001b[1B\u001b[J\u001b[32m◇\u001b[39m  このセッションを破棄しますか？\r\n\u001b[90m│\u001b[39m  \u001b[2mいいえ\u001b[22m\r\n\u001b[?25h  \u001b[33m−\u001b[39m キャンセルしました。\r\n",
+			"frames": [
+				"\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mdiscard\u001b[22m\r\n\r\n    \u001b[2mWorktree\u001b[22m  <fixture>/discard/repo-worktrees/discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo-pr2-next\r\n    \u001b[2mRemote\u001b[22m  origin\r\n    \u001b[2mRemote branch\u001b[22m  refs/heads/discard-demo\r\n    \u001b[2mRemote branch\u001b[22m  refs/heads/discard-demo-pr2-next\r\n  \u001b[36m•\u001b[39m 表示したリモートブランチも未マージの変更ごと削除します。\r\n  \u001b[36m•\u001b[39m 未コミット・未追跡・無視対象のファイルはありません。\r\n  \u001b[36m•\u001b[39m このセッションのローカルブランチを未マージの変更ごと削除します。\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  このセッションを破棄しますか？\r\n\u001b[36m│\u001b[39m  \u001b[2m○\u001b[22m \u001b[2mはい\u001b[22m \u001b[2m/\u001b[22m \u001b[32m●\u001b[39m いいえ\r\n\u001b[36m└\u001b[39m\r\n"
+			],
+			"mode": "TTY 実測",
+			"input": [["このセッションを破棄しますか", "\r"]]
+		},
+		{
+			"title": "discard: 削除予定",
+			"args": [
+				"discard",
+				"<fixture>/discard/repo-worktrees/discard-demo",
+				"--dry-run"
+			],
+			"command": "wts discard <fixture>/discard/repo-worktrees/discard-demo --dry-run",
+			"cwd": "<fixture>/discard/repo",
+			"code": 0,
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mdiscard\u001b[22m\r\n\r\n    \u001b[2mWorktree\u001b[22m  <fixture>/discard/repo-worktrees/discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo-pr2-next\r\n  \u001b[36m•\u001b[39m 未コミット・未追跡・無視対象のファイルはありません。\r\n  \u001b[36m•\u001b[39m このセッションのローカルブランチを未マージの変更ごと削除します。\r\n  \u001b[36m•\u001b[39m DRY_RUN: 削除は行いません\r\n",
+			"frames": [],
+			"mode": "TTY 実測",
+			"input": []
+		},
+		{
+			"title": "discard: 実行中のworktreeを保護",
+			"args": [
+				"discard",
+				"<fixture>/discard/repo-worktrees/discard-demo",
+				"--yes"
+			],
+			"command": "wts discard <fixture>/discard/repo-worktrees/discard-demo --yes",
+			"cwd": "<fixture>/discard/repo-worktrees/discard-demo",
+			"code": 1,
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mdiscard\u001b[22m\r\n\r\n  \u001b[31m✗\u001b[39m 削除対象の worktree の外から実行してください。\r\n",
+			"frames": [],
+			"mode": "TTY 実測",
+			"input": []
+		},
+		{
+			"title": "discard: メインworktreeを保護",
+			"args": ["discard", "<fixture>/discard/repo", "--yes"],
+			"command": "wts discard <fixture>/discard/repo --yes",
+			"cwd": "<fixture>/discard/repo",
+			"code": 1,
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mdiscard\u001b[22m\r\n\r\n  \u001b[31m✗\u001b[39m メイン worktree は削除できません。\r\n",
+			"frames": [],
+			"mode": "TTY 実測",
+			"input": []
+		},
+		{
+			"title": "discard: 非TTYで確認要求",
+			"args": ["discard", "<fixture>/discard/repo-worktrees/discard-demo"],
+			"command": "wts discard <fixture>/discard/repo-worktrees/discard-demo",
+			"cwd": "<fixture>/discard/repo",
+			"code": 1,
+			"raw": "Worktree  <fixture>/discard/repo-worktrees/discard-demo\nBranch  discard-demo\nBranch  discard-demo-pr2-next\n未コミット・未追跡・無視対象のファイルはありません。\nこのセッションのローカルブランチを未マージの変更ごと削除します。\nエラー: 非対話で削除するには --yes を指定してください。\n",
+			"frames": [],
+			"mode": "PIPE 実測",
+			"input": []
+		},
+		{
+			"title": "discard: 否定",
+			"args": ["discard", "<fixture>/discard/repo-worktrees/discard-demo"],
+			"command": "wts discard <fixture>/discard/repo-worktrees/discard-demo",
+			"cwd": "<fixture>/discard/repo",
+			"code": 0,
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mdiscard\u001b[22m\r\n\r\n    \u001b[2mWorktree\u001b[22m  <fixture>/discard/repo-worktrees/discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo-pr2-next\r\n  \u001b[36m•\u001b[39m 未コミット・未追跡・無視対象のファイルはありません。\r\n  \u001b[36m•\u001b[39m このセッションのローカルブランチを未マージの変更ごと削除します。\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  このセッションを破棄しますか？\r\n\u001b[36m│\u001b[39m  \u001b[2m○\u001b[22m \u001b[2mはい\u001b[22m \u001b[2m/\u001b[22m \u001b[32m●\u001b[39m いいえ\r\n\u001b[36m└\u001b[39m\r\n\u001b[999D\u001b[4A\u001b[1B\u001b[J\u001b[32m◇\u001b[39m  このセッションを破棄しますか？\r\n\u001b[90m│\u001b[39m  \u001b[2mいいえ\u001b[22m\r\n\u001b[?25h  \u001b[33m−\u001b[39m キャンセルしました。\r\n",
+			"frames": [
+				"\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mdiscard\u001b[22m\r\n\r\n    \u001b[2mWorktree\u001b[22m  <fixture>/discard/repo-worktrees/discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo-pr2-next\r\n  \u001b[36m•\u001b[39m 未コミット・未追跡・無視対象のファイルはありません。\r\n  \u001b[36m•\u001b[39m このセッションのローカルブランチを未マージの変更ごと削除します。\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  このセッションを破棄しますか？\r\n\u001b[36m│\u001b[39m  \u001b[2m○\u001b[22m \u001b[2mはい\u001b[22m \u001b[2m/\u001b[22m \u001b[32m●\u001b[39m いいえ\r\n\u001b[36m└\u001b[39m\r\n"
+			],
+			"mode": "TTY 実測",
+			"input": [["このセッションを破棄しますか", "\r"]]
+		},
+		{
+			"title": "discard: Ctrl-C",
+			"args": ["discard", "<fixture>/discard/repo-worktrees/discard-demo"],
+			"command": "wts discard <fixture>/discard/repo-worktrees/discard-demo",
+			"cwd": "<fixture>/discard/repo",
+			"code": 0,
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mdiscard\u001b[22m\r\n\r\n    \u001b[2mWorktree\u001b[22m  <fixture>/discard/repo-worktrees/discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo-pr2-next\r\n  \u001b[36m•\u001b[39m 未コミット・未追跡・無視対象のファイルはありません。\r\n  \u001b[36m•\u001b[39m このセッションのローカルブランチを未マージの変更ごと削除します。\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  このセッションを破棄しますか？\r\n\u001b[36m│\u001b[39m  \u001b[2m○\u001b[22m \u001b[2mはい\u001b[22m \u001b[2m/\u001b[22m \u001b[32m●\u001b[39m いいえ\r\n\u001b[36m└\u001b[39m\r\n\u001b[999D\u001b[4A\u001b[1B\u001b[J\u001b[31m■\u001b[39m  このセッションを破棄しますか？\r\n\u001b[90m│\u001b[39m  \u001b[9m\u001b[2mいいえ\u001b[22m\u001b[29m\r\n\u001b[90m│\u001b[39m\r\n\u001b[?25h  \u001b[33m−\u001b[39m キャンセルしました。\r\n",
+			"frames": [
+				"\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mdiscard\u001b[22m\r\n\r\n    \u001b[2mWorktree\u001b[22m  <fixture>/discard/repo-worktrees/discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo-pr2-next\r\n  \u001b[36m•\u001b[39m 未コミット・未追跡・無視対象のファイルはありません。\r\n  \u001b[36m•\u001b[39m このセッションのローカルブランチを未マージの変更ごと削除します。\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  このセッションを破棄しますか？\r\n\u001b[36m│\u001b[39m  \u001b[2m○\u001b[22m \u001b[2mはい\u001b[22m \u001b[2m/\u001b[22m \u001b[32m●\u001b[39m いいえ\r\n\u001b[36m└\u001b[39m\r\n"
+			],
+			"mode": "TTY 実測",
+			"input": [["このセッションを破棄しますか", "\u0003"]]
+		},
+		{
+			"title": "discard: ロックを保護",
+			"args": [
+				"discard",
+				"<fixture>/discard/repo-worktrees/discard-demo",
+				"--yes",
+				"--force"
+			],
+			"command": "wts discard <fixture>/discard/repo-worktrees/discard-demo --yes --force",
+			"cwd": "<fixture>/discard/repo",
+			"code": 1,
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mdiscard\u001b[22m\r\n\r\n  \u001b[31m✗\u001b[39m ロックされた worktree は削除できません: <fixture>/discard/repo-worktrees/discard-demo\r\n",
+			"frames": [],
+			"mode": "TTY 実測",
+			"input": []
+		},
+		{
+			"title": "discard: 未保存ファイルの予定",
+			"args": [
+				"discard",
+				"<fixture>/discard/repo-worktrees/discard-demo",
+				"--dry-run"
+			],
+			"command": "wts discard <fixture>/discard/repo-worktrees/discard-demo --dry-run",
+			"cwd": "<fixture>/discard/repo",
+			"code": 0,
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mdiscard\u001b[22m\r\n\r\n    \u001b[2mWorktree\u001b[22m  <fixture>/discard/repo-worktrees/discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo-pr2-next\r\n  \u001b[36m•\u001b[39m 未コミット・未追跡・無視対象のファイルがあります。破棄には --force が必要です。\r\n  \u001b[36m•\u001b[39m このセッションのローカルブランチを未マージの変更ごと削除します。\r\n  \u001b[36m•\u001b[39m DRY_RUN: 削除は行いません\r\n",
+			"frames": [],
+			"mode": "TTY 実測",
+			"input": []
+		},
+		{
+			"title": "discard: 未保存ファイルを保護",
+			"args": [
+				"discard",
+				"<fixture>/discard/repo-worktrees/discard-demo",
+				"--yes"
+			],
+			"command": "wts discard <fixture>/discard/repo-worktrees/discard-demo --yes",
+			"cwd": "<fixture>/discard/repo",
+			"code": 1,
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mdiscard\u001b[22m\r\n\r\n    \u001b[2mWorktree\u001b[22m  <fixture>/discard/repo-worktrees/discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo-pr2-next\r\n  \u001b[36m•\u001b[39m 未コミット・未追跡・無視対象のファイルがあります。破棄には --force が必要です。\r\n  \u001b[36m•\u001b[39m このセッションのローカルブランチを未マージの変更ごと削除します。\r\n  \u001b[31m✗\u001b[39m ファイルを破棄する場合は --force を指定してください。\r\n",
+			"frames": [],
+			"mode": "TTY 実測",
+			"input": []
+		},
+		{
+			"title": "discard: forceでリモートを含む破棄を確認",
+			"args": [
+				"discard",
+				"<fixture>/discard/repo-worktrees/discard-demo",
+				"--force",
+				"--remote",
+				"origin"
+			],
+			"command": "wts discard <fixture>/discard/repo-worktrees/discard-demo --force --remote origin",
+			"cwd": "<fixture>/discard/repo",
+			"code": 0,
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mdiscard\u001b[22m\r\n\r\n    \u001b[2mWorktree\u001b[22m  <fixture>/discard/repo-worktrees/discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo-pr2-next\r\n    \u001b[2mRemote\u001b[22m  origin\r\n    \u001b[2mRemote branch\u001b[22m  refs/heads/discard-demo\r\n    \u001b[2mRemote branch\u001b[22m  refs/heads/discard-demo-pr2-next\r\n  \u001b[36m•\u001b[39m 表示したリモートブランチも未マージの変更ごと削除します。\r\n  \u001b[36m•\u001b[39m 未コミット・未追跡・無視対象のファイルがあります。破棄には --force が必要です。\r\n  \u001b[36m•\u001b[39m このセッションのローカルブランチを未マージの変更ごと削除します。\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  このセッションを破棄しますか？\r\n\u001b[36m│\u001b[39m  \u001b[2m○\u001b[22m \u001b[2mはい\u001b[22m \u001b[2m/\u001b[22m \u001b[32m●\u001b[39m いいえ\r\n\u001b[36m└\u001b[39m\r\n\u001b[1A\r\n\u001b[?25h\u001b[999D\u001b[4A\u001b[1B\u001b[J\u001b[32m◇\u001b[39m  このセッションを破棄しますか？\r\n\u001b[90m│\u001b[39m  \u001b[2mはい\u001b[22m\r\n  \u001b[32m✓\u001b[39m 完了しました (2 ブランチ・1 Worktree・2 リモートブランチ)\r\n",
+			"frames": [
+				"\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mdiscard\u001b[22m\r\n\r\n    \u001b[2mWorktree\u001b[22m  <fixture>/discard/repo-worktrees/discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo\r\n    \u001b[2mBranch\u001b[22m  discard-demo-pr2-next\r\n    \u001b[2mRemote\u001b[22m  origin\r\n    \u001b[2mRemote branch\u001b[22m  refs/heads/discard-demo\r\n    \u001b[2mRemote branch\u001b[22m  refs/heads/discard-demo-pr2-next\r\n  \u001b[36m•\u001b[39m 表示したリモートブランチも未マージの変更ごと削除します。\r\n  \u001b[36m•\u001b[39m 未コミット・未追跡・無視対象のファイルがあります。破棄には --force が必要です。\r\n  \u001b[36m•\u001b[39m このセッションのローカルブランチを未マージの変更ごと削除します。\r\n\u001b[?25l\u001b[90m│\u001b[39m\r\n\u001b[36m◆\u001b[39m  このセッションを破棄しますか？\r\n\u001b[36m│\u001b[39m  \u001b[2m○\u001b[22m \u001b[2mはい\u001b[22m \u001b[2m/\u001b[22m \u001b[32m●\u001b[39m いいえ\r\n\u001b[36m└\u001b[39m\r\n"
+			],
+			"mode": "TTY 実測",
+			"input": [["このセッションを破棄しますか", "y\r"]]
+		},
+		{
+			"title": "discard: 未管理worktreeを保護",
+			"args": [
+				"discard",
+				"<fixture>/discard/repo-worktrees/unmanaged",
+				"--yes"
+			],
+			"command": "wts discard <fixture>/discard/repo-worktrees/unmanaged --yes",
+			"cwd": "<fixture>/discard/repo",
+			"code": 1,
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mdiscard\u001b[22m\r\n\r\n  \u001b[31m✗\u001b[39m wts のセッション情報がありません。wts start で作成した worktree 内で実行してください。\r\n",
+			"frames": [],
+			"mode": "TTY 実測",
+			"input": []
+		},
+		{
+			"title": "discard: worktreeのサブディレクトリを拒否",
+			"args": [
+				"discard",
+				"<fixture>/discard/repo-worktrees/unmanaged/child",
+				"--yes"
+			],
+			"command": "wts discard <fixture>/discard/repo-worktrees/unmanaged/child --yes",
+			"cwd": "<fixture>/discard/repo",
+			"code": 1,
+			"raw": "\r\n  \u001b[1m\u001b[36mwts\u001b[39m\u001b[22m \u001b[1mdiscard\u001b[22m\r\n\r\n  \u001b[31m✗\u001b[39m 登録済み worktree のルートを指定してください: <fixture>/discard/repo-worktrees/unmanaged/child\r\n",
 			"frames": [],
 			"mode": "TTY 実測",
 			"input": []
