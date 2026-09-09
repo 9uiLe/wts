@@ -236,13 +236,20 @@ for (const failure of [
 	});
 }
 
-for (const kind of ["symlink", "directory"]) {
+for (const kind of ["symlink", "dangling-symlink", "directory", "fifo"]) {
 	test(`web install rejects a destination ${kind}`, async () => {
 		await fixture(async ({ root, install }) => {
 			await writeFile(join(root, "original"), "keep");
-			if (kind === "symlink")
-				await symlink(join(root, "original"), join(root, "local bin/wts"));
-			else await mkdir(join(root, "local bin/wts"));
+			if (kind === "symlink" || kind === "dangling-symlink")
+				await symlink(
+					join(root, kind === "symlink" ? "original" : "missing"),
+					join(root, "local bin/wts"),
+				);
+			else if (kind === "directory") await mkdir(join(root, "local bin/wts"));
+			else
+				expect(
+					Bun.spawnSync(["mkfifo", join(root, "local bin/wts")]).exitCode,
+				).toBe(0);
 			expect(install().exitCode).not.toBe(0);
 			expect(await readFile(join(root, "original"), "utf8")).toBe("keep");
 		});

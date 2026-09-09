@@ -45,7 +45,19 @@ if [[ "$with_deps" == true ]]; then
 fi
 
 mkdir -p -- "$install_dir"
-install -m 755 -- "$artifact_dir/wts-macos-arm64" "$install_dir/wts"
+[[ ! -L "$install_dir/wts" && ( ! -e "$install_dir/wts" || -f "$install_dir/wts" ) ]] || {
+  echo "配置先の wts は通常ファイルである必要があります。" >&2
+  exit 1
+}
+staged=''
+cleanup() { [[ -z "$staged" ]] || rm -f -- "$staged"; }
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+staged="$(mktemp "$install_dir/.wts.XXXXXX")"
+install -m 755 -- "$artifact_dir/wts-macos-arm64" "$staged"
+mv -f -- "$staged" "$install_dir/wts"
+staged=''
 echo "インストールしました: $install_dir/wts"
 echo "GitHub CLI の認証が未設定の場合: gh auth login"
 printf '環境を検査: %q doctor --check\n' "$install_dir/wts"
