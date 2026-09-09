@@ -17,10 +17,10 @@ function fixture(overrides: Record<string, unknown> = {}): GitHubApi {
 		"git/matching-refs/tags/v0.2.0": [],
 		...overrides,
 	};
-	return <T>(endpoint: string): T => {
+	return (endpoint: string): unknown => {
 		if (!(endpoint in responses))
 			throw new Error(`Unexpected API: ${endpoint}`);
-		return responses[endpoint] as T;
+		return responses[endpoint];
 	};
 }
 
@@ -114,3 +114,33 @@ test("API 失敗や参照できないタグを初回公開として扱わない"
 		),
 	).toThrow("Unexpected API");
 });
+
+for (const [endpoint, values] of Object.entries({
+	"git/ref/heads/master": [
+		null,
+		[],
+		{},
+		{ object: null },
+		{ object: { sha: 1 } },
+	],
+	releases: [
+		null,
+		{},
+		[null],
+		[release],
+		[[null]],
+		[[{ ...release, draft: "false" }]],
+		[[{ ...release, published_at: 1 }]],
+		[[{ ...release, tag_name: null }]],
+	],
+	"commits/tags%2Fv0.1.0": [null, [], {}, { sha: 1 }],
+	"git/matching-refs/tags/v0.2.0": [null, {}, [null], [{ ref: 1 }]],
+})) {
+	test(`不正な API 応答を明示的に拒否する: ${endpoint}`, () => {
+		for (const value of values) {
+			expect(() =>
+				checkRelease("0.2.0", head, fixture({ [endpoint]: value })),
+			).toThrow(`GitHub API の応答形式が不正です: ${endpoint}`);
+		}
+	});
+}
