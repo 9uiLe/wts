@@ -50,14 +50,14 @@ test("list shows multiple sessions, dirty ignored files and unmanaged metadata w
 			PATH: `${bin}:${process.env.PATH}`,
 		});
 		expect(result.code).toBe(0);
-		expect(result.out).toContain(one);
-		expect(result.out).toMatch(/Root\s+one/);
-		expect(result.out).toContain("2: one-pr2-followup");
-		expect(result.out).toMatch(/Current\s+one-pr2-followup/);
-		expect(result.out).toContain("--force");
-		expect(result.out).toContain("なし");
-		expect(result.out.match(/未管理/g)?.length).toBe(2);
-		expect(result.out).not.toContain(outside);
+		expect(result.text).toContain(one);
+		expect(result.text).toMatch(/Root\s+one/);
+		expect(result.text).toContain("2: one-pr2-followup");
+		expect(result.text).toMatch(/Current\s+one-pr2-followup/);
+		expect(result.text).toContain("--force");
+		expect(result.text).toContain("なし");
+		expect(result.text.match(/未管理/g)?.length).toBe(2);
+		expect(result.text).not.toContain(outside);
 		expect(git(root, "show-ref")).toBe(before);
 	} finally {
 		rmSync(dir, { recursive: true, force: true });

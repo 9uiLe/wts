@@ -2,6 +2,7 @@ import { expect, test } from "bun:test";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+import { linkHamio, outputText } from "./helpers/cli";
 
 const doctor = resolve(import.meta.dir, "../src/commands/doctor.ts");
 
@@ -22,6 +23,7 @@ function check({
 } = {}) {
 	const cwd = mkdtempSync(join(tmpdir(), "wts-doctor-"));
 	try {
+		linkHamio(cwd);
 		if (git !== null)
 			writeFileSync(
 				join(cwd, "git"),
@@ -50,7 +52,7 @@ function check({
 		);
 		return {
 			code: result.exitCode,
-			out: result.stdout.toString(),
+			text: outputText(result.stdout.toString()),
 			err: result.stderr.toString(),
 		};
 	} finally {
@@ -61,18 +63,18 @@ function check({
 test("environment check succeeds outside a repository with supported dependencies", () => {
 	const result = check();
 	expect(result.code).toBe(0);
-	expect(result.out).toContain("OK: Git 2.38");
-	expect(result.out).toContain("OK: GitHub CLI 認証");
-	expect(result.out).toContain("OK: Claude CLI");
-	expect(result.out).not.toContain("private-auth");
+	expect(result.text).toContain("OK: Git 2.38");
+	expect(result.text).toContain("OK: GitHub CLI 認証");
+	expect(result.text).toContain("OK: Claude CLI");
+	expect(result.text).not.toContain("private-auth");
 	expect(result.err).toBe("");
 });
 
 test("missing required dependencies report installation steps and fail", () => {
 	const result = check({ git: null, gh: false, claude: false });
 	expect(result.code).toBe(1);
-	expect(result.out).toContain("brew install git");
-	expect(result.out).toContain("brew install gh");
+	expect(result.text).toContain("brew install git");
+	expect(result.text).toContain("brew install gh");
 });
 
 test("Git older than the restack requirement fails", () => {
@@ -83,15 +85,15 @@ test("Git older than the restack requirement fails", () => {
 test("authentication failure gives guidance without exposing auth output", () => {
 	const result = check({ auth: false });
 	expect(result.code).toBe(1);
-	expect(result.out).toContain("gh auth login");
-	expect(result.out).not.toContain("private-auth");
+	expect(result.text).toContain("gh auth login");
+	expect(result.text).not.toContain("private-auth");
 	expect(result.err).toBe("");
 });
 
 test("missing optional Claude CLI keeps the check successful", () => {
 	const result = check({ claude: false });
 	expect(result.code).toBe(0);
-	expect(result.out).toContain("日付＋UUID によるブランチ命名");
+	expect(result.text).toContain("日付＋UUID によるブランチ命名");
 });
 
 test("unsupported operating system or architecture fails", () => {

@@ -10,7 +10,9 @@ Developer ID 署名・公証は行っていません。Gatekeeper によって�
 
 ## インストール
 
-配布バイナリは Bun ランタイムを含み、利用時に Nix・Bun・Node.js は不要です。Git を使用し、`restack` は Git 2.38 以上、`cleanup` は認証済み GitHub CLI（`gh`）を必要とします。fetch・PR 照会・push にはリモートへの接続が必要です。既定の命名は AI や外部の命名コマンドを使いません。
+配布バイナリは Bun ランタイムを含み、利用時に Nix・Bun・Node.js は不要です。すべてのコマンドで、入出力を担う [9uiLe/hamio](https://github.com/9uiLe/hamio) v0.1.0 の実行ファイルが PATH に必要です。[hamio の導入手順](https://github.com/9uiLe/hamio/blob/dd8c86c6923f692ef183152958147bf095e85daa/docs/distribution.md)で用意してください。hamio が見つからない場合は JSON エラーを返して終了します。
+
+Git を使用し、`restack` は Git 2.38 以上、`cleanup` は認証済み GitHub CLI（`gh`）を必要とします。fetch・PR 照会・push にはリモートへの接続が必要です。既定の命名は AI や外部の命名コマンドを使いません。
 
 Apple Silicon Mac のターミナルで実行します。HTTPS で同じ Release のバイナリ・SHA-256・`BUILD_INFO` を取得し、チェックサムとバージョン・ターゲットを検証して `~/.local/bin/wts` に配置します。リポジトリの clone は不要です。
 
@@ -27,7 +29,7 @@ wts --version
 wts doctor --check
 ```
 
-Git・gh の導入や認証、Gatekeeper の許可は行いません。環境検査で不足を指摘された場合は、[Homebrew](https://brew.sh/) を用意して `brew install git gh`、認証には `gh auth login` を実行し、再検査してください。
+hamio・Git・gh の導入や認証、Gatekeeper の許可は行いません。環境検査で Git・gh の不足を指摘された場合は、[Homebrew](https://brew.sh/) を用意して `brew install git gh`、認証には `gh auth login` を実行し、再検査してください。
 
 ### 更新と配置先の指定
 
@@ -81,13 +83,25 @@ git commit -m "Configure wts sessions"
 
 ## コマンドと入力
 
-コマンドは `wts --help`、オプションは `wts <コマンド> --help` で確認できます。対話には標準入力・標準出力の両方に TTY が必要です。非対話では各操作に必要な入力をオプションで渡してください。成功と対話の否定・Ctrl-C は終了コード `0`、入力不足や未知のコマンドなどのエラーは `1` です。
+コマンドは `wts --help`、オプションは `wts <コマンド> --help` で確認できます。対話には標準入力・標準エラーの両方に TTY が必要です。`--format json`、CI、`TERM=dumb` では対話せず、各操作に必要な入力をオプションで渡してください。既定値や入力省略がある質問では、候補を使うか入力するかを選んでから入力します。成功と対話の否定・Ctrl-C は終了コード `0`、入力不足や未知のコマンドなどのエラーは `1` です。
 
 `start`・`restack` は設定のベースを使い、操作時だけ変える場合は `--base-branch origin/release/stable` のように指定します。この上書きは `cleanup` の基準を変えません。設定も上書きもない場合の対話候補と優先順位は [ベースブランチ](docs/configuration.md#ベースブランチ)を参照してください。
 
 `BASE_BRANCH`、`COPY_FROM`、`PR_NUMBER`、`PUSH=1`、`PUSH_ONLY=1`、`DRY_RUN=1` は対応するオプションの代わりに使えます。オプションを優先し、boolean 環境変数は値が `1` の場合だけ有効です。解除には unset を使います。
 
-通常の結果は標準出力、警告・エラー・進捗は標準エラーです。JSON 出力はありません。リダイレクト時は色とスピナーを省き、`NO_COLOR=1` または `FORCE_COLOR=0` で色を無効にできます。CI と `TERM=dumb` では装飾と進捗アニメーションを抑制します。
+表示形式は `--format human` または `--format json` で指定できます。省略時は標準エラーが TTY なら `human`、それ以外は `json` です。human は結果・警告・エラー・進捗を標準エラーに表示し、標準出力には hamio の JSON 応答を返します。json は表示内容を含む JSON 応答だけを標準出力に返します。通常の表示は表示ごと、進捗は一つの処理の終了ごとに 1 行の JSON を返すため、複数の応答は NDJSON になります。`--help`・`--version`・スキル取得もこの形式に従います。
+
+パイプや AI からの利用では `--format json` を明示してください。`apiVersion: 1` の応答には次の形式があります。端末の色は hamio に従い、`NO_COLOR=1` で無効にできます。
+
+| 応答の種類 | 内容 |
+| --- | --- |
+| 通常の表示（render） | `blocks` に表示データ。`--version` の版は `kind: "result"` ブロックの `data.version` |
+| 進捗の終了（stream） | `runId`、`result`、`tasks`、`warnings` に処理結果と進捗の最終状態 |
+
+```bash
+wts --format json list
+wts --format json --version
+```
 
 ### 実行予定の確認
 
@@ -202,7 +216,7 @@ dry-run に表示された全ブランチとファイル状態を確認し、残
 
 ## AI 向けスキル
 
-`wts-cli` は AI による wts のセッション操作用スキルです。AI の実行環境の PATH に `wts` を配置し、スキルを導入します。
+`wts-cli` は AI による wts のセッション操作用スキルです。AI の実行環境の PATH に `wts` と `hamio` を配置し、スキルを導入します。
 
 ```bash
 wts skills install wts-cli
@@ -214,7 +228,7 @@ wts skills install wts-cli
 wts skills install wts-cli --path "$HOME/.claude/skills"
 ```
 
-AI にスキルを読み込ませ、`wts-cli` で操作するよう依頼してください。Claude Code では `/wts-cli` で呼び出せます。入口は `wts skills get wts-cli` で実行バイナリに対応するガイドを取得するため、バイナリ更新後も対応する手順を使えます。導入とガイド取得自体には Git・Bun・ソース・通信は不要です。
+AI にスキルを読み込ませ、`wts-cli` で操作するよう依頼してください。Claude Code では `/wts-cli` で呼び出せます。入口は `wts --format json skills get wts-cli` で実行バイナリに対応するガイドを取得するため、バイナリ更新後も対応する手順を使えます。result ブロックの `data.lines` にガイドの各行が入ります。導入とガイド取得自体には Git・Bun・ソース・通信は不要です。
 
 入口を更新するには導入コマンドを再実行します。同内容なら変更せず成功し、異なる内容は上書きを拒否します。既存の編集内容を確認し、置き換える場合だけ `--force` を指定してください。他のファイルは変更しません。
 
@@ -224,6 +238,7 @@ AI にスキルを読み込ませ、`wts-cli` で操作するよう依頼して�
 - [開発・検証・ビルド・公開](docs/development.md)
 - [端末 UI カタログの生成とレビュー](docs/development.md#端末-ui-の一覧と変更確認)
 - [設計・安全契約](docs/design.md)
+- [CLI 入出力と hamio の連携](docs/hamio.md)
 - [作業規約](AGENTS.md)
 
 ## ライセンス

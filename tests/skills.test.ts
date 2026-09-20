@@ -12,7 +12,7 @@ import {
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
-import { runCli } from "./helpers/cli";
+import { linkHamio, runCli } from "./helpers/cli";
 const entrypoint = readFileSync(
 	resolve(import.meta.dir, "../skills/wts-cli/SKILL.md"),
 	"utf8",
@@ -34,12 +34,14 @@ function fixture() {
 	fixtures.add(directory);
 	const userHome = join(directory, "home");
 	mkdirSync(userHome);
+	const commands = join(directory, "commands");
+	mkdirSync(commands);
+	linkHamio(commands);
 	function run(...args: string[]) {
-		const { code, out, err } = runCli(directory, ["skills", ...args], {
-			PATH: "",
+		return runCli(directory, ["skills", ...args], {
+			PATH: commands,
 			HOME: userHome,
 		});
-		return { code, out, err };
 	}
 	const skillDirectory = join(directory, "wts-cli");
 	const skillFile = join(skillDirectory, "SKILL.md");
@@ -49,12 +51,21 @@ function fixture() {
 	return { directory, userHome, skillDirectory, skillFile, run, install };
 }
 
-test("get returns the complete guide without a repository, external commands or a TTY", () => {
-	expect(fixture().run("get", "wts-cli")).toEqual({
-		code: 0,
-		out: guide,
-		err: "",
+test("get returns the complete guide using only hamio outside a repository or TTY", () => {
+	const result = fixture().run("get", "wts-cli");
+	expect(result.code).toBe(0);
+	expect(JSON.parse(result.out)).toEqual({
+		apiVersion: 1,
+		status: "ok",
+		blocks: [
+			{
+				kind: "result",
+				success: true,
+				data: { name: "wts-cli", lines: guide.split("\n") },
+			},
+		],
 	});
+	expect(result.err).toBe("");
 });
 
 test.each(["get", "install"])(
@@ -65,9 +76,9 @@ test.each(["get", "install"])(
 			command === "install" ? ["--path", join(f.directory, "skills")] : [];
 		const result = f.run(command, "../unknown", ...options);
 		expect(result.code).toBe(1);
-		expect(result.out).toBe("");
-		expect(result.err).toContain("未知のスキル");
-		expect(readdirSync(f.directory)).toEqual(["home"]);
+		expect(result.text).toContain("未知のスキル");
+		expect(result.err).toBe("");
+		expect(readdirSync(f.directory).sort()).toEqual(["commands", "home"]);
 	},
 );
 
@@ -103,7 +114,7 @@ test("install preserves customized content unless force is specified", () => {
 	writeFileSync(f.skillFile, "custom instructions");
 	const result = f.install();
 	expect(result.code).toBe(1);
-	expect(result.err).toContain("--force");
+	expect(result.text).toContain("--force");
 	expect(readFileSync(f.skillFile, "utf8")).toBe("custom instructions");
 });
 

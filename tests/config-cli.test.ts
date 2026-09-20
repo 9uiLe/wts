@@ -30,14 +30,14 @@ test("config check validates an explicit file without running its script or crea
 		const run = () => runCli(directory, ["config", "check", file]);
 		const valid = run();
 		expect(valid.code).toBe(0);
-		expect(valid.out).toContain("設定 OK");
-		expect(valid.out).toContain(script);
+		expect(valid.text).toContain("設定 OK");
+		expect(valid.text).toContain(script);
 		expect(existsSync(marker)).toBe(false);
 		expect(existsSync(join(directory, "sessions"))).toBe(false);
 		writeFileSync(file, JSON.stringify({ worktreeDirecotry: "typo" }));
 		const invalid = run();
 		expect(invalid.code).toBe(1);
-		expect(invalid.err).toContain("worktreeDirecotry");
+		expect(invalid.text).toContain("worktreeDirecotry");
 	} finally {
 		rmSync(directory, { recursive: true, force: true });
 	}

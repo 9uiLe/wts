@@ -109,7 +109,7 @@ export async function restackCases(): Promise<Capture[]> {
 	await take("ベース入力→push確認Yes", [], normal.worktree, 0, {
 		steps: [
 			["ベースブランチ", "\r"],
-			["これらを push しますか？", "y\r"],
+			["これらを push しますか？", "\u001b[C\r"],
 		],
 	});
 	await take("push不要", [...base, "--push"], normal.worktree, 0);
@@ -273,7 +273,7 @@ const result=Bun.spawnSync([${JSON.stringify(context.gitPath)},...args],{stdin:'
 		conflict.worktree,
 	);
 	for (const [label, input] of [
-		["肯定", "y\r"],
+		["肯定", "\u001b[C\r"],
 		["否定", "\r"],
 		["Ctrl-C", "\u0003"],
 	] as const) {

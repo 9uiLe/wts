@@ -1,16 +1,18 @@
 # wts CLI 操作ガイド
 
-このガイドは `wts skills get wts-cli` を実行したバイナリの操作契約です。以下の `wts` は同じ実行ファイルに置き換え、対象リポジトリまたはセッションを作業ディレクトリにして操作します。
+このガイドは `wts --format json skills get wts-cli` を実行したバイナリの操作契約です。以下の `wts` は同じ実行ファイルに置き換え、対象リポジトリまたはセッションを作業ディレクトリにして操作します。
 
 ## 実行環境と入力
 
-対象は Apple Silicon macOS です。配布バイナリは Bun を含み、Git は別途必要です。restack の rebase には Git 2.38 以上、cleanup には認証済み GitHub CLI（`gh`）を使います。PR 作成・マージ、端末・AI エージェントの起動は wts の操作範囲外です。
+対象は Apple Silicon macOS です。配布バイナリは Bun を含み、すべてのコマンドで PATH 上の hamio v0.1.0 が必要です。Git は別途必要です。restack の rebase には Git 2.38 以上、cleanup には認証済み GitHub CLI（`gh`）を使います。PR 作成・マージ、端末・AI エージェントの起動は wts の操作範囲外です。
 
-対話には stdin・stdout 両方の TTY が必要です。非対話では各操作に必要な入力をオプションで渡します。「確認」は出力・設定と依頼範囲の照合を意味し、許可された対象と影響が明確なら追加の質問は不要です。push、削除対象、残存ファイルの破棄の許可が不明なら、その範囲をユーザーに確認してから実行してください。確認省略のオプション自体は許可を与えません。
+AI からはすべてのコマンドに `--format json` を指定し、必要な入力をオプションで渡します。この指定では TTY でも入力を待たず、必要な値がなければエラーになります。人向けの対話は stdin・stderr 両方の TTY が必要で、CI と `TERM=dumb` では行いません。「確認」は出力・設定と依頼範囲の照合を意味し、許可された対象と影響が明確なら追加の質問は不要です。push、削除対象、残存ファイルの破棄の許可が不明なら、その範囲をユーザーに確認してから実行してください。確認省略のオプション自体は許可を与えません。
 
 `BASE_BRANCH`・`COPY_FROM`・`PR_NUMBER` は同名のオプションに対応し、`PUSH=1`・`PUSH_ONLY=1`・`DRY_RUN=1` は対応するフラグを有効にします。オプションを優先し、boolean 環境変数は `1` のときだけ有効、解除は unset です。継承した値が依頼と一致することを確認してください。
 
-通常の結果は stdout、警告・エラー・進捗は stderr です。リダイレクトでは色・スピナーを省き、JSON 出力はありません。成功と対話の否定・Ctrl-C は終了コード `0`、エラーは `1` です。完了は終了コードと出力、必要に応じて参照・ファイルの状態で判断します。
+`--format json` の stdout は hamio の API v1 応答を 1 行ずつ返す NDJSON です。通常の表示は `blocks`、進捗処理の最終応答は `runId`・`result`・`tasks`・`warnings` を持ちます。全体を一つの JSON として扱わず、行ごとに処理してください。ガイドは `blocks` 内の `kind: "result"` ブロックの `data.lines` を改行で連結して取得できます。バージョンは同じ種類のブロックの `data.version` です。
+
+人向けの `--format human` は stderr に表示し、stdout には JSON 応答を返します。成功と対話の否定・Ctrl-C は終了コード `0`、エラーは `1` です。hamio の `status: "ok"` は UI 処理の成功なので、操作の完了は wts の終了コードと表示データ、必要に応じて参照・ファイルの状態で判断します。
 
 ## 操作の選択
 
@@ -34,16 +36,16 @@
 
 `start`・`stack`・`restack`・`cleanup`・`discard`・`list` は `.wts.json` を必要とします。現在の worktree のルート、メインチェックアウトのルートの順に探し、最初の一つを使います。設定はマージしません。
 
-`wts init --base-branch main` で実行元 worktree のルートに設定を生成します。ベース名は対象プロジェクトに合わせ、既存設定は上書きしません。`wts init` だけではベースを保存せず、ローカルの `origin/HEAD` があれば候補だけを案内します。設定を `wts config check` で検査し、使う命名スクリプトとともにベースブランチへコミットして共有します。
+`wts --format json init --base-branch main` で実行元 worktree のルートに設定を生成します。ベース名は対象プロジェクトに合わせ、既存設定は上書きしません。`wts --format json init` だけではベースを保存せず、ローカルの `origin/HEAD` があれば候補だけを案内します。設定を `wts --format json config check` で検査し、使う命名スクリプトとともにベースブランチへコミットして共有します。
 
-`baseBranch` は `origin/` なしのローカルブランチ名です。start・restack は `--base-branch`、`BASE_BRANCH`、設定の `origin/<baseBranch>` の順に優先します。未指定なら対話になるため、非対話では設定または上書きが必要です。対話候補はローカルの `origin/HEAD`、なければ `origin/main` です。cleanup は設定のベースだけを使い、省略時は `main` を保護して `origin/main` への取り込みを判定します。
+`baseBranch` は `origin/` なしのローカルブランチ名です。start・restack は `--base-branch`、`BASE_BRANCH`、設定の `origin/<baseBranch>` の順に優先します。`--format json` では設定または上書きが必要です。人向けの対話は候補を使うか別の参照を入力するか選び、候補はローカルの `origin/HEAD`、なければ `origin/main` です。cleanup は設定のベースだけを使い、省略時は `main` を保護して `origin/main` への取り込みを判定します。
 
 `worktreeDirectory` は配置先と cleanup・discard の管理範囲です。相対パスは常にメインチェックアウト基準で、省略時はメインの絶対パスに `-worktrees` を付けます。変更すると旧配置は管理範囲から外れます。メイン自体や Git 管理領域は指定できず、リポジトリ内に置く場合は `.gitignore` に追加してください。
 
 ## セッション一覧
 
 ```sh
-wts list
+wts --format json list
 ```
 
 管理範囲内の登録済み worktree を通信なしで表示します。Path、ルート・スタック、現在のブランチ、dirty を確認できます。dirty は未コミット・未追跡・無視対象ファイルを含み、discard に `--force` が必要な状態です。手動の worktree と壊れたセッション情報は「未管理」と表示し、discard の対象にはしません。
@@ -64,7 +66,7 @@ wts list
 ## セッション開始
 
 ```sh
-wts start --task '認証処理を追加する' --base-branch origin/main
+wts --format json start --task '認証処理を追加する' --base-branch origin/main
 ```
 
 ベースは対象プロジェクトに合わせ、設定済みならオプションを省略できます。命名スクリプトがある場合は、非対話では `--task` が必要です。ベースが `origin/` で始まれば fetch し、失敗して手元の参照を使う場合は警告します。作成後は出力の `Path` を後続コマンドの作業ディレクトリにしてください。呼び出し元のディレクトリは変わりません。
@@ -80,7 +82,7 @@ wts start --task '認証処理を追加する' --base-branch origin/main
 セッション内の作業をコミットし、クリーンな作業ツリーとスタック先端のブランチで実行します。同じ worktree に新しいブランチを作って切り替えます。
 
 ```sh
-wts stack --pr-number 2 --task '認証画面を追加する'
+wts --format json stack --pr-number 2 --task '認証画面を追加する'
 ```
 
 非対話では未使用の `--pr-number <n>`（2 以上）が必要です。ブランチ命名スクリプトがある場合は `--task` も渡します。例の番号・作業内容は実際のスタックに合わせてください。
@@ -90,7 +92,7 @@ wts stack --pr-number 2 --task '認証画面を追加する'
 start が作ったセッション内で実行します。作業ツリーがクリーンで、スタックが番号順の祖先・子孫関係を持つ必要があります。別 worktree で使用中のスタックブランチや進行中の rebase がある場合は拒否します。
 
 ```sh
-wts restack --push
+wts --format json restack --push
 ```
 
 ベースが未設定なら `--base-branch <ref>` も渡します。通常モードはベースが `origin/` で始まる場合に fetch し、rebase 後に origin へ push します。他者の更新を上書きしないよう、rebase 前のリモート状態を lease として保存して照合します。
@@ -103,7 +105,7 @@ wts restack --push
 
 ```sh
 git rebase --continue
-wts restack --push-only --push
+wts --format json restack --push-only --push
 ```
 
 `--push-only` はベース入力・fetch・rebase・lease の再取得を行わず、保存済み lease で push します。成功時は lease を除去します。不足、リモート照会失敗、不一致は原因を報告し、lease の作成・取り直しや `git push --force` で回避しないでください。
@@ -115,7 +117,7 @@ wts restack --push-only --push
 削除対象以外の場所、通常はメインチェックアウトで候補を確認します。
 
 ```sh
-wts cleanup --dry-run
+wts --format json cleanup --dry-run
 ```
 
 cleanup はローカルブランチ全体を走査し、同じ GitHub リポジトリのマージ済み PR と変更の取り込みを確認します。wts の命名やセッション情報には限定しません。設定のベース、実行中ブランチ、管理範囲外の worktree で使用中のブランチは除外します。削除するのはローカルブランチと対応する worktree で、リモートブランチは残ります。
@@ -123,7 +125,7 @@ cleanup はローカルブランチ全体を走査し、同じ GitHub リポジ�
 **候補 worktree の未コミット・未追跡・無視対象ファイルも強制削除されます。** 対象ごとに `git -C <path> status --short --untracked-files=all --ignored` などで残存ファイルを照合し、必要な内容が失われないことを確認します。候補を絞るオプションはないため、全候補と残存ファイルの破棄が許可されている場合に実行してください。
 
 ```sh
-wts cleanup --yes
+wts --format json cleanup --yes
 ```
 
 削除候補がある非対話本実行では `--yes` が必要です。dry-run は候補を固定せず、本実行では確認前にベースを fetch して再評価します。fetch 失敗時は古い参照で判定する旨を警告します。削除前の検査で変化を検出した対象や、削除できないロック中の worktree の参照は保持します。
@@ -145,13 +147,13 @@ wts cleanup --yes
 
 ```sh
 cd /path/to/project
-wts discard /path/to/session --remote origin --dry-run
+wts --format json discard /path/to/session --remote origin --dry-run
 ```
 
 表示された worktree・全対象ブランチ・ファイル状態を依頼範囲と照合して実行します。dry-run は対象を固定せず、本実行で再検査します。
 
 ```sh
-wts discard /path/to/session --remote origin --yes
+wts --format json discard /path/to/session --remote origin --yes
 ```
 
 対話の既定値は否定で、否定・Ctrl-C は何も削除しません。対象は設定された管理範囲内のセッションです。メイン・実行中・管理範囲外・未管理・ロック中の worktree、ベースブランチや別 worktree で使用中の所属ブランチを含むセッションは拒否します。
@@ -172,26 +174,26 @@ wts discard /path/to/session --remote origin --yes
 
 | 確認対象 | コマンド |
 | --- | --- |
-| コマンド・オプション | `wts --help`、`wts <command> --help` |
-| バージョン・OS・CPU | `wts doctor` |
-| 対応環境、Git、gh と認証、任意の Claude CLI | `wts doctor --check` |
-| 設定の構文・項目・型・パス・スクリプト実行権限 | `wts config check [file]` |
+| コマンド・オプション | `wts --format json --help`、`wts --format json <command> --help` |
+| バージョン・OS・CPU | `wts --format json doctor` |
+| 対応環境、Git、gh と認証、任意の Claude CLI | `wts --format json doctor --check` |
+| 設定の構文・項目・型・パス・スクリプト実行権限 | `wts --format json config check [file]` |
 | 作業ツリーとブランチ | `git status --short --branch` |
 | worktree の場所とブランチ | `git worktree list --porcelain` |
 
-doctor はリポジトリ外でも使えます。`--check` は gh 認証確認で通信しますが、インストール・ログインは行いません。`--interactive` は TTY の動作確認用で、`--check` と併用できません。
+doctor はリポジトリ外でも使えます。`--check` は gh 認証確認で通信しますが、インストール・ログインは行いません。`--interactive` は人向けの TTY の動作確認用で、`--check` と併用できません。AI 操作の `--format json` では入力を待ちません。
 
 `config check` は解決された設定を表示し、命名スクリプトは実行しません。ファイルを明示すればリポジトリ外でも検査できます。
 
 ## スキルの導入
 
 ```sh
-wts skills install wts-cli
-wts skills install wts-cli --path /path/to/skills
+wts --format json skills install wts-cli
+wts --format json skills install wts-cli --path /path/to/skills
 ```
 
 既定の親ディレクトリは `~/.agents/skills` です。`--path` は使用する AI の読み込み先の親ディレクトリを指定し、その中に `wts-cli/SKILL.md` を配置します。
 
 同内容なら変更せず成功します。異なる既存内容の置き換えが依頼範囲に含まれる場合だけ `--force` を使います。配置先ディレクトリや `SKILL.md` が symlink の場合、通常ファイルでない `SKILL.md` の場合は拒否します。他のファイルは変更しません。
 
-導入する SKILL.md は実行バイナリから `wts skills get wts-cli` で操作ガイドを取得する入口です。ガイドはバイナリに含まれ、別の参照ファイルやネットワークは不要です。
+導入する SKILL.md は実行バイナリから `wts --format json skills get wts-cli` で操作ガイドを取得する入口です。ガイドはバイナリに含まれ、取得には PATH 上の hamio が必要ですが、別の参照ファイルやネットワークは不要です。

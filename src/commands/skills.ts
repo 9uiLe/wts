@@ -2,7 +2,7 @@ import { getSkillGuide, installSkillFiles } from "../skills";
 import { ui } from "../ui";
 
 export function getSkill(name: string): void {
-	process.stdout.write(getSkillGuide(name));
+	ui.result({ name, lines: getSkillGuide(name).split("\n") });
 }
 
 export async function installSkill(

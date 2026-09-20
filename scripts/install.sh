@@ -59,5 +59,6 @@ install -m 755 -- "$artifact_dir/wts-macos-arm64" "$staged"
 mv -f -- "$staged" "$install_dir/wts"
 staged=''
 echo "インストールしました: $install_dir/wts"
+echo "実行には PATH 上の hamio v0.1.0 が必要です: https://github.com/9uiLe/hamio/blob/dd8c86c6923f692ef183152958147bf095e85daa/docs/distribution.md"
 echo "GitHub CLI の認証が未設定の場合: gh auth login"
 printf '環境を検査: %q doctor --check\n' "$install_dir/wts"

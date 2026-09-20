@@ -8,7 +8,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { cliEnvironment, runCli } from "./helpers/cli";
+import { cliEnvironment, linkHamio, runCli } from "./helpers/cli";
 import { gitWithEnv } from "./helpers/git";
 
 function fixture(baseBranch?: string) {
@@ -55,9 +55,10 @@ function fixture(baseBranch?: string) {
 	);
 	const realGit = Bun.which("git");
 	if (!realGit) throw new Error("Git is required for this test");
-	writeFileSync(
-		join(bin, "git"),
-		`#!${process.execPath}
+	function instrumentGit() {
+		writeFileSync(
+			join(bin, "git"),
+			`#!${process.execPath}
 import { existsSync, writeFileSync, readFileSync } from 'node:fs';
 const args = process.argv.slice(2);
 const git = (...a) => { const r = Bun.spawnSync([${JSON.stringify(realGit)}, ...a], { env: process.env }); if (r.exitCode) throw new Error(r.stderr.toString()); return r.stdout.toString().trim(); };
@@ -70,12 +71,14 @@ process.stdout.write(result.stdout);
 process.stderr.write(result.stderr);
 process.exit(result.exitCode);
 `,
-		{ mode: 0o755 },
-	);
+			{ mode: 0o755 },
+		);
+	}
 	function run(
 		options: { dryRun?: boolean; yes?: boolean },
 		extra: Record<string, string> = {},
 	) {
+		if (extra.GIT_HOOK) instrumentGit();
 		writeFileSync(prData, JSON.stringify(heads));
 		return runCli(
 			root,
@@ -223,6 +226,7 @@ test("cleanup reports missing gh without deleting candidates", () => {
 		const bin = join(f.dir, "git-only");
 		mkdirSync(bin);
 		symlinkSync(gitPath, join(bin, "git"));
+		linkHamio(bin);
 		const result = f.run({ yes: true }, { PATH: bin });
 		expect(result.code).not.toBe(0);
 		expect(result.text).toContain("gh コマンドが見つかりません");

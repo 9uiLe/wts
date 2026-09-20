@@ -125,6 +125,7 @@ wts_install() (
   print_completion() {
     printf 'wts %s をインストールしました: %s/wts\n' "$version" "$install_dir"
     print_path_instructions
+    echo '実行には PATH 上の hamio v0.1.0 が必要です: https://github.com/9uiLe/hamio/blob/dd8c86c6923f692ef183152958147bf095e85daa/docs/distribution.md'
     printf '動作確認: wts --version\nヘルプ: wts --help\n環境検査: wts doctor --check\n'
     echo 'GitHub CLI の認証が未設定の場合: gh auth login'
   }
