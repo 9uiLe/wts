@@ -81,6 +81,9 @@ test("multiline messages cross hamio's block and UTF-8 limits without losing tex
 		`ui.line(${JSON.stringify([...lines, longLine].join("\n"))});`,
 	);
 	expect(result.code).toBe(0);
+	expect(result.responses.map((response) => response.blocks.length)).toEqual([
+		32, 3,
+	]);
 	const blocks = result.responses.flatMap((response) => response.blocks);
 	expect(blocks.slice(0, lines.length).map((block) => block.text)).toEqual(
 		lines,
@@ -91,6 +94,67 @@ test("multiline messages cross hamio's block and UTF-8 limits without losing tex
 			.map((block) => block.text)
 			.join(""),
 	).toBe(longLine);
+});
+
+test("messages split JSON-escaped content before the request byte limit", () => {
+	const line = "\u0000".repeat(4096);
+	const result = render(
+		`ui.line(Array.from({ length: 32 }, () => ${JSON.stringify(line)}).join("\\n"));`,
+	);
+	expect(result.code).toBe(0);
+	expect(result.err).toBe("");
+	expect(result.responses.length).toBeGreaterThan(1);
+	expect(
+		result.responses
+			.flatMap((response) => response.blocks)
+			.map((block) => block.text),
+	).toEqual(Array.from({ length: 32 }, () => line));
+});
+
+test("details preserve more than 200 items in bounded blocks", () => {
+	const result = render(
+		'ui.details(Array.from({ length: 201 }, (_, index) => ["項目", String(index)]));',
+	);
+	expect(result.code).toBe(0);
+	expect(result.err).toBe("");
+	expect(result.responses).toHaveLength(1);
+	const blocks = result.responses.flatMap((response) => response.blocks);
+	expect(blocks.map((block) => block.items.length)).toEqual([200, 1]);
+	expect(blocks.flatMap((block) => block.items)).toEqual(
+		Array.from({ length: 201 }, (_, index) => ({
+			label: "項目",
+			value: String(index),
+			secret: false,
+		})),
+	);
+});
+
+test("large details preserve Unicode and JSON escapes across requests", () => {
+	const value = '日本語"\\\u0000'.repeat(300);
+	const result = render(
+		`ui.details(Array.from({ length: 100 }, (_, index) => [\`項目\${index}\`, ${JSON.stringify(value)}]));`,
+	);
+	expect(result.code).toBe(0);
+	expect(result.err).toBe("");
+	expect(result.responses.length).toBeGreaterThan(1);
+	expect(
+		result.responses
+			.flatMap((response) => response.blocks)
+			.flatMap((block) => block.items),
+	).toEqual(
+		Array.from({ length: 100 }, (_, index) => ({
+			label: `項目${index}`,
+			value,
+			secret: false,
+		})),
+	);
+});
+
+test("oversized detail strings keep hamio's validation failure", () => {
+	const result = render('ui.detail("項目", "x".repeat(4097));');
+	expect(result.code).toBe(1);
+	expect(result.responses).toEqual([]);
+	expect(result.err).toContain("hamio の処理に失敗しました");
 });
 
 test("tasks report completion and preserve business results and failures", () => {

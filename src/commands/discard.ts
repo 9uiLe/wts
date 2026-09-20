@@ -1,9 +1,9 @@
 import { realpathSync } from "node:fs";
 import { resolve } from "node:path";
-import { dirtyStatus, Git, worktrees } from "../git";
+import { dirtyStatus, Git, localBranches, worktrees } from "../git";
 import { projectBase, repository } from "../project";
 import { confirmAction, isInteractive } from "../prompts";
-import { sessionRootBranch, stackBranches } from "../session";
+import { readSession } from "../session";
 import { ui } from "../ui";
 
 type DiscardOptions = {
@@ -89,12 +89,15 @@ async function planDiscard(
 	if (tree.locked)
 		throw new Error(`ロックされた worktree は削除できません: ${target}`);
 	const git = new Git(target);
-	const root = sessionRootBranch({
-		root: target,
-		worktreesBase,
-		gitDir: git.run(["rev-parse", "--absolute-git-dir"]),
-	});
-	const members = stackBranches(repo.git, root).map(({ branch }) => {
+	const { root, branches } = readSession(
+		{
+			root: target,
+			worktreesBase,
+			gitDir: git.run(["rev-parse", "--absolute-git-dir"]),
+		},
+		localBranches(repo.git),
+	);
+	const members = branches.map(({ branch, oid }) => {
 		if (branch === baseBranch)
 			throw new Error(`ベースブランチは削除できません: ${branch}`);
 		const other = trees.find(
@@ -104,14 +107,7 @@ async function planDiscard(
 			throw new Error(
 				`別の worktree で使用中のブランチは削除できません: ${branch} (${other.path})`,
 			);
-		const ref = repo.git.tryRun([
-			"rev-parse",
-			"--verify",
-			`refs/heads/${branch}`,
-		]);
-		if (ref.code !== 0)
-			throw new Error(`セッションのブランチが存在しません: ${branch}`);
-		return { branch, oid: ref.out };
+		return { branch, oid };
 	});
 	if (!members.some(({ branch }) => branch === tree.branch))
 		throw new Error(
@@ -174,11 +170,17 @@ async function planRemoteDeletion(
 }
 
 function displayPlan(plan: DiscardPlan): void {
-	ui.detail("Worktree", plan.target);
-	for (const { branch } of plan.members) ui.detail("Branch", branch);
+	ui.details([
+		["Worktree", plan.target],
+		...plan.members.map(({ branch }) => ["Branch", branch] as const),
+		...(plan.remote
+			? [
+					["Remote", plan.remote.name] as const,
+					...plan.remote.refs.map(({ ref }) => ["Remote branch", ref] as const),
+				]
+			: []),
+	]);
 	if (plan.remote) {
-		ui.detail("Remote", plan.remote.name);
-		for (const { ref } of plan.remote.refs) ui.detail("Remote branch", ref);
 		ui.info(
 			plan.remote.refs.length
 				? "表示したリモートブランチも未マージの変更ごと削除します。"

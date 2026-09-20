@@ -1,8 +1,8 @@
-import { ensureClean } from "../git";
+import { ensureClean, localBranches } from "../git";
 import { defaultNaming, generateName, validateBranchName } from "../naming";
 import { repository } from "../project";
 import { askText } from "../prompts";
-import { sessionRootBranch, stackBranches } from "../session";
+import { readSession } from "../session";
 import { commandLine, ui } from "../ui";
 
 export async function startStackBranch(options: {
@@ -13,9 +13,8 @@ export async function startStackBranch(options: {
 	ui.heading("stack");
 	if (options.dryRun) ui.info("DRY_RUN: ブランチは作成しません");
 	const repo = await repository();
-	const root = sessionRootBranch(repo);
+	const { root, branches } = readSession(repo, localBranches(repo.git));
 	ensureClean(repo.git);
-	const branches = stackBranches(repo.git, root);
 	const tip = branches.at(-1);
 	if (!tip) throw new Error(`スタックの root ブランチが存在しません: ${root}`);
 	const current = repo.git.run(["rev-parse", "--abbrev-ref", "HEAD"]).trim();

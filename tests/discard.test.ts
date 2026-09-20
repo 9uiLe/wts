@@ -67,6 +67,32 @@ function fixture() {
 	};
 }
 
+for (const root of ["absent", "HEAD", "--force"]) {
+	test(`discard refuses unusable session root ${root} before changing state`, () => {
+		const f = fixture();
+		try {
+			if (root === "absent") f.git("update-ref", "-d", "refs/heads/session");
+			else f.git("update-ref", `refs/heads/${root}`, "refs/heads/session");
+			writeFileSync(
+				f.metadata,
+				JSON.stringify({ rootBranch: root === "absent" ? "session" : root }),
+			);
+			const before = f.snapshot();
+			const result = f.run(["--yes", "--force"]);
+			expect(result.code).toBe(1);
+			expect(result.text).toContain(
+				root === "absent"
+					? "セッションのブランチが存在しません"
+					: "セッションのブランチ名が不正",
+			);
+			expect(f.snapshot()).toEqual(before);
+			expect(existsSync(f.target)).toBe(true);
+		} finally {
+			rmSync(f.dir, { recursive: true, force: true });
+		}
+	});
+}
+
 test("discard removes the entire unmerged local session and preserves unrelated and remote branches", () => {
 	const f = fixture();
 	try {

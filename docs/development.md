@@ -86,6 +86,16 @@ devShell は CLI の入出力を担当する hamio v0.1.0 を PATH に提供し�
 
 命名、GitHub、Homebrew の応答と障害は一時ファイル・テスト用コマンドで再現します。実サービスの認証、システムへの依存導入、実際の開発 worktree や公開リモートへの削除・push は自動テストで行いません。
 
+### 性能を比較する
+
+変更前後の同じビルド設定のバイナリを用意し、固定 devShell で実行します。基準版は変更前に `./scripts/build.sh` で生成して `release/` 内の別名へ保存してください。
+
+```bash
+nix develop --no-update-lock-file --command bun scripts/benchmark.ts release/baseline-wts dist/wts-macos-arm64 --output release/performance/comparison.json
+```
+
+同一の隔離リポジトリで両版を交互に実行し、起動、1・10 セッションの list、10 ブランチの discard dry-run を比較します。セッション数の桁を変えて増加傾向を確認する入力です。ウォームアップ 1 回後の 5 サンプルと中央値を記録し、合否の時間閾値は設けません。Git・hamio の起動数と macOS の最大 RSS は時間計測とは別の実行で採取します。RSS は同時に動く全プロセスのメモリ合計ではありません。通信は行わず、実行前後の参照・worktree・状態が変わらないことを照合します。結果にはバイナリの SHA-256・サイズ・環境を含めます。
+
 ### 対話と状態の検証
 
 固定 devShell の TTY 上で入力、終了コード、操作後の状態を確認します。CLI の直接起動と `bun run dev` 経由の実行は区別し、実行していない経路を検証済みと扱いません。

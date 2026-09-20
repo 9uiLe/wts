@@ -1,13 +1,16 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { isSameOrDescendant } from "./path";
-import { Git } from "./git";
+import type { Git } from "./git";
 
-export function sessionRootBranch(repo: {
-	root: string;
-	worktreesBase: string;
-	gitDir: string;
-}): string {
+type StackBranch = { branch: string; number: bigint; oid: string };
+
+export type Session = { root: string; branches: StackBranch[] };
+
+export function readSession(
+	repo: { root: string; worktreesBase: string; gitDir: string },
+	refs: ReadonlyMap<string, string>,
+): Session {
 	if (
 		repo.root === repo.worktreesBase ||
 		!isSameOrDescendant(repo.root, repo.worktreesBase)
@@ -36,14 +39,17 @@ export function sessionRootBranch(repo: {
 	) {
 		throw new Error(`セッション情報が不正です: ${file}`);
 	}
-	const git = new Git(repo.root);
+	// refs/heads の参照名として存在しても checkout のブランチ名には使えない。
 	if (
-		data.rootBranch.startsWith("@{") ||
-		git.tryRun(["check-ref-format", "--branch", data.rootBranch]).code !== 0
-	) {
+		data.rootBranch === "HEAD" ||
+		data.rootBranch.startsWith("-") ||
+		data.rootBranch.startsWith("@{")
+	)
 		throw new Error(`セッションのブランチ名が不正です: ${file}`);
-	}
-	return data.rootBranch;
+	return {
+		root: data.rootBranch,
+		branches: stackBranches(refs, data.rootBranch),
+	};
 }
 
 export function recordSession(
@@ -59,19 +65,19 @@ export function recordSession(
 	);
 }
 
-export function stackBranches(
-	git: Git,
+function stackBranches(
+	refs: ReadonlyMap<string, string>,
 	rootBranch: string,
-): { branch: string; number: bigint }[] {
+): StackBranch[] {
+	const oid = refs.get(rootBranch);
+	if (!oid)
+		throw new Error(`セッションのブランチが存在しません: ${rootBranch}`);
 	const prefix = `${rootBranch}-pr`;
-	const members = git
-		.run(["for-each-ref", "--format=%(refname:short)", "refs/heads/"])
-		.split("\n")
-		.flatMap((branch) => {
-			if (!branch.startsWith(prefix)) return [];
-			const match = /^(\d+)-/.exec(branch.slice(prefix.length));
-			return match ? [{ branch, number: BigInt(match[1] as string) }] : [];
-		});
+	const members = [...refs].flatMap(([branch, oid]) => {
+		if (!branch.startsWith(prefix)) return [];
+		const match = /^(\d+)-/.exec(branch.slice(prefix.length));
+		return match ? [{ branch, oid, number: BigInt(match[1] as string) }] : [];
+	});
 	members.sort((a, b) =>
 		a.number < b.number
 			? -1
@@ -79,5 +85,5 @@ export function stackBranches(
 				? 1
 				: a.branch.localeCompare(b.branch),
 	);
-	return [{ branch: rootBranch, number: 1n }, ...members];
+	return [{ branch: rootBranch, number: 1n, oid }, ...members];
 }

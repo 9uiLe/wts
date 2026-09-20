@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { Git, worktrees } from "../src/git";
+import { Git, localBranches, worktrees } from "../src/git";
 import { command, commandAsync } from "../src/process";
 import { supportsUpdateRefs } from "../src/git-version";
 import { isSameOrDescendant } from "../src/path";
@@ -50,6 +50,29 @@ test("worktree enumeration returns path branch and lock state together", () => {
 		expect(worktrees(new Git(dir)).find((t) => t.branch === "session")).toEqual(
 			{ path: target, branch: "session", locked: true },
 		);
+	} finally {
+		rmSync(dir, { recursive: true, force: true });
+	}
+});
+
+test("local branch snapshots preserve exact names and refresh OIDs independently of tags", () => {
+	const dir = realpathSync(mkdtempSync(join(tmpdir(), "wts-refs-")));
+	try {
+		initRepository(dir);
+		git(dir, "commit", "--allow-empty", "-m", "base");
+		const branch = "feature/日本語";
+		git(dir, "branch", branch);
+		git(dir, "tag", branch);
+		const old = git(dir, "rev-parse", "HEAD");
+		const before = localBranches(new Git(dir));
+		expect(before.get(branch)).toBe(old);
+		expect([...before.keys()]).toEqual([branch, "main"]);
+		git(dir, "commit", "--allow-empty", "-m", "advance");
+		git(dir, "branch", "-f", branch, "HEAD");
+		const after = localBranches(new Git(dir));
+		expect(after.get(branch)).toBe(git(dir, "rev-parse", "HEAD"));
+		expect(before.get(branch)).toBe(old);
+		expect(git(dir, "rev-parse", `refs/tags/${branch}`)).toBe(old);
 	} finally {
 		rmSync(dir, { recursive: true, force: true });
 	}
