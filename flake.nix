@@ -10,7 +10,7 @@
       pkgs = import nixpkgs { inherit system; };
     in {
       devShells.${system}.default = pkgs.mkShell {
-        packages = with pkgs; [ bun git osv-scanner coreutils hamio.packages.${system}.hamio ];
+        packages = with pkgs; [ bun git python3 osv-scanner coreutils hamio.packages.${system}.hamio ];
       };
     };
 }
