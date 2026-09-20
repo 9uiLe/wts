@@ -1,12 +1,10 @@
 # wts の開発とリリース
 
-このリポジトリでは、プロジェクト設定に基づく wts のセッションを使って開発します。本書は環境構築、開発セッション、検証、成果物の生成と公開の手順を定義します。利用方法と配布状態は [README](../README.md)、実装の責務と公開判定は [設計書](design.md)、選択理由は [設計判断](decisions.md)、変更時の規約は [AGENTS.md](../AGENTS.md) を参照してください。
+wts の変更、検証、配布を担当する人向けの手順です。コマンドの使い方は [README](../README.md)、変更時の契約と権限は [AGENTS.md](../AGENTS.md) に従ってください。
 
 ## 開発環境
 
-Apple Silicon Mac、Xcode Command Line Tools、`nix-command` と `flakes` を有効にした Nix が必要です。依存の取得と監査にはネットワーク接続を使用します。
-
-リポジトリを取得し、ルートディレクトリでセットアップと検証を実行します。
+Apple Silicon Mac、Xcode Command Line Tools、`nix-command` と `flakes` を有効にした Nix が必要です。依存取得と監査にはネットワーク接続を使います。`setup.sh` は Nix と Xcode Command Line Tools 自体をインストールしません。
 
 ```bash
 git clone https://github.com/9uiLe/wts.git
@@ -16,23 +14,13 @@ nix develop --no-update-lock-file --command bun run verify:deps
 ./scripts/check.sh
 ```
 
-Nix Flakes は Bun、Git、OSV-Scanner、Coreutils を提供し、Bun は JavaScript / TypeScript の依存を管理します。ツールは `flake.lock`、パッケージは `bun.lock` で固定します。通常の開発と CI ではロックファイルを更新せず、devShell の Bun を使用してください。インストール時のスクリプトは実行しません。
-
-`setup.sh` は Apple Silicon macOS、Nix、Xcode Command Line Tools の存在を確認し、Flake を検査してから `install-deps.sh` で依存を取得します。Nix や Xcode Command Line Tools 自体のインストールは行いません。依存取得だけを再実行する場合は `./scripts/install-deps.sh` を使用します。
+開発と CI の環境を揃えるため、Nix Flakes で開発ツール、Bun で JavaScript / TypeScript 依存を管理します。`flake.lock` と `bun.lock` を Git 管理し、通常の実行では更新せず、devShell 内の固定された Bun を使います。依存の再取得には `./scripts/install-deps.sh` を使います。依存追加・更新時は [依存の検証](#依存の検証) に従ってください。
 
 ## 開発セッション
 
-### 設定と作成元
+このリポジトリの [.wts.json](../.wts.json) は、ベースを `master`、worktree の作成先をメインチェックアウトの隣の `wts-worktrees` に設定しています。[scripts/name-session.py](../scripts/name-session.py) による命名には Python 3 と認証済み Claude CLI が必要です。Claude の Haiku へ作業内容を送信し、`--dry-run` でも命名を実行します。
 
-メインチェックアウトはリポジトリを clone したディレクトリです。作業用 worktree は、その隣の `wts-worktrees` ディレクトリに作成します。リポジトリで管理する `.wts.json` が、この配置とベースブランチ `master`、作業内容に基づく命名を指定しています。
-
-命名には Python 3 と認証済み Claude CLI が必要です。`scripts/name-session.py` は Claude の Haiku で英語の作業名を生成し、start では `YYYYMMDD-<作業名>`、stack では `<root>-pr<n>-<作業名>` を使います。worktree はブランチと同じ名前です。命名時は Claude への通信が発生し、`--dry-run` でも生成します。生成失敗や名前の衝突は作成前のエラーになります。
-
-`start` は `origin/master` からセッションを作成し、`restack` は同じ参照から更新を取り込みます。`cleanup` は `master` を削除対象から除き、`origin/master` への取り込み状況を調べます。別のベースを使う操作では `start`・`restack` の `--base-branch` を指定できます。設定の契約と優先順位は [設定資料](configuration.md) を参照してください。
-
-### セッションを作成する
-
-開発環境を用意したメインチェックアウトから、設定と作成予定を確認してセッションを作成します。`./scripts/dev.sh` は固定 Nix 環境で、そのスクリプトが属するチェックアウトのソースを実行します。バイナリのビルドやインストールは不要です。
+メインチェックアウトから、作成予定を確認してセッションを作ります。
 
 ```bash
 ./scripts/dev.sh config check
@@ -40,47 +28,13 @@ Nix Flakes は Bun、Git、OSV-Scanner、Coreutils を提供し、Bun は JavaSc
 ./scripts/dev.sh start --task '設定の診断を改善する'
 ```
 
-作成される worktree のソースと `.wts.json` は、ベースのコミットに含まれるものです。作成結果の `Path` へ `cd` し、その worktree にある `./scripts/setup.sh` を実行してください。`node_modules` は Git 管理しないため、worktree ごとに固定依存を取得します。以降のソース実行と検証には、作業中の worktree にあるスクリプトを使います。
+`dev.sh` は、そのスクリプトが属するチェックアウトのソースを固定 Nix 環境で実行します。ビルドやインストールは不要です。作成される worktree のソースと設定はベースコミットの内容なので、作成結果の `Path` へ移動し、その worktree の `./scripts/setup.sh` で依存を取得してください。以後の実行と検証にも作業中の worktree のスクリプトを使います。
 
-### 変更を積み、ベースの更新を取り込む
-
-変更は [開発コマンド](#開発コマンド) と [検証手順](#検証を実行する) に従って検証し、目的が共通する実装・テスト・文書を一つの変更単位としてコミットします。PR の記載項目は [PR テンプレート](../.github/PULL_REQUEST_TEMPLATE.md) に従ってください。
-
-同じ worktree で次の変更を別ブランチに積む場合は `stack` を使います。現在のブランチがスタックの先端で、未コミット変更がないことが必要です。最初の追加ブランチの番号は `2` です。
-
-```bash
-./scripts/dev.sh stack --pr-number 2 --task '診断結果の表示を整える'
-```
-
-`master` の更新をスタックへ取り込む場合は `restack` を使います。rebase 後の origin への push は対話で確認します。PR の作成・マージは GitHub または gh で行ってください。
-
-```bash
-./scripts/dev.sh restack
-```
-
-### マージ済みのセッションを整理する
-
-メインチェックアウトへ戻り、削除予定を確認してから整理します。削除対象の worktree にある未コミット変更や管理外ファイルは保持されないため、必要な内容は事前に保存してください。
-
-```bash
-./scripts/dev.sh cleanup --dry-run
-./scripts/dev.sh cleanup
-```
-
-### 不要なセッションを破棄する
-
-メインチェックアウトから、対象 worktree のルートパスを指定します。リモートの同名ブランチを含めて破棄する例です。
-
-```bash
-./scripts/dev.sh discard ../wts-worktrees/session-name --remote origin --dry-run
-./scripts/dev.sh discard ../wts-worktrees/session-name --remote origin
-```
-
-ローカルだけを対象とする場合は両方のコマンドから `--remote origin` を省きます。未コミット・未追跡・無視対象ファイルも破棄するときは `--force` を指定します。削除範囲、確認、失敗時の扱いは [利用手順](../README.md#セッションの破棄)を参照してください。
+変更の積み重ねと更新は [セッションで作業する](../README.md#セッションで作業する)、削除は [マージ済みブランチの整理](../README.md#マージ済みブランチの整理) と [セッションの破棄](../README.md#セッションの破棄) に従い、例の `wts` を `./scripts/dev.sh` に置き換えます。削除は対象外のメインチェックアウトから行い、残すファイルと削除範囲を確認してください。PR の作成・マージは GitHub または gh で行います。
 
 ## 開発コマンド
 
-各スクリプトは自身の位置から wts リポジトリと固定 Nix 環境を特定します。設定検査は呼び出し元のプロジェクトを対象とするため、現在のディレクトリを保持します。
+スクリプトは自身の位置から wts のチェックアウトを特定します。`check-config.sh` は呼び出し元のプロジェクトを検査するため、現在のディレクトリを保持します。
 
 | スクリプト | 用途・引数 |
 | --- | --- |
@@ -88,246 +42,207 @@ Nix Flakes は Bun、Git、OSV-Scanner、Coreutils を提供し、Bun は JavaSc
 | `./scripts/install-deps.sh` | 固定依存の取得。引数なし |
 | `./scripts/dev.sh [CLI引数…]` | ソースから CLI を実行 |
 | `./scripts/check-config.sh [設定ファイル]` | 呼び出し元プロジェクトまたは指定ファイルの設定検査 |
-| `./scripts/build.sh` | ビルドと成果物検証。引数なし |
-| `./scripts/check.sh` | 整形・lint・型・テスト・ビルドと成果物検証。引数なし |
-| `./scripts/install.sh [--with-deps] [成果物ディレクトリ] [配置先ディレクトリ]` | 配布バイナリを配置 |
+| `./scripts/build.sh` | ビルドと成果物照合。引数なし |
+| `./scripts/check.sh` | 整形・lint・型・テスト・ビルドと成果物照合。引数なし |
+| `./scripts/install.sh [--with-deps] [成果物ディレクトリ] [配置先ディレクトリ]` | [取得済み成果物の配置](#取得済み成果物からの導入) |
 
-`check-config.sh` は任意のプロジェクトから絶対パスで呼び出せます。検査対象・設定の必須条件・検査範囲は [設定資料](configuration.md#設定の検査)を参照してください。`install.sh` は Nix を必要とせず、macOS の標準コマンドを使用します。引数の既定値は [ビルド成果物](#ビルド成果物)に記載しています。
+`check-config.sh` は任意のプロジェクトから絶対パスでも呼び出せます。検査範囲は [設定の検査](configuration.md#設定の検査) を参照してください。
 
-スクリプトから呼び出す処理と個別の検査は `package.json` に定義しています。個別に実行する場合は `nix develop --no-update-lock-file` で devShell を開き、以下のコマンドを使用します。
+個別の処理はリポジトリのルートで `nix develop --no-update-lock-file` を実行し、devShell 内で次のコマンドを使います。
 
-| コマンド | 処理 |
+| コマンド | 用途 |
 | --- | --- |
-| `bun run dev` | ソースから CLI を起動する。後ろに `--help`、`--version`、`doctor` などの引数を渡す |
-| `bun run format` | Biome で整形し、ファイルを更新する |
-| `bun run format:check` | ファイルを変更せずに整形規則を検査する |
-| `bun run lint` | Biome の recommended ルールで静的検査する |
-| `bun run typecheck` | `tsc --noEmit` で型を検査する |
-| `bun run test` | CLI、初期化・設定・命名、セッション操作、環境検査、バージョン、公開判定、インストールの振る舞いをテストする |
-| `bun run ui:catalog` | 全コマンドの出力を収録し、全件と基準版との差分を静的 HTML に生成する |
-| `bun run verify:deps` | 固定依存をインストールし、依存一覧と監査結果を生成する |
-| `bun run build` | Apple Silicon 向けバイナリを生成し、起動を検証する |
-| `bun run check` | 整形検査、lint、型チェック、テスト、ビルドを順に実行する |
+| `bun run dev [CLI引数…]` | ソースから CLI を実行 |
+| `bun run format` | Biome で整形し、ファイルを更新 |
+| `bun run format:check` | ファイルを変更せず整形を検査 |
+| `bun run lint` | `biome.json` に従って静的検査 |
+| `bun run typecheck` | `tsconfig.json` に従って `tsc --noEmit` で型検査 |
+| `bun run test` | 自動テスト |
+| `bun run ui:catalog` | [端末 UI のレビュー資料](#端末-ui-の一覧と変更確認) を生成 |
+| `bun run verify:deps` | 固定依存の取得と両監査 |
+| `bun run build` | Apple Silicon 向けバイナリの生成と起動検証 |
+| `bun run check` | 整形検査・lint・型検査・テスト・ビルド |
 
 ## 検証を実行する
 
-`./scripts/check.sh` は整形、lint、型、テスト、ビルド、成果物照合を実行します。整形・lint は `biome.json`、型検査は `tsconfig.json` に従います。個別の変更には [開発コマンド](#開発コマンド)から必要な検証を選び、[仕様と受け入れ基準](specification.md)に対する実行結果と未検証条件を [検証資料](verification.md)に記録してください。
+変更が影響する契約に対応する証拠を選びます。整形、lint、型検査、振る舞い、依存監査、成果物照合は別の証拠です。Bun による実行や lint を型検査の代わりにしません。
+
+| 変更の影響 | 必要な検証 |
+| --- | --- |
+| 文書・指示のみ | 差分、参照先、適用条件、既存契約との整合。実行コードや配布内容に影響しなければ CLI テストとビルドは不要 |
+| TypeScript・JSON | `bun run format:check` と `bun run lint`。型に影響すれば `bun run typecheck`、振る舞いに影響すれば該当テスト |
+| 同梱スキル | [スキルの保守](#ai-向けスキルの保守) に従って取得・導入・バイナリ埋め込みを検証 |
+| 依存追加・更新 | [依存の検証](#依存の検証) |
+| ビルド・配布 | Apple Silicon 上で `./scripts/build.sh` を実行し、バイナリ・SHA-256・`BUILD_INFO` を照合 |
+| 対話 | 下記の TTY 検証。対話変更時は doctor の肯定・否定・Ctrl-C を必ず確認し、変更した操作の状態も確認 |
+
+[CI](../.github/workflows/ci.yml) の `bun run check` と成果物照合は維持します。検証結果は該当する PR・CI・Release に、対象コミット、環境、入力、観測結果、未検証条件を記載してください。自動テスト、実サービス、配布経路で得た証拠を区別し、認証情報や秘密情報は記録しません。
 
 ### 自動テスト
 
-`tests/helpers/` は一時 Git リポジトリ・bare origin の生成、Git 設定の隔離、wts の環境変数を除去した CLI 環境と実行を提供します。環境変数は `runCli(cwd, args, overrides)` で明示します。restack の非対話条件と boolean 環境変数は CLI の入口から実行し、終了コード、fetch、参照、lease を観測します。
+[tests/helpers/](../tests/helpers/) を使い、一時 Git リポジトリと bare origin、利用者の Git 設定と wts 環境変数を隔離した環境で実行します。環境変数による入力と非対話の条件は CLI の入口から検証します。共通の fixture と実行処理をテストごとに重複定義しません。
 
-設定・命名には一時ファイルとテスト用スクリプトを使います。外部サービスの応答や Homebrew はテスト用コマンドで再現し、自動テスト中に実サービスの認証やシステムへの依存導入は行いません。削除操作も一時 worktree・bare origin で検証し、実際の開発 worktree や公開リモートを使いません。実サービスや配布バイナリを検証した結果は、これらの自動テストとは分けて記録します。
+命名、GitHub、Homebrew の応答と障害は一時ファイル・テスト用コマンドで再現します。実サービスの認証、システムへの依存導入、実際の開発 worktree や公開リモートへの削除・push は自動テストで行いません。
 
 ### 対話と状態の検証
 
-固定 devShell の TTY 上で実行し、入力だけでなく終了コードと操作後の状態を確認します。
+固定 devShell の TTY 上で入力、終了コード、操作後の状態を確認します。CLI の直接起動と `bun run dev` 経由の実行は区別し、実行していない経路を検証済みと扱いません。
 
 | 対象 | 入力条件 | 期待する結果 |
 | --- | --- | --- |
-| `bun run dev doctor --interactive` | 肯定・否定・Ctrl-C | 終了コード `0`、参照不変 |
+| `bun run dev doctor --interactive` | 肯定・否定・Ctrl-C | 終了コード `0`、Git 参照不変 |
 | `bun run dev restack --dry-run` | CLI・環境変数・設定のベースを省略。`origin/HEAD` の有無ごとに Enter・Ctrl-C | 候補は `origin/HEAD` の参照、なければ `origin/main`。終了コード `0`、参照・lease 不変 |
-| discard | ローカルだけ・リモートを含む各条件で承認・否定・Ctrl-C | 承認時は指定範囲を削除し、否定・Ctrl-C は状態不変。終了コード `0` |
+| `bun run dev discard <検証用path>` | ローカルだけ・`--remote origin` の各条件で承認・否定・Ctrl-C | 承認時は指定範囲を削除。否定・Ctrl-C は状態不変。終了コード `0` |
 
-restack の push 確認には、入力ごとに独立したセッションと bare origin を用意し、rebase で OID が変わる状態にします。`PUSH`・`PUSH_ONLY`・`DRY_RUN` を unset して、`bun run dev restack --base-branch origin/main` を実行します。
+restack の push 確認には、入力ごとに独立したセッションと bare origin を用意し、rebase で OID が変わり push が必要な状態にします。`PUSH`・`PUSH_ONLY`・`DRY_RUN` を unset し、`bun run dev restack --base-branch origin/main` を実行します。
 
 | push 確認 | ローカル参照 | origin | lease |
 | --- | --- | --- | --- |
 | 肯定 | rebase 後の OID | rebase 後の OID | 除去 |
 | 否定・Ctrl-C | rebase 後の OID | 不変 | 保持 |
 
-すべて終了コード `0` と元の checkout への復帰を確認します。discard の保護条件・参照競合・削除段階ごとの失敗は `tests/discard.test.ts` で検証します。
+いずれも終了コード `0` と元の checkout への復帰を確認します。push の確認時点で rebase は完了しているため、否定・キャンセルでもローカル参照は元に戻りません。削除の保護条件、参照競合、段階ごとの失敗は [discard のテスト](../tests/discard.test.ts) で検証します。
 
 ### AI 向けスキルの保守
 
-AI によるスキルの選択条件とガイドの読み込み手順は `skills/wts-cli/SKILL.md`、CLI の操作手順は `skills/wts-cli/references/guide.md` を編集します。コマンドの入力、実行範囲、復旧方法を変更した場合は、対応するガイドも同じ変更単位で更新してください。
+[skills/wts-cli/SKILL.md](../skills/wts-cli/SKILL.md) は操作依頼の選択とガイド取得の入口、[references/guide.md](../skills/wts-cli/references/guide.md) は CLI の操作手順です。実行する CLI と手順の版を揃えるため、導入するのは入口だけとし、ガイドは実行バイナリから取得します。取得・導入に Git リポジトリ、設定、通信、外部コマンド、実行時のソースファイルを要求しません。入口に配布されない参照ファイルへのリンクを追加しないでください。
 
-ソースから内容と導入結果を確認できます。`--path` には検証用のスキル親ディレクトリを指定してください。
+description は wts の実操作を対象にし、ソースや文書を編集するだけの依頼では発動させません。ガイドは操作に必要な節へ案内し、特定のモデルだけを前提にしません。この保守方針は OpenAI Developers の [Rethinking skills and prompts for GPT-6 Astra](https://developers.openai.com/blog/rethinking-skills-and-prompts-for-gpt-6-astra) を参考にしています。
+
+コマンドの入力、操作範囲、復旧方法を変えたら対応するガイドも更新します。導入先は `--path` で選べ、AI 製品の設定ファイルは変更しません。既存の同内容は変更せず成功し、異なる内容の置き換えは `--force` を要求します。他ファイルの保持、配置先ディレクトリの symlink と通常ファイル以外の `SKILL.md` の拒否を維持してください。
+
+スキル内容の取得と入口の導入は次のコマンドで確認できます。`--path` は検証用のスキル親ディレクトリにします。
 
 ```bash
 ./scripts/dev.sh skills get wts-cli
 ./scripts/dev.sh skills install wts-cli --path /path/to/test-skills
 ```
 
-`bun run test` でガイド出力、配置先、同一内容の再導入、既存ファイルの保護と置き換えを検証します。ビルド時は `scripts/build.ts` の `verifyEmbeddedSkill` が、生成バイナリをリポジトリ外の一時ディレクトリで PATH を空にして実行します。取得したガイドと導入した `SKILL.md` をソースのテキストと照合し、外部コマンドと実行時のソース参照なしに配布内容を利用できることを確認します。AI 製品上での読み込み・呼び出しを試した場合は、この CLI の検証とは分けて記録してください。
+文面の変更でも、固定 devShell 内の `bun test tests/skills.test.ts` と `./scripts/build.sh` で検証します。ビルド検証はリポジトリ外・外部コマンドなしで取得・導入し、ソースの内容と一致することを確認します。description の適用条件、参照節、非対話オプション、承認範囲も差分で照合してください。これらは AI 製品上の発動精度や複数モデルの実動作を保証しません。実際の読み込み・呼び出しは別の証拠として扱います。
 
 ### 端末 UI の一覧と変更確認
 
-端末 UI のレビューには、実 CLI の表示を収録した静的 HTML を使います。全件一覧でコマンド間の一貫性を、変更一覧で採用済みの表示との差分を確認します。リポジトリのルートから固定 devShell で生成してください。
+定義したケースで実 CLI の出力を静的 HTML に収録し、全体の一貫性と採用済み表示との差分を確認します。リポジトリのルートで生成してください。
 
 ```bash
 nix develop --no-update-lock-file --command bun run ui:catalog
 ```
 
-#### レビュー画面
+`release/ui-catalog/index.html` をブラウザーで開き、変更された文言・配色・入力・終了コードと全体の表示を確認します。対話は「入力前」の画面も確認してください。HTML はサーバー不要で単体共有でき、CI の `terminal-ui-review` アーティファクトからも取得できます。
 
-`release/ui-catalog/index.html` をブラウザーで開きます。各 HTML に画面と操作機能を含むため、サーバーを用意せず単体で共有できます。CI で生成したファイルは、Actions の `terminal-ui-review` アーティファクトから取得できます。
-
-上部の件数付きボタンで「全件」と「変更のみ」を切り替えます。ケース名・コマンド・出力の検索と、コマンドによる絞り込みを併用できます。選択した範囲の件数と、絞り込み後の表示件数を確認してください。
-
-| ケースの状態 | 表示 |
+| `release/ui-catalog/` のファイル | 用途 |
 | --- | --- |
-| 変更なし | 「出力」を1画面で表示 |
-| 変更あり | 「変更前」「変更後」を並べ、変更行を強調 |
-| 追加 | 追加された出力を表示 |
-| 削除 | 削除された出力を表示 |
+| `index.html`、`changes.html` | 全件または変更件を初期表示するレビュー画面 |
+| `captures.json`、`comparison.json` | 生の収録結果とケースごとの変更判定の調査 |
+| `coverage.md` | 疑似応答の範囲と未実測条件の確認 |
+| `failure.txt`、`partial-captures.json` | 生成失敗時の診断と部分収録。HTML にも失敗を表示し、終了コードは `1` |
 
-各ケースでは実行コマンド、入力、終了コード、最終画面を確認できます。対話の選択肢や入力待ちの表示は「入力前」を開いて確認してください。変更が0件の場合は「全件を表示」、検索や絞り込みに一致しない場合は「絞り込みを解除」から一覧へ戻れます。
-
-#### 生成ファイル
-
-既定の出力先は `release/ui-catalog/` です。HTML は表示レビュー用、JSON と Markdown は実行結果や収録条件の調査用です。
-
-| ファイル | 内容 |
-| --- | --- |
-| `index.html` | 「全件」を初期表示するレビュー画面 |
-| `changes.html` | 「変更のみ」を初期表示するレビュー画面 |
-| `captures.json` | 実行時の端末出力、入力、コマンド、終了コード |
-| `comparison.json` | ケースごとの変更判定 |
-| `coverage.md` | 収録条件、疑似応答を使う範囲、未実測の条件 |
-
-生成が失敗すると終了コード `1` を返し、HTML に診断を表示します。`failure.txt` で失敗内容、`partial-captures.json` で収録済みケースを調べてください。
-
-#### 基準版の採用
-
-`tests/fixtures/ui-baseline.json` は、担当者が採用した表示を保存する Git 管理の基準版です。一時パスや生成名などを正規化して保存します。通常の生成はこの基準版と比較し、差分の有無にかかわらず収録が成功すれば終了コード `0` を返します。
-
-1. UI を変更し、カタログを生成します。
-2. 「変更のみ」で文言、配色、入力前画面、終了コードを確認し、「全件」で全体の表示を確認します。
-3. 採用する表示が確定したら、次のコマンドで基準版を更新します。
+`tests/fixtures/ui-baseline.json` は担当者が明示的に採用する Git 管理の基準版です。通常の収録が成功すれば、差分があっても終了コードは `0` です。表示を確認して採用を決めた後だけ、次を実行します。
 
 ```bash
 nix develop --no-update-lock-file --command bun run ui:catalog --update-baseline tests/fixtures/ui-baseline.json
 nix develop --no-update-lock-file --command bun run format
 ```
 
-UI と基準版を同じ変更単位でコミットしてください。基準版を更新した実行の HTML は、更新前の基準との比較結果です。通常の生成を再実行すると、更新後の基準と比較します。
+UI と基準版を同じ変更単位でコミットします。この実行の HTML は更新前の基準との比較です。更新後の基準と比較する場合は通常の生成を実行します。別の基準や出力先は devShell 内で `bun run ui:catalog --baseline /path/to/baseline.json --output release/ui-review` と指定できます。
 
-別の基準版や出力先を使う場合は、devShell 内で次のように指定します。
+表示設計と無関係な差分を除くため、一時パス・日付・UUID・OID を正規化し、スピナーの更新回数を比較対象から外します。文言・色・入力前画面・入力・コマンド・終了コードは比較します。収録は隔離した一時環境と疑似応答を使い、実サービスへの接続結果を保証しません。詳しい未実測条件は生成された `coverage.md` を確認してください。
 
-```bash
-bun run ui:catalog --baseline /path/to/baseline.json --output release/ui-review
-```
-
-#### 収録条件とケースの追加
-
-コマンド分類は収録ケースから導出します。discard・skills・list を含む固有ケースが各コマンドの絞り込みで表示されることを確認してください。
-
-収録は 120 桁・40 行の Bun 擬似端末と一時 Git リポジトリを使います。この寸法はカタログの表示条件です。非 TTY のケースはパイプ出力を収録します。リモート操作にはローカル bare リポジトリを使い、GitHub 応答や障害はテスト用コマンドで再現します。
-
-比較では一時パス、日付付き UUID、Git の OID などの可変値を正規化します。対象は文言・色・入力前画面・入力・実行コマンド・終了コードで、スピナーの描画回数は含めません。
-
-ケースは `scripts/ui-catalog/` に定義します。コマンドや表示分岐を追加したら、到達条件と期待する終了コードを持つケースも追加してください。タイトルは基準版との対応キーなので、表示文言の変更だけでは変更しません。条件を変えた場合はケースの追加・削除としてレビューします。
-
-収録対象は列挙した表示分岐です。実サービスへの接続、可変値の全組合せ、OS・Git の診断文の全種類は対象外です。glob 走査例外と lease 削除時の OS 例外、および通常到達しない防御的分岐は未実測として扱います。具体的な条件は生成された `coverage.md` で確認してください。
+表示分岐を追加したら [scripts/ui-catalog/](../scripts/ui-catalog/) に到達条件と期待する終了コードを持つケースを追加します。タイトルは基準版との対応キーなので、表示文言だけの変更では変えません。条件を変えたケースは追加・削除としてレビューします。
 
 ## 依存の検証
 
-依存追加・更新時は公開元、ライセンス、リリース履歴、既知の脆弱性、スクリプト、推移的依存、予期しない通信を確認し、更新理由を記録します。通常の取得は `bun install --frozen-lockfile --ignore-scripts` とし、未レビューの更新やインストールスクリプトの実行は行いません。
+依存追加・更新時は、公開元、ライセンス、リリース履歴、既知の脆弱性、スクリプト、推移的依存、予期しない通信を確認し、必要性と更新理由を PR またはコミットに記録します。通常の取得は `bun install --frozen-lockfile --ignore-scripts` とし、未レビューの依存更新、ロックファイル差し替え、インストールスクリプト実行は行いません。
 
-`verify:deps` は `bun audit` と `osv-scanner` の両方の成功を要求します。生成する監査資料は次のとおりです。
+固定 devShell 内で `bun run verify:deps` を実行し、`bun audit` と `osv-scanner` の両方の成功を確認します。診断資料は `release/` に生成されます。
 
-| ファイル | 内容 |
+| ファイル | 用途 |
 | --- | --- |
-| `release/DEPENDENCIES.json` | パッケージのメタデータとインストール状態 |
-| `release/bun-audit.json`、`release/osv-audit.json` | 脆弱性監査結果 |
-| `release/bun-audit.stderr`、`release/osv-audit.stderr` | 監査コマンドの標準エラー |
-| `release/AUDIT_INFO` | 問い合わせ日時、ツール、データベース取得先、終了コード、例外の有無 |
+| `DEPENDENCIES.json` | パッケージのメタデータと導入状態の確認 |
+| `bun-audit.json`、`osv-audit.json` | 脆弱性監査結果の確認 |
+| `bun-audit.stderr`、`osv-audit.stderr` | 監査コマンドの診断の調査 |
+| `AUDIT_INFO` | 問い合わせ日時・ツール・データベース・終了コード・例外の確認 |
 
 ## ビルド成果物
 
-`./scripts/build.sh` は固定 Nix 環境で `bun run build` を実行し、バイナリ・SHA-256・`BUILD_INFO` の存在とバイナリのチェックサムを確認します。`./scripts/check.sh` も全検査とビルドの後に同じ成果物検証を行います。ビルドは Apple Silicon macOS 上で `bun-darwin-arm64` 向けにコンパイルし、生成バイナリの `--help`、`--version`、`doctor` を実行します。生成と起動検証を同じ処理で行うため、macOS ARM64 の実行環境が必要です。
-
-通常は `package.json` のバージョンを使用します。配布バージョンを指定する場合は、先頭 `v` なしの SemVer をビルド時に渡します。
+Apple Silicon macOS 上で `./scripts/build.sh` を実行します。`bun-darwin-arm64` 向けバイナリの生成と起動検証を同じ環境で行います。バージョンは通常 `package.json` を使い、公開用には追跡ファイルを変更せずビルド時に埋め込みます。
 
 ```bash
 WTS_RELEASE_VERSION=0.2.0-rc.1 ./scripts/build.sh
 ```
 
-成果物は次の構成です。`dist/` と `release/` は Git 管理対象外です。
+指定は先頭 `v` なしの SemVer です。生成物は `dist/wts-macos-arm64` と、配布する次の一組です。`dist/` と `release/` は Git 管理しません。
 
 ```text
-dist/wts-macos-arm64
 release/wts-macos-arm64
 release/wts-macos-arm64.sha256
 release/BUILD_INFO
 ```
 
-`BUILD_INFO` は生成元コミット、作業ツリーの状態、バージョン、ツール・OS、ロックファイルのハッシュ、対応環境と署名・公証の状態を記録します。手動でチェックサムを照合する場合は、`release/` 内で次を実行します。
+`BUILD_INFO` はバージョンとターゲット、生成元コミット、作業ツリー・ツール・環境・依存の状態、外部要件、署名・公証の状態を示す配布資料です。バイナリとの対応を確認するため同じビルドの一組を扱います。成果物の種別は `build_kind=verification_only` で、Pre-release もこの種別です。起動検証の成功だけで正式公開可能とは判断しません。
+
+`build.sh` と `check.sh` は成果物の存在とチェックサムを照合します。手動で照合する場合は `release/` 内で実行します。
 
 ```bash
 shasum -a 256 -c wts-macos-arm64.sha256
 ```
 
-成果物の種別は `build_kind=verification_only` です。Pre-release として公開する場合も同じ種別を使用します。
+## 取得済み成果物からの導入
 
-ローカル配置には `./scripts/install.sh [--with-deps] [成果物ディレクトリ] [配置先ディレクトリ]` を使用します。既定の成果物はリポジトリの `release/`、配置先は `~/.local/bin` です。指定した相対パスは呼び出し時のディレクトリを基準に解釈します。バイナリ・チェックサム・`BUILD_INFO` の存在とチェックサムを確認してから配置します。`--with-deps` 指定時は検証と配置の間に Homebrew の `brew install git gh` を実行します。Homebrew が利用できない場合と導入失敗時は配置を中止します。依存と認証の確認は `wts doctor --check` を使用します。署名・公証や Gatekeeper 許可は行いません。
+GitHub Releases からの取得とローカル配置を分けたい場合や、自分でビルドした成果物を導入する場合に使います。wts のリポジトリを clone し、同じ Release のバイナリ・SHA-256・`BUILD_INFO` を `/path/to/downloads` に揃えて実行します。Nix は不要で、macOS の標準コマンドを使います。
 
-### インストーラーの配置検証
+```bash
+./scripts/install.sh /path/to/downloads
+```
 
-ローカル・Web とも、配置先の `wts` が存在する場合は通常ファイルかつ非 symlink を要求します。検証済み成果物を配置先と同じディレクトリの staging ファイルへ書き込み、実行権限を付けて rename します。検証や配置が失敗した場合は既存の実行ファイルを保持し、staging を除去します。`tests/install.test.ts` と `tests/web-install.test.ts` で通常ファイルの更新、symlink・非通常ファイルの拒否、検証・配置失敗時の保持を確認します。
+成果物ディレクトリの既定値はリポジトリの `release/`、配置先の既定値は `~/.local/bin` です。第 2 引数で配置先を変えられます。相対パスは呼び出し時のディレクトリを基準に解釈します。
 
-## GitHub Actions
+`--with-deps` を明示すると、成果物検証後に Homebrew の `brew install git gh` を実行し、成功後に配置します。Homebrew がない場合や導入に失敗した場合は配置しません。Homebrew 自体、命名スクリプトの依存、認証は自動設定しません。
 
-CI と Release の検証ジョブは `macos-15` ランナーでクリーンなチェックアウトを確認し、`setup.sh`、依存監査、`check.sh` を実行します。ローカルと同じ入口で ARM64、Flake、依存、整形・lint・型・テスト・ビルド、チェックサムを検証します。使用するアクションはコミット SHA に固定します。
-
-| ワークフロー | 起動 | 権限と成果 |
-| --- | --- | --- |
-| [CI](../.github/workflows/ci.yml) | push、pull request、手動 | `contents: read` で検証し、追跡ファイルの差分がないことを確認する |
-| [Release](../.github/workflows/release.yml) | `master` を選択した手動実行 | 公開ジョブに `contents: write` を付与し、検証済み成果物を Pre-release として公開し、成功後に Pages を配信する |
-| [Pages](../.github/workflows/pages.yml) | Release からの呼び出し、`master` を選択した手動実行 | 公開済み Release を検査し、インストーラーと配布対象タグを Pages へ再配信する |
-
-Release はさらに、Nix 環境外でのバージョン一致・起動と、作業ツリーに変更がないことを確認します。Release ワークフローの同時実行は直列化し、進行中の実行を自動キャンセルしません。Pages の配信ジョブには `pages: write` と `id-token: write` を付与します。
+利用中の wts を壊さないため、両インストーラーは配置前に成果物を検証し、同じディレクトリの一時ファイルから置き換えます。既存の `wts` は通常ファイルかつ非 symlink が必要で、検証・配置失敗時は既存ファイルを保持します。署名・公証、Gatekeeper 許可、シェル設定の自動変更は行いません。PATH の登録は [README のインストール手順](../README.md#インストール) に従い、導入後は `wts doctor --check` で依存と認証を確認してください。
 
 ## Pre-release の公開手順
 
-リポジトリの Actions 設定とタグルールで、自動発行される `GITHUB_TOKEN` による Release・タグ作成が許可されている必要があります。初回は **Settings → Pages → Build and deployment → Source** を **GitHub Actions**（API の `build_type: workflow`）に設定してください。公開リポジトリの標準ランナーと GitHub Pages、Releases を使用し、外部サーバーは用意しません。
+[Release workflow](../.github/workflows/release.yml) は、最低対応 macOS と署名・公証方針が未確定のため、検証用 Pre-release を公開します。依存監査と `./scripts/check.sh` に加え、Nix 環境外で生成バイナリのバージョンと起動を確認します。公開ジョブ以外に書き込み権限を与えず、アクションはコミット SHA に固定してください。
 
-1. GitHub の **Actions → Release → Run workflow** を開きます。
-2. ブランチに `master`、`version` に先頭 `v` なしの SemVer（例: `0.2.0`、`0.2.0-rc.1`）を入力して実行します。`master` 以外では公開ジョブがスキップされます。
-3. ジョブの成功後、GitHub Releases で `v<version>` の Pre-release と、`wts-macos-arm64`、`wts-macos-arm64.sha256`、`BUILD_INFO` の添付を確認します。
-4. Pages 配信の成功後、`https://9uile.github.io/wts/channel.txt` が `v<version>` の 1 行であることと、`https://9uile.github.io/wts/install.sh` の取得を確認します。
+初回はリポジトリの Actions 設定とタグルールで `GITHUB_TOKEN` による Release・タグ作成を許可し、**Settings → Pages → Build and deployment → Source** を **GitHub Actions** に設定します。
 
-チェックアウト時点の最新 `master` を公開対象とし、ビルド前後に [公開判定](design.md#インストールと公開判定) を実行します。最新公開 Release と同じコミット、使用済みバージョン、処理中の `master` 更新、API エラーは公開を止めます。入力バージョンにプレリリース識別子がなくても、公開状態は必ず Pre-release です。
+1. 公開対象と影響が承認されていることを確認し、**Actions → Release → Run workflow** を開きます。
+2. ブランチに `master`、`version` に先頭 `v` なしの SemVer を指定します。公開対象はチェックアウト時点の最新 `master` です。`master` 以外では公開されません。
+3. 成功後、GitHub Releases の `v<version>` が Pre-release で、バイナリ・SHA-256・`BUILD_INFO` が添付されていることを確認します。
+4. Pages 配信後、`https://9uile.github.io/wts/channel.txt` が `v<version>` の 1 行で、`https://9uile.github.io/wts/install.sh` を取得できることを確認します。
 
-全ファイルのアップロード完了後に下書きを公開します。途中で失敗した場合は GitHub Releases とタグの状態を確認してください。既存の下書きやタグは再実行で上書き・削除されず、使用済みバージョンとして拒否されます。`master` 更新で停止した場合は、最新 `master` を対象に再実行してください。
+公開対象のすり替わりや重複公開を防ぐため、ビルド前後に最新 `master`、最新公開 Release、バージョンとタグの未使用を検査します。最新公開 Release と同じコミット、使用済みバージョン、処理中の `master` 更新、API の取得・応答検証の失敗は公開を止めます。入力にプレリリース識別子がなくても公開状態は必ず Pre-release です。
 
-Release 本文には、検証環境、最低対応 macOS の未確定、Developer ID 署名・公証の未実施、Gatekeeper 許可手順の未検証、チェックサム照合手順を記載します。
+Release は直列実行し、進行中の実行を自動キャンセルしません。成果物のアップロードが揃ってから下書きを公開します。失敗時は Releases とタグの状態を確認してください。既存の下書きやタグは再実行で上書き・削除せず、使用済みバージョンとして拒否します。`master` 更新による停止は最新 `master` で再実行します。Release 本文のテンプレートは workflow が保持し、配布条件や未検証範囲を変えるときは同時に更新してください。
 
 ### Pages の再配信
 
-Release 公開後に Pages の配信が失敗した場合や、既存 Release を配布対象として選び直す場合は、**Actions → Pages → Run workflow** で `master` と `version`（先頭 `v` なしの公開済み SemVer）を指定します。公開済み Release と 3 ファイルの存在を確認してから配信します。新たな Release やタグは作成しません。
+Pre-release を既定の導入対象に選び、インストール時の GitHub API 呼び出しを不要にするため、配布対象タグを Pages の `channel.txt` で指定します。利用者が未完成の Release を取得しないよう、Release 公開後にインストーラーとタグを同じ Pages 配信で切り替えます。
 
-`install.sh` と `channel.txt` は同じ Pages 配信に含めます。既定のインストール対象は最後に成功した Pages 配信のタグです。バージョン番号順や GitHub の Latest API では選びません。Pages が未配信、または取得できない場合、バージョン未指定のインストールは失敗します。
+Pages 配信の失敗から復旧する場合や既存 Release を選び直す場合は、[Pages workflow](../.github/workflows/pages.yml) の **Run workflow** で `master` と公開済みの `version`（先頭 `v` なし）を指定します。公開済み Release と 3 成果物を検査して配信し、Release やタグは作り直しません。
+
+既定のインストール対象は最後に成功した Pages 配信のタグであり、バージョン番号順や Latest API では選びません。Pages を取得できない場合、バージョン未指定のインストールは失敗します。
 
 ### 実機での配布経路の検証
 
-配布経路を通した実機での導入・更新・実動作、Gatekeeper の挙動と許可手順は未検証です。配布検証の担当者は Apple Silicon Mac の通常のターミナルで以下を実施します。Nix devShell を終了してから実行し、macOS バージョン、配布タグ、各操作の結果と終了コードを記録してください。検証範囲と結果の正本は [検証資料](verification.md)です。
+配布経路を通した実機での導入・更新・実動作と、Gatekeeper の挙動・許可手順は未検証です。検証担当者は Apple Silicon Mac の通常のターミナルで、Nix devShell を終了して次を確認します。対象コミット・配布タグ・macOS・CPU・入力・終了コード・結果を該当する PR または Release に記載してください。
 
-1. `sw_vers` と `uname -m` で環境を記録し、Pages の `channel.txt` と対象 Release の `BUILD_INFO` を確認します。
-2. [README のインストールコマンド](../README.md#インストール)を実行し、表示された導入先を確認します。PATH の設定案内が表示された場合は zsh でそのコマンドを実行します。
-3. 次のコマンドを実行し、`--version` が対象 Release のバージョンと一致すること、ヘルプと環境情報が表示されることを確認します。新しく開いたターミナルでも `wts --version` を実行できることを確認します。
+1. `sw_vers` と `uname -m`、Pages の `channel.txt`、対象 Release の `BUILD_INFO` で環境と成果物を特定します。
+2. [README のインストール](../README.md#インストール) に従い、配置先と PATH を確認します。新しいターミナルで `wts --version` が対象 Release と一致すること、`wts --help`、`wts doctor`、`wts doctor --check` の結果を確認します。
+3. Gatekeeper の制限の有無を記録します。制限がある場合は表示内容、実施した許可操作、その後の起動結果を記録します。インストーラーは隔離属性の削除やセキュリティ設定変更を行いません。
+4. `wts doctor --interactive` の肯定・否定・Ctrl-C が終了コード `0` になることを確認します。
+5. 検証用リポジトリで [README の操作手順](../README.md#プロジェクトを初期化する) に従い、`init`、`config check`、`start`、`stack`、`restack`、`cleanup` を確認します。必要な Git・gh・認証を用意し、push・PR のマージ・worktree の削除も検証用の対象だけに行います。実行していないコマンドは未検証と記録します。
+6. wts を終了し、別の公開済み Release を同じインストールコマンドで導入してバージョン更新と起動を確認します。更新先がなければ更新は未検証と記録します。
 
-```bash
-wts --version
-wts --help
-wts doctor
-wts doctor --check
-```
-
-4. 起動時に Gatekeeper の制限が生じるかを記録します。制限がある場合は macOS が示す内容と、実施した許可操作、その後の起動結果を記録します。インストーラーは隔離属性の削除やセキュリティ設定変更を行いません。
-5. `wts doctor --interactive` をそれぞれ肯定入力、否定入力、Ctrl-C で実行し、終了コードが `0` であることを確認します。
-6. 検証用リポジトリで [README の操作手順](../README.md#プロジェクトを初期化する)に従い、`init`、`config check`、`start`、`stack`、`restack`、`cleanup` の結果を確認します。Git・gh の導入と GitHub 認証が不足する場合は先に設定します。push・PR のマージ・worktree の削除は検証用の対象で行ってください。
-7. 更新先の Release が公開されたら実行中の wts を終了し、同じインストールコマンドを再実行します。`--version` の更新と起動を確認します。公開済みの異なるバージョンを `--version` で指定して更新を検証することもできます。異なるバージョンがなければ更新は未検証として記録します。
-
-実機の検証結果が揃うまでは、CI の起動成功だけで配布経路や対応 macOS の検証を完了扱いにしません。
+CI や自動テストの成功から、実サービスへの接続、配布経路、対応 macOS、Gatekeeper を検証済みと判断しません。
 
 ## 正式リリースの条件
 
-このワークフローが公開するのは検証用 Pre-release です。正式公開には次の条件を満たす必要があります。
+正式公開には、次の条件をすべて満たす必要があります。
 
-- 最低対応 macOS を決定し、対象環境で起動、コマンド、対話入力、キャンセル、終了を検証する。
-- Nix 環境外で実行し、GitHub Releases から取得したファイルのインストールと更新を検証する。
-- Developer ID 署名・公証の採否を決定する。採用する場合は最終バイナリへ適用・検証してからチェックサムを生成する。採用しない場合は対象 macOS の Gatekeeper の挙動と許可手順を検証し、制約と手順をリリース本文へ記載する。
-- レビュー済みコミットとクリーンな作業ツリーから生成し、依存監査、CI の ARM64 実行結果、成果物と `BUILD_INFO` の整合、最終バイナリのチェックサムを確認する。
-- 公開先の権限とリリース承認を確認し、バイナリ、チェックサム、ビルド情報を一組で公開する。
+- 最低対応 macOS を決め、対象環境で起動、コマンド、対話入力、キャンセル、終了を検証する。
+- Nix 環境外で、GitHub Releases からの導入と更新を検証する。
+- Developer ID 署名・公証の採否を決める。採用する場合は最終バイナリへの適用・検証後にチェックサムを生成する。採用しない場合は対象 macOS の Gatekeeper の挙動と許可手順を検証し、制約と手順を Release 本文に記載する。
+- レビュー済みコミットとクリーンな作業ツリーから生成して Apple Silicon 上で実行し、依存監査、CI の ARM64 実行結果、成果物と `BUILD_INFO` の整合、最終バイナリのチェックサムを確認する。
+- 公開先の権限とリリース承認を確認し、バイナリ・チェックサム・ビルド情報を一組で公開する。
