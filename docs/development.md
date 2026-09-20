@@ -49,6 +49,8 @@ nix develop --no-update-lock-file --command bun run verify:deps
 
 `dev.sh` は、スクリプトが属するチェックアウトのソースを devShell の Bun で直接実行します。作成した worktree にはベースコミットのソースと設定が入ります。作成結果の `Path` へ移動し、その worktree の `./scripts/setup.sh` で依存を取得してください。以後の実行と検証には、作業中の worktree のスクリプトを使います。
 
+ブランチ名が決まっている場合は `./scripts/dev.sh start --branch fix/config-diagnostics` で開始できます。本リポジトリの設定ではブランチ名からディレクトリ名も決まり、Claude による命名は実行しません。別の作業は別のブランチ名で作成し、それぞれの `Path` で並列に進めます。
+
 変更の積み重ねと更新は [セッションで作業する](../README.md#セッションで作業する)、削除は [マージ済みブランチの整理](../README.md#マージ済みブランチの整理) と [セッションの破棄](../README.md#セッションの破棄) に従い、例の `wts` を `./scripts/dev.sh` に置き換えます。削除は対象外のメインチェックアウトから行い、残すファイルと削除範囲を確認してください。PR の作成・マージは GitHub または gh で行います。
 
 ## 開発コマンド

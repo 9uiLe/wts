@@ -107,7 +107,7 @@ wts --format json --version
 
 ### 実行予定の確認
 
-`start`・`stack`・`restack`・`cleanup`・`discard` は `--dry-run` に対応します。fetch、ブランチ・worktree の変更、コピー、セッション情報・lease の書き込み、push は行いません。ただし、設定済み命名スクリプト、cleanup の GitHub・リモート照会、restack の通常モードでのリモート参照照会、discard の `--remote` 指定時のリモート照会は実行します。
+`start`・`stack`・`restack`・`cleanup`・`discard` は `--dry-run` に対応します。fetch、ブランチ・worktree の変更、コピー、セッション情報・lease の書き込み、push は行いません。ただし、名前の解決に使う命名スクリプト、cleanup の GitHub・リモート照会、restack の通常モードでのリモート参照照会、discard の `--remote` 指定時のリモート照会は実行します。
 
 ```bash
 wts start --task '' --dry-run
@@ -121,6 +121,15 @@ wts cleanup --dry-run
 ```bash
 wts start
 ```
+
+作業名が決まっている場合は、新規ブランチ名を直接指定できます。複数の作業をそれぞれの worktree で始めるには、別々の名前で実行します。
+
+```bash
+wts start --branch feature/auth
+wts start --branch fix/search --worktree search-fix
+```
+
+`--branch` はブランチ命名、`--worktree` はディレクトリ命名を上書きし、その側の命名スクリプトを実行しません。未指定の側は設定に従い、worktree の命名設定もなければブランチ名の `/` を `-` に置き換えます。実行する命名スクリプトがなければ `--task` は不要です。既存の名前は上書きしません。`--worktree` は管理範囲内の単一ディレクトリ名を指定します。
 
 表示された `Path` へ移動します。wts は呼び出し元シェルのディレクトリを変更しません。ベースが `origin/` で始まる場合は fetch し、失敗して手元の参照を使う場合は警告します。
 
