@@ -55,9 +55,10 @@ function fixture(baseBranch?: string) {
 	);
 	const realGit = Bun.which("git");
 	if (!realGit) throw new Error("Git is required for this test");
-	writeFileSync(
-		join(bin, "git"),
-		`#!${process.execPath}
+	function instrumentGit() {
+		writeFileSync(
+			join(bin, "git"),
+			`#!${process.execPath}
 import { existsSync, writeFileSync, readFileSync } from 'node:fs';
 const args = process.argv.slice(2);
 const git = (...a) => { const r = Bun.spawnSync([${JSON.stringify(realGit)}, ...a], { env: process.env }); if (r.exitCode) throw new Error(r.stderr.toString()); return r.stdout.toString().trim(); };
@@ -70,12 +71,14 @@ process.stdout.write(result.stdout);
 process.stderr.write(result.stderr);
 process.exit(result.exitCode);
 `,
-		{ mode: 0o755 },
-	);
+			{ mode: 0o755 },
+		);
+	}
 	function run(
 		options: { dryRun?: boolean; yes?: boolean },
 		extra: Record<string, string> = {},
 	) {
+		if (extra.GIT_HOOK) instrumentGit();
 		writeFileSync(prData, JSON.stringify(heads));
 		return runCli(
 			root,
