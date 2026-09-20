@@ -66,6 +66,7 @@ test("Claude naming example sends the configured prompt and formats branch and w
 				env: {
 					...process.env,
 					PATH: `${bin}:${process.env.PATH}`,
+					PYENV_DIR: join(directory, "missing-pyenv-directory"),
 					CLAUDE_LOG: log,
 					CLAUDE_RESULT: output,
 				},
