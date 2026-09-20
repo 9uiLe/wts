@@ -238,6 +238,7 @@ AI にスキルを読み込ませ、`wts-cli` で操作するよう依頼して�
 - [開発・検証・ビルド・公開](docs/development.md)
 - [端末 UI カタログの生成とレビュー](docs/development.md#端末-ui-の一覧と変更確認)
 - [設計・安全契約](docs/design.md)
+- [CLI 入出力と hamio の連携](docs/hamio.md)
 - [作業規約](AGENTS.md)
 
 ## ライセンス

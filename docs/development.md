@@ -16,7 +16,7 @@ nix develop --no-update-lock-file --command bun run verify:deps
 
 開発と CI の環境を揃えるため、Nix Flakes で開発ツール、Bun で JavaScript / TypeScript 依存を管理します。`flake.lock` と `bun.lock` を Git 管理し、通常の実行では更新せず、devShell 内の固定された Bun を使います。依存の再取得には `./scripts/install-deps.sh` を使います。依存追加・更新時は [依存の検証](#依存の検証) に従ってください。
 
-devShell は hamio v0.1.0 も PATH に提供します。パッケージ定義は `flake.nix` の hamio input を commit `dd8c86c6923f692ef183152958147bf095e85daa` に固定し、hamio 側の nixpkgs は提供元の lock を維持します。利用側の nixpkgs へ `follows` させません。採用元と依存調査は [hamio 移行資料](hamio-migration.md)に記録します。
+devShell は CLI の入出力を担当する hamio v0.1.0 を PATH に提供します。バージョンと Nix 構成の固定方法、プロセス間の契約、外部バイナリの依存と検証範囲は [CLI 入出力と hamio の連携](hamio.md)に定義します。
 
 ## 開発セッション
 
