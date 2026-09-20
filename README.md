@@ -91,6 +91,8 @@ git commit -m "Configure wts sessions"
 
 表示形式は `--format human` または `--format json` で指定できます。省略時は標準エラーが TTY なら `human`、それ以外は `json` です。human は結果・警告・エラー・進捗を標準エラーに表示し、標準出力には hamio の JSON 応答を返します。json は表示内容を含む JSON 応答だけを標準出力に返します。通常の表示は表示ごと、進捗は一つの処理の終了ごとに 1 行の JSON を返すため、複数の応答は NDJSON になります。`--help`・`--version`・スキル取得もこの形式に従います。
 
+json 形式の通常表示の応答は `blocks` 配列を持ち、`kind: "key-value"` のブロックは `items` 配列に項目を持ちます。一つの応答に複数のブロックと項目が入るため、機械利用側では各行を JSON として解析し、配列の全要素を順に読み取ってください。応答の数は、表示内容と hamio API の上限によって決まります。
+
 パイプや AI からの利用では `--format json` を明示してください。`apiVersion: 1` の応答には次の形式があります。端末の色は hamio に従い、`NO_COLOR=1` で無効にできます。
 
 | 応答の種類 | 内容 |

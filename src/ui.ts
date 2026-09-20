@@ -1,28 +1,12 @@
 import { type Block, render, task } from "./hamio";
+import { detailBlocks, messageBlocks, renderRequests } from "./display";
 
-// hamio API v1 の文字列4096 bytes・表示32 blocksに従う。
 function messages(
 	text: string,
 	level: "info" | "success" | "warning" | "error",
 ): void {
-	const blocks: Block[] = [];
-	for (const line of text.split("\n")) {
-		let part = "";
-		let bytes = 0;
-		for (const character of line) {
-			const size = Buffer.byteLength(character);
-			if (bytes + size > 4096) {
-				blocks.push({ kind: "message", level, text: part });
-				part = "";
-				bytes = 0;
-			}
-			part += character;
-			bytes += size;
-		}
-		blocks.push({ kind: "message", level, text: part });
-	}
-	for (let index = 0; index < blocks.length; index += 32)
-		render(blocks.slice(index, index + 32));
+	for (const request of renderRequests(messageBlocks(text, level)))
+		render(request);
 }
 
 export function commandLine(args: readonly string[]): string {
@@ -55,16 +39,7 @@ export const ui = {
 		ui.details([[label, value]]);
 	},
 	details(rows: readonly (readonly [string, string])[]): void {
-		// hamio API v1 の key-value は1 blockあたり200項目。
-		for (let index = 0; index < rows.length; index += 200)
-			render([
-				{
-					kind: "key-value",
-					items: rows
-						.slice(index, index + 200)
-						.map(([label, value]) => ({ label, value })),
-				},
-			]);
+		for (const request of renderRequests(detailBlocks(rows))) render(request);
 	},
 	plan(message: string): void {
 		messages(message, "info");

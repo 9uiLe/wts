@@ -1,10 +1,10 @@
 import { existsSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { ensureClean, fetchBase, type Git, worktrees } from "../git";
+import { ensureClean, localBranches, type Git, worktrees } from "../git";
 import { supportsUpdateRefs } from "../git-version";
-import { repository, resolveBaseRef } from "../project";
+import { fetchBase, repository, resolveBaseRef } from "../project";
 import { confirmAction, isInteractive } from "../prompts";
-import { sessionRootBranch, stackBranches } from "../session";
+import { readSession } from "../session";
 import { commandLine, ui } from "../ui";
 
 export async function restack(options: {
@@ -22,7 +22,7 @@ export async function restack(options: {
 	}
 	const repo = await repository();
 	const { git, gitDir } = repo;
-	const root = sessionRootBranch(repo);
+	const session = readSession(repo, localBranches(git));
 	ensureClean(git);
 	const rebasing = () =>
 		existsSync(join(gitDir, "rebase-merge")) ||
@@ -39,7 +39,11 @@ export async function restack(options: {
 			);
 		}
 	}
-	const { branches, tip } = validatedStack(git, root, repo.root);
+	const { branches, tip } = validatedStack(
+		git,
+		session.branches.map(({ branch }) => branch),
+		repo.root,
+	);
 	ui.detail("スタック", branches.join(", "));
 	const base = options.pushOnly
 		? ""
@@ -74,11 +78,13 @@ export async function restack(options: {
 				);
 			}
 		}
-		const selected = branches.filter(
-			(branch) =>
-				git.run(["rev-parse", `refs/heads/${branch}`]).trim() !==
-				leases.get(branch),
-		);
+		const currentRefs = localBranches(git);
+		const selected = branches.filter((branch) => {
+			const oid = currentRefs.get(branch);
+			if (!oid)
+				throw new Error(`セッションのブランチが存在しません: ${branch}`);
+			return oid !== leases.get(branch);
+		});
 		if (selected.length > 0) {
 			ui.detail("push 対象", selected.join(", "));
 			if (!options.push && !(await confirmAction("これらを push しますか？"))) {
@@ -103,15 +109,13 @@ export async function restack(options: {
 
 function validatedStack(
 	git: Git,
-	root: string,
+	branches: string[],
 	worktree: string,
 ): { branches: string[]; tip: string } {
-	const branches = stackBranches(git, root).map(({ branch }) => branch);
 	const tip = branches.at(-1);
 	if (!tip) throw new Error("スタックが見つかりません");
 	const checkouts = worktrees(git);
 	for (const branch of branches) {
-		git.run(["rev-parse", "--verify", `refs/heads/${branch}`]);
 		const other = checkouts.find(
 			(tree) => tree.branch === branch && tree.path !== worktree,
 		);

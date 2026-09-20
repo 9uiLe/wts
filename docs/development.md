@@ -86,6 +86,35 @@ devShell は CLI の入出力を担当する hamio v0.1.0 を PATH に提供し�
 
 命名、GitHub、Homebrew の応答と障害は一時ファイル・テスト用コマンドで再現します。実サービスの認証、システムへの依存導入、実際の開発 worktree や公開リモートへの削除・push は自動テストで行いません。
 
+### 性能を比較する
+
+[`scripts/benchmark.ts`](../scripts/benchmark.ts) は、基準バイナリと比較対象バイナリを同じ一時リポジトリで実行し、時間、Git・hamio の起動数、バイナリサイズ、最大 RSS を記録します。バイナリは同じビルド設定で用意し、固定 devShell から実行してください。
+
+基準にするリビジョンで `./scripts/build.sh` を実行し、生成したバイナリを別名で保存します。
+
+```bash
+mkdir -p release/performance
+cp release/wts-macos-arm64 release/performance/baseline-wts
+```
+
+比較対象のリビジョンを同じ設定でビルドしてから、両方のバイナリを指定します。
+
+```bash
+nix develop --no-update-lock-file --command bun scripts/benchmark.ts release/performance/baseline-wts dist/wts-macos-arm64 --output release/performance/comparison.json
+```
+
+| 測定項目 | 入力・方法 |
+| --- | --- |
+| 起動 | `--version` を実行 |
+| 一覧 | 1 セッションと 10 セッション。各セッションはルートと 3 スタックブランチを持つ |
+| 削除予定 | ルートを含む 10 ブランチのセッションに `discard --dry-run` を実行 |
+| 時間 | 両バイナリを交互に実行し、ウォームアップ 1 回後の 5 サンプルと中央値を記録 |
+| 起動数・メモリ | 時間計測とは別の実行で Git・hamio の起動数と macOS の最大 RSS を採取 |
+
+セッション数は、入力の桁を変えたときの増加傾向を観察するための条件です。時間のサンプル数と中央値は測定手順を揃えるために使い、合否の閾値は設けません。最大 RSS は OS の報告値であり、同時に動く全プロセスのメモリ合計ではありません。
+
+測定用リポジトリはリモートを持たず、通信は行いません。実行前後の参照、worktree 登録、メイン作業ツリーの状態が変わらないことを照合します。JSON の結果には環境、測定条件、全時間サンプル、バイナリの SHA-256 とサイズを含めます。実サービスや別の入力規模の性能は、その条件で測定してください。
+
 ### 対話と状態の検証
 
 固定 devShell の TTY 上で入力、終了コード、操作後の状態を確認します。CLI の直接起動と `bun run dev` 経由の実行は区別し、実行していない経路を検証済みと扱いません。

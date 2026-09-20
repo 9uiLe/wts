@@ -1,14 +1,14 @@
 import { lstatSync, mkdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { copyUnmanaged, readCopyList } from "../copy";
-import { fetchBase, type Git, validateRef, worktrees } from "../git";
+import { type Git, validateRef, worktrees } from "../git";
 import {
 	defaultNaming,
 	generateName,
 	validateBranchName,
 	validateWorktreeName,
 } from "../naming";
-import { repository, resolveBaseRef } from "../project";
+import { fetchBase, repository, resolveBaseRef } from "../project";
 import { askText } from "../prompts";
 import { recordSession } from "../session";
 import { commandLine, ui } from "../ui";
@@ -63,14 +63,15 @@ async function resolveCreation(
 	} catch (error) {
 		if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
 	}
-	if (worktrees(repo.git).some((wt) => wt.path === target))
+	const trees = worktrees(repo.git);
+	if (trees.some((wt) => wt.path === target))
 		throw new Error(`Worktree は既に登録されています: ${target}`);
 	const copyList = readCopyList(join(repo.root, ".worktree-copy"));
 
 	const source = options.copyFrom
 		? resolve(repo.root, options.copyFrom)
 		: (!base.startsWith("origin/") &&
-				worktrees(repo.git).find((wt) => wt.branch === base)?.path) ||
+				trees.find((wt) => wt.branch === base)?.path) ||
 			repo.main;
 	return { branch, target, base, source, copyList };
 }

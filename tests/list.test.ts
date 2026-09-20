@@ -20,7 +20,7 @@ test("list shows multiple sessions, dirty ignored files and unmanaged metadata w
 		writeFileSync(join(root, ".gitignore"), "ignored\n");
 		git(root, "add", ".");
 		git(root, "commit", "-m", "base");
-		for (const name of ["one", "two", "manual", "broken"]) {
+		for (const name of ["one", "two", "manual", "broken", "missing"]) {
 			const path = join(dir, "repo-worktrees", name);
 			git(root, "worktree", "add", "-b", name, path);
 			if (name !== "manual")
@@ -29,11 +29,20 @@ test("list shows multiple sessions, dirty ignored files and unmanaged metadata w
 						git(path, "rev-parse", "--absolute-git-dir"),
 						"wts-session.json",
 					),
-					name === "broken" ? "{" : JSON.stringify({ rootBranch: name }),
+					name === "broken"
+						? "{"
+						: JSON.stringify({
+								rootBranch: name === "missing" ? "absent" : name,
+							}),
 				);
 		}
 		const one = join(dir, "repo-worktrees", "one");
 		git(one, "switch", "-c", "one-pr2-followup");
+		git(one, "branch", "one-pr10-later");
+		git(one, "branch", "one-pr999999999999999999999-last");
+		git(one, "branch", "one-pr3-second");
+		git(one, "branch", "one-prinvalid-unrelated");
+		git(one, "tag", "one-pr2-followup");
 		writeFileSync(join(one, "ignored"), "dirty");
 		const outside = join(dir, "outside");
 		git(root, "worktree", "add", "-b", "outside", outside);
@@ -56,7 +65,14 @@ test("list shows multiple sessions, dirty ignored files and unmanaged metadata w
 		expect(result.text).toMatch(/Current\s+one-pr2-followup/);
 		expect(result.text).toContain("--force");
 		expect(result.text).toContain("なし");
-		expect(result.text.match(/未管理/g)?.length).toBe(2);
+		expect(result.text.match(/未管理/g)?.length).toBe(3);
+		expect(result.text).not.toContain("one-prinvalid-unrelated");
+		expect(result.text.indexOf("3: one-pr3-second")).toBeLessThan(
+			result.text.indexOf("10: one-pr10-later"),
+		);
+		expect(result.text).toContain(
+			"999999999999999999999: one-pr999999999999999999999-last",
+		);
 		expect(result.text).not.toContain(outside);
 		expect(git(root, "show-ref")).toBe(before);
 	} finally {

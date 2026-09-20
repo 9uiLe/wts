@@ -23,7 +23,6 @@ function fixture(baseBranch?: string) {
 	const env = cliEnvironment({
 		PATH: `${bin}:${process.env.PATH}`,
 		PR_DATA: prData,
-		HOOK_MARKER: join(dir, "hook-done"),
 	});
 	function git(...args: string[]) {
 		return gitWithEnv(root, args, env);
@@ -50,7 +49,25 @@ function fixture(baseBranch?: string) {
 	}
 	writeFileSync(
 		join(bin, "gh"),
-		`#!${process.execPath}\nconst a = process.argv.slice(2);\nif (a[0] === 'repo') console.log('test/repo');\nelse if (a[0] === 'api') process.exit(process.env.API_FAIL === '1' ? 1 : 0);\nelse {if (process.env.PR_FAIL === '1') process.exit(1);const data = JSON.parse(await Bun.file(process.env.PR_DATA).text()); console.log(JSON.stringify(process.env.PR_RESPONSE ? JSON.parse(process.env.PR_RESPONSE) : data[a[a.indexOf('--head') + 1]] || []));}\n`,
+		`#!${process.execPath}
+const a = process.argv.slice(2);
+if (a[0] === 'repo') console.log('test/repo');
+else if (a[0] === 'api') process.exit(process.env.API_FAIL === '1' ? 1 : 0);
+else {
+  if (process.env.PR_FAIL === '1') process.exit(1);
+  const branch = a[a.indexOf('--head') + 1];
+  const data = JSON.parse(await Bun.file(process.env.PR_DATA).text());
+  if (branch === 'target' && process.env.PR_HOOK) {
+    const git = (...args) => {
+      const result = Bun.spawnSync(['git', ...args], { env: process.env });
+      if (result.exitCode) throw new Error(result.stderr.toString());
+      return result.stdout.toString().trim();
+    };
+    new Function('git', process.env.PR_HOOK)(git);
+  }
+  console.log(JSON.stringify(process.env.PR_RESPONSE ? JSON.parse(process.env.PR_RESPONSE) : data[branch] || []));
+}
+`,
 		{ mode: 0o755 },
 	);
 	const realGit = Bun.which("git");
@@ -126,6 +143,29 @@ test("cleanup deletes merged heads and reachable tips, protecting external workt
 			"outside",
 			"unmerged",
 		]);
+	} finally {
+		f.dispose();
+	}
+});
+
+test("cleanup resolves local branches independently of same-name tags", () => {
+	const f = fixture();
+	try {
+		const tag = f.git("rev-parse", "HEAD");
+		f.git("tag", "target", tag);
+		f.git("switch", "-c", "target");
+		writeFileSync(join(f.root, "file"), "branch change\n");
+		f.git("commit", "-am", "branch change");
+		const oid = f.git("rev-parse", "refs/heads/target");
+		f.git("switch", f.base);
+		f.merged("target", oid);
+		const result = f.run({ yes: true });
+		expect(result.code).toBe(0);
+		expect(result.text).toContain("1 ブランチ・0 Worktree");
+		expect(f.git("for-each-ref", "--format=%(refname)", "refs/heads/")).toBe(
+			`refs/heads/${f.base}`,
+		);
+		expect(f.git("rev-parse", "refs/tags/target")).toBe(tag);
 	} finally {
 		f.dispose();
 	}
@@ -265,14 +305,8 @@ test.each(baseCases)(
 	},
 );
 
-const beforeRevalidation = (mutation: string) => `
-if (phase === 'before' && args.join(' ') === 'rev-parse --verify refs/heads/target') {
-  if (existsSync(process.env.HOOK_MARKER)) { ${mutation} }
-  else writeFileSync(process.env.HOOK_MARKER, 'classified');
-}`;
-
 test.each(["oid", "current", "other", "path"] as const)(
-	"cleanup retains candidates when %s changes after classification",
+	"cleanup retains candidates when %s changes during PR lookup",
 	(change) => {
 		const f = fixture();
 		try {
@@ -289,10 +323,7 @@ test.each(["oid", "current", "other", "path"] as const)(
 				other: `git('worktree', 'add', ${JSON.stringify(join(f.dir, "other"))}, 'target');`,
 				path: `git('-C', ${JSON.stringify(path)}, 'switch', 'replacement');`,
 			}[change];
-			const result = f.run(
-				{ yes: true },
-				{ GIT_HOOK: beforeRevalidation(mutation) },
-			);
+			const result = f.run({ yes: true }, { PR_HOOK: mutation });
 			expect(result.code).not.toBe(0);
 			expect(result.text).toContain("再検証: target");
 			expect(f.git("branch", "--format=%(refname:short)")).toContain("target");

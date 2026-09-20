@@ -1,4 +1,9 @@
-import { type Git, worktrees } from "../git";
+import { type Git, localBranches, worktrees } from "../git";
+import {
+	githubCommitExists,
+	githubRepository,
+	mergedPullRequestHeads,
+} from "../github";
 import { isSameOrDescendant } from "../path";
 import { commandAsync, requireCommand } from "../process";
 import { projectBase, repository } from "../project";
@@ -45,81 +50,28 @@ async function rewriteReasons(
 				: "origin のブランチ有無を確認できない",
 		);
 	}
-	if (
-		(
-			await commandAsync(
-				"gh",
-				["api", `repos/${owner}/commits/${oid}`],
-				git.cwd,
-			)
-		).code !== 0
-	) {
+	if (!(await githubCommitExists(git.cwd, owner, oid))) {
 		reasons.push("tip が origin に無い（未 push）");
 	}
 	const merges = git.tryRun([
 		"rev-list",
 		"--count",
 		"--min-parents=2",
-		`${remoteBase}..${branch}`,
+		`${remoteBase}..${oid}`,
 	]);
 	if (merges.code !== 0 || merges.out.trim() !== "0") {
 		reasons.push(`独自 merge commit ${merges.out.trim() || "?"} 件`);
 	}
 	try {
-		const base = git.run(["merge-base", remoteBase, branch]).trim();
+		const base = git.run(["merge-base", remoteBase, oid]).trim();
 		const upstream = await patchIds(git, `${base}..${remoteBase}`);
-		const local = await patchIds(git, `${remoteBase}..${branch}`);
+		const local = await patchIds(git, `${remoteBase}..${oid}`);
 		const unmatched = [...local].filter((id) => !upstream.has(id)).length;
 		if (unmatched) reasons.push(`パッチ非同値 ${unmatched} 件`);
 	} catch {
 		reasons.push("パッチ比較に失敗");
 	}
 	return reasons;
-}
-
-async function mergedHeads(
-	git: Git,
-	owner: string,
-	branch: string,
-): Promise<string[]> {
-	const result = await commandAsync(
-		"gh",
-		[
-			"pr",
-			"list",
-			"--repo",
-			owner,
-			"--state",
-			"merged",
-			"--head",
-			branch,
-			"--json",
-			"headRefOid,headRepository",
-		],
-		git.cwd,
-	);
-	if (result.code !== 0) {
-		throw new Error(`マージ済み PR を取得できません: ${branch}`);
-	}
-	const data: unknown = JSON.parse(result.out);
-	if (!Array.isArray(data)) throw new Error("gh が不正な PR 情報を返しました");
-	const heads: string[] = [];
-	for (const pr of data) {
-		if (
-			typeof pr !== "object" ||
-			pr === null ||
-			!("headRefOid" in pr) ||
-			typeof pr.headRefOid !== "string" ||
-			!("headRepository" in pr) ||
-			(pr.headRepository !== null &&
-				(typeof pr.headRepository !== "object" ||
-					!("nameWithOwner" in pr.headRepository) ||
-					typeof pr.headRepository.nameWithOwner !== "string"))
-		)
-			throw new Error("gh が不正な PR 情報を返しました");
-		if (pr.headRepository?.nameWithOwner === owner) heads.push(pr.headRefOid);
-	}
-	return heads;
 }
 
 interface CleanupTarget {
@@ -142,56 +94,32 @@ function cleanupCandidates(
 ) {
 	const trees = worktrees(git);
 	const current = git.run(["rev-parse", "--abbrev-ref", "HEAD"]).trim();
-	const candidates = git
-		.run(["for-each-ref", "--format=%(refname:short)", "refs/heads/"])
-		.trim()
-		.split("\n")
-		.filter(
-			(branch) =>
-				branch &&
-				branch !== baseBranch &&
-				branch !== current &&
-				!trees.some(
-					(tree) =>
-						tree.branch === branch &&
-						(tree.path === worktreesBase ||
-							!isSameOrDescendant(tree.path, worktreesBase)),
-				),
-		);
-	return { candidates, trees };
-}
-
-async function githubRepository(git: Git): Promise<string> {
-	requireCommand("gh");
-	const repo = await ui.task("GitHub リポジトリを確認しています", () =>
-		commandAsync(
-			"gh",
-			["repo", "view", "--json", "nameWithOwner", "-q", ".nameWithOwner"],
-			git.cwd,
-		),
+	const candidates = [...localBranches(git)].filter(
+		([branch]) =>
+			branch !== baseBranch &&
+			branch !== current &&
+			!trees.some(
+				(tree) =>
+					tree.branch === branch &&
+					(tree.path === worktreesBase ||
+						!isSameOrDescendant(tree.path, worktreesBase)),
+			),
 	);
-	const owner = repo.out.trim();
-	if (repo.code !== 0 || !owner) {
-		throw new Error("gh repo view でリポジトリ情報を取得できませんでした");
-	}
-	return owner;
+	return { candidates, trees };
 }
 
 async function classifyBranches(
 	git: Git,
 	owner: string,
 	remoteBase: string,
-	candidates: string[],
+	candidates: [string, string][],
 	trees: ReturnType<typeof worktrees>,
 ): Promise<CleanupTarget[]> {
 	const automatic: CleanupTarget[] = [];
-	for (const branch of candidates) {
-		const oid = git
-			.run(["rev-parse", "--verify", `refs/heads/${branch}`])
-			.trim();
+	for (const [branch, oid] of candidates) {
 		const heads = await ui.task(
 			`${branch} のマージ済み PR を確認しています`,
-			() => mergedHeads(git, owner, branch),
+			() => mergedPullRequestHeads(git.cwd, owner, branch),
 		);
 		if (!heads.length) continue;
 		const reasons =
@@ -405,7 +333,10 @@ export async function cleanupSessionBranches(options: {
 		ui.info("削除対象のブランチはありません");
 		return;
 	}
-	const owner = await githubRepository(git);
+	requireCommand("gh");
+	const owner = await ui.task("GitHub リポジトリを確認しています", () =>
+		githubRepository(git.cwd),
+	);
 	if (
 		!options.dryRun &&
 		(
