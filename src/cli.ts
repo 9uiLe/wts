@@ -122,6 +122,11 @@ dryRun(
 		"--task <text>",
 		"命名スクリプトへ渡す作業内容（既定の命名は日付＋UUID）",
 	)
+	.option("--branch <name>", "新規ブランチ名（ブランチ命名スクリプトを省略）")
+	.option(
+		"--worktree <name>",
+		"作成先のディレクトリ名（worktree 命名スクリプトを省略）",
+	)
 	.addOption(baseBranchOption())
 	.addOption(
 		new Option("--copy-from <directory>", "管理外ファイルのコピー元").env(

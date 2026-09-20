@@ -35,17 +35,26 @@ nix develop --no-update-lock-file --command bun run verify:deps
 
 ## 開発セッション
 
-開発セッションは、本リポジトリのソースを変更・検証するための Git worktree です。[.wts.json](../.wts.json) に従い、`master` をベースとして、メインチェックアウトの隣の `wts-worktrees` に作成します。
+本リポジトリの開発には、独立した作業ごとに Git worktree のセッションを作ります。[.wts.json](../.wts.json) はベースを `master`、配置先をメインチェックアウトの隣の `wts-worktrees` に定めています。ソースから CLI を実行する入口は `./scripts/dev.sh` です。
 
-命名には [scripts/name-session.py](../scripts/name-session.py) を使います。Python 3 は devShell が提供し、Claude CLI は利用者が PATH 上に用意して認証します。スクリプトは作業内容を Claude の Haiku へ送信して名前を生成します。`--dry-run` でも予定名を得るためにこの通信を行います。
-
-メインチェックアウトから、作成予定を確認してセッションを作ります。
+メインチェックアウトで設定を検査し、ブランチ名を指定して作成します。本リポジトリでは worktree の命名スクリプトを設定していないため、ディレクトリ名はブランチ名の `/` を `-` に置き換えたものです。次の例は命名スクリプトを実行しません。
 
 ```bash
 ./scripts/dev.sh config check
+./scripts/dev.sh start --branch fix/config-diagnostics --dry-run
+./scripts/dev.sh start --branch fix/config-diagnostics
+```
+
+別の作業は別のブランチ名で開始し、それぞれの作成結果の `Path` で並列に進めます。ディレクトリ名も指定する場合は `--worktree <name>` を使います。
+
+作業内容から名前を生成する場合は、ブランチ名を省略して `--task` を渡します。設定された [scripts/name-session.py](../scripts/name-session.py) が Claude の Haiku へ作業内容を送信します。Python 3 は devShell が提供し、Claude CLI は利用者が PATH 上に用意して認証します。
+
+```bash
 ./scripts/dev.sh start --task '設定の診断を改善する' --dry-run
 ./scripts/dev.sh start --task '設定の診断を改善する'
 ```
+
+この命名方法では dry-run でも Claude と通信し、本実行の名前が予定と異なる場合があります。名前を明示する場合も設定と命名スクリプトの存在・実行権限は検査します。
 
 `dev.sh` は、スクリプトが属するチェックアウトのソースを devShell の Bun で直接実行します。作成した worktree にはベースコミットのソースと設定が入ります。作成結果の `Path` へ移動し、その worktree の `./scripts/setup.sh` で依存を取得してください。以後の実行と検証には、作業中の worktree のスクリプトを使います。
 

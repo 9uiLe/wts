@@ -18,6 +18,8 @@ type Repository = Awaited<ReturnType<typeof repository>>;
 interface StartOptions {
 	dryRun?: boolean;
 	task?: string;
+	branch?: string;
+	worktree?: string;
 	baseBranch?: string;
 	copyFrom?: string;
 }
@@ -34,27 +36,31 @@ async function resolveCreation(
 	repo: Repository,
 	options: StartOptions,
 ): Promise<SessionCreation> {
-	const task =
-		options.task ??
-		(repo.config.config.naming?.branch || repo.config.config.naming?.worktree
-			? await askText("作業内容")
-			: "");
+	const rules = repo.config.config.naming;
+	const needsTask =
+		(options.branch === undefined && rules?.branch) ||
+		(options.worktree === undefined && rules?.worktree);
+	const task = options.task ?? (needsTask ? await askText("作業内容") : "");
 	const base = await resolveBaseRef(repo.config.config, options.baseBranch);
 	validateRef(base);
 	const naming = defaultNaming();
-	const branch = await generateName(repo.config, {
-		...naming,
-		kind: "branch",
-		task,
-	});
+	const branch =
+		options.branch ??
+		(await generateName(repo.config, {
+			...naming,
+			kind: "branch",
+			task,
+		}));
 	validateBranchName(repo.git, branch);
-	const worktree = await generateName(repo.config, {
-		...naming,
-		kind: "worktree",
-		task,
-		branch,
-		defaultName: branch.replaceAll("/", "-"),
-	});
+	const worktree =
+		options.worktree ??
+		(await generateName(repo.config, {
+			...naming,
+			kind: "worktree",
+			task,
+			branch,
+			defaultName: branch.replaceAll("/", "-"),
+		}));
 	validateWorktreeName(worktree);
 	const target = join(repo.worktreesBase, worktree);
 	try {

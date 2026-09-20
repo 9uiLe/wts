@@ -12,7 +12,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { runCli } from "./helpers/cli";
+import { cli, cliEnvironment, runCli } from "./helpers/cli";
 import { git, initRepository } from "./helpers/git";
 
 const dirs: string[] = [];
@@ -273,6 +273,181 @@ test("custom branch and worktree scripts receive task and prompt and determine s
 			kind === "branch" ? "branch prompt" : "directory prompt",
 		);
 	}
+});
+
+test("explicit names skip both naming scripts and keep the dry-run path for execution", () => {
+	const { main, dir } = fixture();
+	const marker = join(dir, "naming-called");
+	const script = namingScript(
+		dir,
+		`await Bun.write(${JSON.stringify(marker)}, "called"); process.exit(1);`,
+	);
+	writeFileSync(
+		join(main, ".wts.json"),
+		JSON.stringify({
+			naming: { branch: { script }, worktree: { script } },
+		}),
+	);
+	const args = [
+		"start",
+		"--base-branch",
+		"main",
+		"--branch",
+		"feature/auth",
+		"--worktree",
+		"auth work",
+	];
+	const refs = git(main, "show-ref");
+	const dry = runCli(main, [...args, "--dry-run"]);
+	expect(dry.code).toBe(0);
+	expect(git(main, "show-ref")).toBe(refs);
+	expect(existsSync(createdPath(dry.text))).toBe(false);
+	const actual = runCli(main, args);
+	expect(actual.code).toBe(0);
+	const target = createdPath(actual.text);
+	expect(target).toBe(createdPath(dry.text));
+	expect(git(target, "branch", "--show-current")).toBe("feature/auth");
+	const gitDir = git(target, "rev-parse", "--absolute-git-dir");
+	expect(
+		JSON.parse(readFileSync(join(gitDir, "wts-session.json"), "utf8")),
+	).toEqual({ rootBranch: "feature/auth" });
+	expect(existsSync(marker)).toBe(false);
+});
+
+test.each(["branch", "worktree"] as const)(
+	"an explicit %s name overrides only its own naming rule",
+	(kind) => {
+		const { main, dir } = fixture();
+		const marker = join(dir, "naming-input");
+		const script = namingScript(
+			dir,
+			`const input = await Bun.stdin.json(); await Bun.write(${JSON.stringify(marker)}, JSON.stringify(input)); console.log("generated");`,
+		);
+		writeFileSync(
+			join(main, ".wts.json"),
+			JSON.stringify({
+				naming: { branch: { script }, worktree: { script } },
+			}),
+		);
+		const args = ["start", "--base-branch", "main", `--${kind}`, "chosen"];
+		expect(runCli(main, args).code).toBe(1);
+		expect(existsSync(marker)).toBe(false);
+		const actual = runCli(main, [...args, "--task", "test task"]);
+		expect(actual.code).toBe(0);
+		const target = createdPath(actual.text);
+		expect(target).toBe(
+			`${main}-worktrees/${kind === "branch" ? "generated" : "chosen"}`,
+		);
+		expect(git(target, "branch", "--show-current")).toBe(
+			kind === "branch" ? "chosen" : "generated",
+		);
+		const input = JSON.parse(readFileSync(marker, "utf8"));
+		expect(input.kind).toBe(kind === "branch" ? "worktree" : "branch");
+		expect(input.task).toBe("test task");
+		if (kind === "branch") expect(input.branch).toBe("chosen");
+	},
+);
+
+test("explicit names preserve branch and directory validation before creating anything", () => {
+	const { main } = fixture();
+	mkdirSync(`${main}-worktrees/occupied`, { recursive: true });
+	const refs = git(main, "show-ref");
+	const trees = git(main, "worktree", "list", "--porcelain");
+	for (const [branch, worktree] of [
+		["main", "valid"],
+		["invalid name", "valid"],
+		["", "valid"],
+		["chosen", "../outside"],
+		["chosen", ".git"],
+		["chosen", ""],
+		["chosen", "occupied"],
+	] as const) {
+		const args = [
+			"start",
+			"--base-branch",
+			"main",
+			"--branch",
+			branch,
+			"--worktree",
+			worktree,
+		];
+		for (const flags of [[], ["--dry-run"]]) {
+			expect(runCli(main, [...args, ...flags]).code).toBe(1);
+			expect(git(main, "show-ref")).toBe(refs);
+			expect(git(main, "worktree", "list", "--porcelain")).toBe(trees);
+		}
+	}
+});
+
+test("explicit branch defaults the worktree name and still copies unmanaged files", () => {
+	const { main } = fixture();
+	writeFileSync(join(main, ".worktree-copy"), "local-config\n");
+	writeFileSync(join(main, "local-config"), "local settings");
+	const result = runCli(main, [
+		"start",
+		"--base-branch",
+		"main",
+		"--branch",
+		"feature/auth",
+	]);
+	expect(result.code).toBe(0);
+	const target = createdPath(result.text);
+	expect(target).toBe(`${main}-worktrees/feature-auth`);
+	expect(readFileSync(join(target, "local-config"), "utf8")).toBe(
+		"local settings",
+	);
+});
+
+test("named sessions start concurrently without changing the main checkout or each other", async () => {
+	const { main } = fixture();
+	writeFileSync(join(main, "tracked"), "unfinished main work");
+	const before = git(main, "status", "--porcelain");
+	const names = ["feature/one", "feature/two"];
+	await Promise.all(
+		names.map(async (branch) => {
+			const child = Bun.spawn(
+				[
+					process.execPath,
+					cli,
+					"start",
+					"--base-branch",
+					"main",
+					"--branch",
+					branch,
+				],
+				{ cwd: main, env: cliEnvironment(), stdout: "pipe", stderr: "pipe" },
+			);
+			const [code, out, err] = await Promise.all([
+				child.exited,
+				new Response(child.stdout).text(),
+				new Response(child.stderr).text(),
+			]);
+			expect({ code, out: code === 0 ? "" : out, err }).toEqual({
+				code: 0,
+				out: "",
+				err: "",
+			});
+		}),
+	);
+	for (const branch of names) {
+		const target = `${main}-worktrees/${branch.replaceAll("/", "-")}`;
+		expect(git(target, "branch", "--show-current")).toBe(branch);
+		expect(readFileSync(join(target, "tracked"), "utf8")).toBe("initial");
+		writeFileSync(join(target, "tracked"), branch);
+	}
+	for (const branch of names) {
+		expect(
+			readFileSync(
+				`${main}-worktrees/${branch.replaceAll("/", "-")}/tracked`,
+				"utf8",
+			),
+		).toBe(branch);
+	}
+	expect(git(main, "branch", "--show-current")).toBe("main");
+	expect(git(main, "status", "--porcelain")).toBe(before);
+	expect(readFileSync(join(main, "tracked"), "utf8")).toBe(
+		"unfinished main work",
+	);
 });
 
 for (const [name, body] of [
