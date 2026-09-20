@@ -4,7 +4,24 @@ wts の変更、検証、配布を担当する人向けの手順です。コマ�
 
 ## 開発環境
 
-Apple Silicon Mac、Xcode Command Line Tools、`nix-command` と `flakes` を有効にした Nix が必要です。依存取得と監査にはネットワーク接続を使います。`setup.sh` は Nix と Xcode Command Line Tools 自体をインストールしません。
+ローカル開発と CI は、Nix が提供する開発用シェル（devShell）でソースの実行、テスト、ビルドを行います。対象は Apple Silicon macOS（`aarch64-darwin`）です。
+
+開発ツールは [`flake.nix`](../flake.nix) に宣言し、取得元と版を [`flake.lock`](../flake.lock) で固定します。devShell は次のツールを PATH に提供します。
+
+| ツール | 用途 |
+| --- | --- |
+| Bun | JavaScript / TypeScript 依存の管理、ソースとテストの実行、バイナリの生成 |
+| Git | リポジトリ・worktree の操作と、テスト用リポジトリの作成 |
+| Python 3 | 命名スクリプトの実行と、サンプルスクリプトのテスト |
+| hamio | CLI の表示・対話・進捗 |
+| osv-scanner | JavaScript / TypeScript 依存の脆弱性監査 |
+| coreutils | 開発スクリプトで使う基本コマンド |
+
+JavaScript / TypeScript のパッケージは [`package.json`](../package.json) に宣言し、解決した依存を [`bun.lock`](../bun.lock) で固定します。取得には devShell の Bun を使い、`bun install --frozen-lockfile --ignore-scripts` でロックどおりに導入します。両ロックファイルを Git 管理し、通常の開発・検証では更新しません。
+
+devShell は呼び出し元の環境変数を引き継ぎます。外部サービスの認証や操作オプションにはその環境を使い、自動テストでは [テスト用の環境と応答](#自動テスト)を設定します。hamio の互換性と固定構成は [CLI 入出力と hamio の連携](hamio.md)に定義します。
+
+環境構築には、Apple Silicon Mac、Xcode Command Line Tools、`nix-command` と `flakes` を有効にした Nix を用意してください。ツール・依存の取得と監査にはネットワーク接続を使います。リポジトリを取得し、セットアップ、依存監査、全体検証の順に実行します。
 
 ```bash
 git clone https://github.com/9uiLe/wts.git
@@ -14,13 +31,13 @@ nix develop --no-update-lock-file --command bun run verify:deps
 ./scripts/check.sh
 ```
 
-開発と CI の環境を揃えるため、Nix Flakes で開発ツール、Bun で JavaScript / TypeScript 依存を管理します。`flake.lock` と `bun.lock` を Git 管理し、通常の実行では更新せず、devShell 内の固定された Bun を使います。依存の再取得には `./scripts/install-deps.sh` を使います。依存追加・更新時は [依存の検証](#依存の検証) に従ってください。
-
-devShell は命名スクリプトとそのテストに使う Python 3、CLI の入出力を担当する hamio v0.1.0 を PATH に提供します。Python は `flake.lock` が固定する nixpkgs のものを使い、ホスト側の Python や pyenv に依存しません。devShell は親シェルの環境変数をすべて消去するものではありません。hamio のバージョンと Nix 構成の固定方法、プロセス間の契約、外部バイナリの依存と検証範囲は [CLI 入出力と hamio の連携](hamio.md)に定義します。
+`setup.sh` は対応環境と Nix 構成を検査し、Bun の依存を取得します。依存だけを再取得する場合は `./scripts/install-deps.sh` を使います。ツールやパッケージを追加・更新する場合は [依存の検証](#依存の検証)に従ってください。
 
 ## 開発セッション
 
-このリポジトリの [.wts.json](../.wts.json) は、ベースを `master`、worktree の作成先をメインチェックアウトの隣の `wts-worktrees` に設定しています。[scripts/name-session.py](../scripts/name-session.py) による命名には Python 3 と認証済み Claude CLI が必要です。Claude の Haiku へ作業内容を送信し、`--dry-run` でも命名を実行します。
+開発セッションは、本リポジトリのソースを変更・検証するための Git worktree です。[.wts.json](../.wts.json) に従い、`master` をベースとして、メインチェックアウトの隣の `wts-worktrees` に作成します。
+
+命名には [scripts/name-session.py](../scripts/name-session.py) を使います。Python 3 は devShell が提供し、Claude CLI は利用者が PATH 上に用意して認証します。スクリプトは作業内容を Claude の Haiku へ送信して名前を生成します。`--dry-run` でも予定名を得るためにこの通信を行います。
 
 メインチェックアウトから、作成予定を確認してセッションを作ります。
 
@@ -30,7 +47,7 @@ devShell は命名スクリプトとそのテストに使う Python 3、CLI の�
 ./scripts/dev.sh start --task '設定の診断を改善する'
 ```
 
-`dev.sh` は、そのスクリプトが属するチェックアウトのソースを固定 Nix 環境で実行します。ビルドやインストールは不要です。作成される worktree のソースと設定はベースコミットの内容なので、作成結果の `Path` へ移動し、その worktree の `./scripts/setup.sh` で依存を取得してください。以後の実行と検証にも作業中の worktree のスクリプトを使います。
+`dev.sh` は、スクリプトが属するチェックアウトのソースを devShell の Bun で直接実行します。作成した worktree にはベースコミットのソースと設定が入ります。作成結果の `Path` へ移動し、その worktree の `./scripts/setup.sh` で依存を取得してください。以後の実行と検証には、作業中の worktree のスクリプトを使います。
 
 変更の積み重ねと更新は [セッションで作業する](../README.md#セッションで作業する)、削除は [マージ済みブランチの整理](../README.md#マージ済みブランチの整理) と [セッションの破棄](../README.md#セッションの破棄) に従い、例の `wts` を `./scripts/dev.sh` に置き換えます。削除は対象外のメインチェックアウトから行い、残すファイルと削除範囲を確認してください。PR の作成・マージは GitHub または gh で行います。
 
@@ -82,9 +99,11 @@ devShell は命名スクリプトとそのテストに使う Python 3、CLI の�
 
 ### 自動テスト
 
-[tests/helpers/](../tests/helpers/) を使い、一時 Git リポジトリと bare origin、利用者の Git 設定と wts 環境変数を隔離した環境で実行します。環境変数による入力と非対話の条件は CLI の入口から検証します。共通の fixture と実行処理をテストごとに重複定義しません。
+自動テストは devShell の Bun で実行します。[tests/helpers/](../tests/helpers/) が一時 Git リポジトリと bare origin を用意し、利用者の Git 設定と wts の環境変数を隔離します。各ケースはこの共通の準備・実行処理を使い、環境変数による入力や非対話の条件を CLI の入口から検証します。
 
-命名、GitHub、Homebrew の応答と障害は一時ファイル・テスト用コマンドで再現します。実サービスの認証、システムへの依存導入、実際の開発 worktree や公開リモートへの削除・push は自動テストで行いません。
+命名、GitHub、Homebrew の応答と障害は、一時ファイルとテスト用コマンドで再現します。Python の命名サンプルは devShell の Python 3 で実行し、Claude CLI の応答をテスト用コマンドで返します。各ケースで必要な環境変数を明示し、命名サンプルでは Python 管理ツールの環境変数が残る条件も検証します。
+
+削除・push は一時リポジトリ内で検証します。実サービスの認証、システムへの依存導入、実際の開発 worktree や公開リモートへの操作は、自動テストとは別の検証として扱います。
 
 ### 性能を比較する
 
@@ -183,9 +202,9 @@ UI と基準版を同じ変更単位でコミットします。この実行の H
 
 ## 依存の検証
 
-依存追加・更新時は、公開元、ライセンス、リリース履歴、既知の脆弱性、スクリプト、推移的依存、予期しない通信を確認し、必要性と更新理由を PR またはコミットに記録します。通常の取得は `bun install --frozen-lockfile --ignore-scripts` とし、未レビューの依存更新、ロックファイル差し替え、インストールスクリプト実行は行いません。
+開発ツールと JavaScript / TypeScript パッケージの追加・更新には、必要性と依存内容の確認が必要です。公開元、ライセンス、リリース履歴、既知の脆弱性、取得・導入時のスクリプト、推移的依存、通信を調べ、採用理由と確認結果を PR またはコミットに記録します。
 
-固定 devShell 内で `bun run verify:deps` を実行し、`bun audit` と `osv-scanner` の両方の成功を確認します。診断資料は `release/` に生成されます。
+依存を追加・更新した際は、固定 devShell 内で `bun run verify:deps` を実行します。このコマンドは `bun.lock` に従ってインストールスクリプトを実行せずに依存を取得し、`bun audit` と `osv-scanner` で監査します。両方の成功を確認し、`release/` に生成される診断資料を検証結果として扱います。
 
 | ファイル | 用途 |
 | --- | --- |
@@ -193,6 +212,10 @@ UI と基準版を同じ変更単位でコミットします。この実行の H
 | `bun-audit.json`、`osv-audit.json` | 脆弱性監査結果の確認 |
 | `bun-audit.stderr`、`osv-audit.stderr` | 監査コマンドの診断の調査 |
 | `AUDIT_INFO` | 問い合わせ日時・ツール・データベース・終了コード・例外の確認 |
+
+両監査の対象は JavaScript / TypeScript の依存です。Nix が提供する Python などの開発ツールは、固定した Nix 定義、提供元のリリース情報・脆弱性情報、利用する機能を別途照合します。確認した範囲と未検証事項を区別し、監査対象外のツールまで安全性を確認したとは扱いません。
+
+通常の依存取得ではロックファイルを維持し、インストールスクリプトを実行しません。依存とロックの変更には、上記の確認と結果の記録を伴わせます。
 
 ## ビルド成果物
 
