@@ -88,13 +88,32 @@ devShell は CLI の入出力を担当する hamio v0.1.0 を PATH に提供し�
 
 ### 性能を比較する
 
-変更前後の同じビルド設定のバイナリを用意し、固定 devShell で実行します。基準版は変更前に `./scripts/build.sh` で生成して `release/` 内の別名へ保存してください。
+[`scripts/benchmark.ts`](../scripts/benchmark.ts) は、基準バイナリと比較対象バイナリを同じ一時リポジトリで実行し、時間、Git・hamio の起動数、バイナリサイズ、最大 RSS を記録します。バイナリは同じビルド設定で用意し、固定 devShell から実行してください。
+
+基準にするリビジョンで `./scripts/build.sh` を実行し、生成したバイナリを別名で保存します。
 
 ```bash
-nix develop --no-update-lock-file --command bun scripts/benchmark.ts release/baseline-wts dist/wts-macos-arm64 --output release/performance/comparison.json
+mkdir -p release/performance
+cp release/wts-macos-arm64 release/performance/baseline-wts
 ```
 
-同一の隔離リポジトリで両版を交互に実行し、起動、1・10 セッションの list、10 ブランチの discard dry-run を比較します。セッション数の桁を変えて増加傾向を確認する入力です。ウォームアップ 1 回後の 5 サンプルと中央値を記録し、合否の時間閾値は設けません。Git・hamio の起動数と macOS の最大 RSS は時間計測とは別の実行で採取します。RSS は同時に動く全プロセスのメモリ合計ではありません。通信は行わず、実行前後の参照・worktree・状態が変わらないことを照合します。結果にはバイナリの SHA-256・サイズ・環境を含めます。
+比較対象のリビジョンを同じ設定でビルドしてから、両方のバイナリを指定します。
+
+```bash
+nix develop --no-update-lock-file --command bun scripts/benchmark.ts release/performance/baseline-wts dist/wts-macos-arm64 --output release/performance/comparison.json
+```
+
+| 測定項目 | 入力・方法 |
+| --- | --- |
+| 起動 | `--version` を実行 |
+| 一覧 | 1 セッションと 10 セッション。各セッションはルートと 3 スタックブランチを持つ |
+| 削除予定 | ルートを含む 10 ブランチのセッションに `discard --dry-run` を実行 |
+| 時間 | 両バイナリを交互に実行し、ウォームアップ 1 回後の 5 サンプルと中央値を記録 |
+| 起動数・メモリ | 時間計測とは別の実行で Git・hamio の起動数と macOS の最大 RSS を採取 |
+
+セッション数は、入力の桁を変えたときの増加傾向を観察するための条件です。時間のサンプル数と中央値は測定手順を揃えるために使い、合否の閾値は設けません。最大 RSS は OS の報告値であり、同時に動く全プロセスのメモリ合計ではありません。
+
+測定用リポジトリはリモートを持たず、通信は行いません。実行前後の参照、worktree 登録、メイン作業ツリーの状態が変わらないことを照合します。JSON の結果には環境、測定条件、全時間サンプル、バイナリの SHA-256 とサイズを含めます。実サービスや別の入力規模の性能は、その条件で測定してください。
 
 ### 対話と状態の検証
 
