@@ -16,6 +16,8 @@ nix develop --no-update-lock-file --command bun run verify:deps
 
 開発と CI の環境を揃えるため、Nix Flakes で開発ツール、Bun で JavaScript / TypeScript 依存を管理します。`flake.lock` と `bun.lock` を Git 管理し、通常の実行では更新せず、devShell 内の固定された Bun を使います。依存の再取得には `./scripts/install-deps.sh` を使います。依存追加・更新時は [依存の検証](#依存の検証) に従ってください。
 
+devShell は hamio v0.1.0 も PATH に提供します。パッケージ定義は `flake.nix` の hamio input を commit `dd8c86c6923f692ef183152958147bf095e85daa` に固定し、hamio 側の nixpkgs は提供元の lock を維持します。利用側の nixpkgs へ `follows` させません。採用元と依存調査は [hamio 移行資料](hamio-migration.md)に記録します。
+
 ## 開発セッション
 
 このリポジトリの [.wts.json](../.wts.json) は、ベースを `master`、worktree の作成先をメインチェックアウトの隣の `wts-worktrees` に設定しています。[scripts/name-session.py](../scripts/name-session.py) による命名には Python 3 と認証済み Claude CLI が必要です。Claude の Haiku へ作業内容を送信し、`--dry-run` でも命名を実行します。
@@ -91,7 +93,7 @@ nix develop --no-update-lock-file --command bun run verify:deps
 | 対象 | 入力条件 | 期待する結果 |
 | --- | --- | --- |
 | `bun run dev doctor --interactive` | 肯定・否定・Ctrl-C | 終了コード `0`、Git 参照不変 |
-| `bun run dev restack --dry-run` | CLI・環境変数・設定のベースを省略。`origin/HEAD` の有無ごとに Enter・Ctrl-C | 候補は `origin/HEAD` の参照、なければ `origin/main`。終了コード `0`、参照・lease 不変 |
+| `bun run dev restack --dry-run` | CLI・環境変数・設定のベースを省略。`origin/HEAD` の有無ごとに「既定値を使う」を Enter で選択・Ctrl-C | 候補は `origin/HEAD` の参照、なければ `origin/main`。終了コード `0`、参照・lease 不変 |
 | `bun run dev discard <検証用path>` | ローカルだけ・`--remote origin` の各条件で承認・否定・Ctrl-C | 承認時は指定範囲を削除。否定・Ctrl-C は状態不変。終了コード `0` |
 
 restack の push 確認には、入力ごとに独立したセッションと bare origin を用意し、rebase で OID が変わり push が必要な状態にします。`PUSH`・`PUSH_ONLY`・`DRY_RUN` を unset し、`bun run dev restack --base-branch origin/main` を実行します。
@@ -105,7 +107,7 @@ restack の push 確認には、入力ごとに独立したセッションと ba
 
 ### AI 向けスキルの保守
 
-[skills/wts-cli/SKILL.md](../skills/wts-cli/SKILL.md) は操作依頼の選択とガイド取得の入口、[references/guide.md](../skills/wts-cli/references/guide.md) は CLI の操作手順です。実行する CLI と手順の版を揃えるため、導入するのは入口だけとし、ガイドは実行バイナリから取得します。取得・導入に Git リポジトリ、設定、通信、外部コマンド、実行時のソースファイルを要求しません。入口に配布されない参照ファイルへのリンクを追加しないでください。
+[skills/wts-cli/SKILL.md](../skills/wts-cli/SKILL.md) は操作依頼の選択とガイド取得の入口、[references/guide.md](../skills/wts-cli/references/guide.md) は CLI の操作手順です。実行する CLI と手順の版を揃えるため、導入するのは入口だけとし、ガイドは実行バイナリから取得します。取得・導入には PATH 上の hamio が必要ですが、Git リポジトリ、設定、通信、実行時のソースファイルを要求しません。入口に配布されない参照ファイルへのリンクを追加しないでください。
 
 description は wts の実操作を対象にし、ソースや文書を編集するだけの依頼では発動させません。ガイドは操作に必要な節へ案内し、特定のモデルだけを前提にしません。この保守方針は OpenAI Developers の [Rethinking skills and prompts for GPT-6 Astra](https://developers.openai.com/blog/rethinking-skills-and-prompts-for-gpt-6-astra) を参考にしています。
 
@@ -114,11 +116,11 @@ description は wts の実操作を対象にし、ソースや文書を編集す
 スキル内容の取得と入口の導入は次のコマンドで確認できます。`--path` は検証用のスキル親ディレクトリにします。
 
 ```bash
-./scripts/dev.sh skills get wts-cli
+./scripts/dev.sh --format json skills get wts-cli
 ./scripts/dev.sh skills install wts-cli --path /path/to/test-skills
 ```
 
-文面の変更でも、固定 devShell 内の `bun test tests/skills.test.ts` と `./scripts/build.sh` で検証します。ビルド検証はリポジトリ外・外部コマンドなしで取得・導入し、ソースの内容と一致することを確認します。description の適用条件、参照節、非対話オプション、承認範囲も差分で照合してください。これらは AI 製品上の発動精度や複数モデルの実動作を保証しません。実際の読み込み・呼び出しは別の証拠として扱います。
+文面の変更でも、固定 devShell 内の `bun test tests/skills.test.ts` と `./scripts/build.sh` で検証します。ビルド検証はリポジトリ外・PATH に hamio だけがある環境で取得・導入し、JSON 応答の result ブロックに含まれる `data.lines` を改行で結合してソースの内容と一致することを確認します。description の適用条件、参照節、非対話オプション、承認範囲も差分で照合してください。これらは AI 製品上の発動精度や複数モデルの実動作を保証しません。実際の読み込み・呼び出しは別の証拠として扱います。
 
 ### 端末 UI の一覧と変更確認
 
@@ -197,13 +199,13 @@ GitHub Releases からの取得とローカル配置を分けたい場合や、�
 
 成果物ディレクトリの既定値はリポジトリの `release/`、配置先の既定値は `~/.local/bin` です。第 2 引数で配置先を変えられます。相対パスは呼び出し時のディレクトリを基準に解釈します。
 
-`--with-deps` を明示すると、成果物検証後に Homebrew の `brew install git gh` を実行し、成功後に配置します。Homebrew がない場合や導入に失敗した場合は配置しません。Homebrew 自体、命名スクリプトの依存、認証は自動設定しません。
+`--with-deps` を明示すると、成果物検証後に Homebrew の `brew install git gh` を実行し、成功後に配置します。Homebrew がない場合や導入に失敗した場合は配置しません。hamio は [README の手順](../README.md#インストール)で別途導入します。Homebrew 自体、命名スクリプトの依存、認証は自動設定しません。
 
 利用中の wts を壊さないため、両インストーラーは配置前に成果物を検証し、同じディレクトリの一時ファイルから置き換えます。既存の `wts` は通常ファイルかつ非 symlink が必要で、検証・配置失敗時は既存ファイルを保持します。署名・公証、Gatekeeper 許可、シェル設定の自動変更は行いません。PATH の登録は [README のインストール手順](../README.md#インストール) に従い、導入後は `wts doctor --check` で依存と認証を確認してください。
 
 ## Pre-release の公開手順
 
-[Release workflow](../.github/workflows/release.yml) は、最低対応 macOS と署名・公証方針が未確定のため、検証用 Pre-release を公開します。依存監査と `./scripts/check.sh` に加え、Nix 環境外で生成バイナリのバージョンと起動を確認します。公開ジョブ以外に書き込み権限を与えず、アクションはコミット SHA に固定してください。
+[Release workflow](../.github/workflows/release.yml) は、最低対応 macOS と署名・公証方針が未確定のため、検証用 Pre-release を公開します。依存監査と `./scripts/check.sh` に加え、固定した hamio を PATH に追加した Nix devShell 外で生成バイナリのバージョンと起動を確認します。公開ジョブ以外に書き込み権限を与えず、アクションはコミット SHA に固定してください。
 
 初回はリポジトリの Actions 設定とタグルールで `GITHUB_TOKEN` による Release・タグ作成を許可し、**Settings → Pages → Build and deployment → Source** を **GitHub Actions** に設定します。
 

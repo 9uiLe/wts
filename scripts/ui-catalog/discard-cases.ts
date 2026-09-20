@@ -67,7 +67,7 @@ export async function discardCases(): Promise<Capture[]> {
 		0,
 		repo,
 		{
-			steps: [["このセッションを破棄しますか", "y\r"]],
+			steps: [["このセッションを破棄しますか", "\u001b[C\r"]],
 		},
 	);
 	const unmanaged = join(dirname(repo), "repo-worktrees", "unmanaged");

@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, symlinkSync } from "node:fs";
 import { mkdir, copyFile, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -29,30 +29,75 @@ async function hashFile(path: string): Promise<string> {
 }
 
 function verifyBinary(): void {
-	if (runCommand([`./${buildPath}`, "--version"]) !== version) {
+	if (
+		resultData(runCommand([`./${buildPath}`, "--format", "json", "--version"]))
+			.version !== version
+	) {
 		throw new Error("Version mismatch");
 	}
-	if (!runCommand([`./${buildPath}`, "--help"]).includes("Usage: wts")) {
+	if (
+		!runCommand([`./${buildPath}`, "--format", "json", "--help"]).includes(
+			"Usage: wts",
+		)
+	) {
 		throw new Error("Help mismatch");
 	}
 	runCommand([`./${buildPath}`, "doctor"]);
 	verifyEmbeddedSkill();
 }
 
+function resultData(output: string): Record<string, unknown> {
+	const response: unknown = JSON.parse(output);
+	if (
+		typeof response !== "object" ||
+		response === null ||
+		!("status" in response) ||
+		response.status !== "ok" ||
+		!("blocks" in response) ||
+		!Array.isArray(response.blocks)
+	) {
+		throw new Error("Invalid hamio response");
+	}
+	for (const block of response.blocks) {
+		if (
+			typeof block === "object" &&
+			block !== null &&
+			block.kind === "result" &&
+			block.success === true &&
+			typeof block.data === "object" &&
+			block.data !== null &&
+			!Array.isArray(block.data)
+		) {
+			return block.data;
+		}
+	}
+	throw new Error("Missing result data");
+}
+
 function verifyEmbeddedSkill(): void {
 	const directory = mkdtempSync(join(tmpdir(), "wts-build-skills-"));
+	const hamioPath = Bun.which("hamio");
+	if (!hamioPath) throw new Error("hamio is required for build verification");
+	symlinkSync(hamioPath, join(directory, "hamio"));
 	function run(...args: string[]): string {
-		const result = Bun.spawnSync([resolve(buildPath), "skills", ...args], {
-			cwd: directory,
-			env: { ...process.env, PATH: "" },
-		});
+		const result = Bun.spawnSync(
+			[resolve(buildPath), "--format", "json", "skills", ...args],
+			{
+				cwd: directory,
+				env: { ...process.env, PATH: directory },
+			},
+		);
 		if (result.exitCode !== 0) throw new Error(result.stderr.toString());
 		return result.stdout.toString();
 	}
 	try {
+		const guide = resultData(run("get", "wts-cli"));
 		if (
-			run("get", "wts-cli") !==
-			readFileSync("skills/wts-cli/references/guide.md", "utf8")
+			guide.name !== "wts-cli" ||
+			!Array.isArray(guide.lines) ||
+			!guide.lines.every((line) => typeof line === "string") ||
+			guide.lines.join("\n") !==
+				readFileSync("skills/wts-cli/references/guide.md", "utf8")
 		) {
 			throw new Error("Embedded skill guide mismatch");
 		}
@@ -78,6 +123,7 @@ async function writeBuildInfo(): Promise<void> {
 			? "dirty"
 			: "clean",
 		bun_version: Bun.version,
+		hamio_version: runCommand(["hamio", "--version"]),
 		nix_version: runCommand(["nix", "--version"]),
 		system: runCommand(["uname", "-a"]),
 		macos_version: runCommand(["sw_vers", "-productVersion"]),
@@ -89,7 +135,7 @@ async function writeBuildInfo(): Promise<void> {
 		external_file_requirements:
 			"Git repository and .wts.json for session commands; optional .worktree-copy; executable naming scripts when configured",
 		external_command_requirements:
-			"git (restack: >=2.38); gh authenticated for cleanup; configured naming scripts and their runtime dependencies",
+			"hamio 0.1.0 on PATH for all commands; git (restack: >=2.38); gh authenticated for cleanup; configured naming scripts and their runtime dependencies",
 		flake_lock_sha256: await hashFile("flake.lock"),
 		bun_lock_sha256: await hashFile("bun.lock"),
 	};

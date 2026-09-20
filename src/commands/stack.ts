@@ -26,9 +26,7 @@ export async function startStackBranch(options: {
 	}
 	const task =
 		options.task ??
-		(repo.config.config.naming?.branch
-			? await askText("作業内容 (Enter でスキップ)")
-			: "");
+		(repo.config.config.naming?.branch ? await askText("作業内容") : "");
 	const number =
 		options.prNumber ||
 		(await askText(

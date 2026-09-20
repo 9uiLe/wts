@@ -71,7 +71,7 @@ test("configured directory and independent names support stack, restack and prot
 	);
 	expect(start).toMatchObject({ code: 0 });
 	const target = join(dir, "custom-sessions", "payment-workspace");
-	expect(start.out).toContain(target);
+	expect(start.text).toContain(target);
 	expect(git(target, "branch", "--show-current")).toBe("feature/payment");
 	const branchData = JSON.parse(readFileSync(branchInput, "utf8"));
 	const worktreeData = JSON.parse(readFileSync(worktreeInput, "utf8"));

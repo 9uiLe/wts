@@ -1,4 +1,5 @@
 export type CommandResult = { code: number; out: string; err: string };
+type CommandIO = { inheritStdin?: boolean; inheritStderr?: boolean };
 
 export function requireCommand(name: string): void {
 	if (!Bun.which(name))
@@ -12,18 +13,23 @@ export function command(
 	args: string[],
 	cwd: string,
 	input?: string,
+	io: CommandIO = {},
 ): CommandResult {
 	requireCommand(executable);
 	const result = Bun.spawnSync([executable, ...args], {
 		cwd,
-		stdin: input === undefined ? "ignore" : Buffer.from(input),
+		stdin: io.inheritStdin
+			? "inherit"
+			: input === undefined
+				? "ignore"
+				: Buffer.from(input),
 		stdout: "pipe",
-		stderr: "pipe",
+		stderr: io.inheritStderr ? "inherit" : "pipe",
 	});
 	return {
 		code: result.exitCode,
 		out: result.stdout.toString(),
-		err: result.stderr.toString(),
+		err: result.stderr?.toString() ?? "",
 	};
 }
 
@@ -32,13 +38,18 @@ export async function commandAsync(
 	args: string[],
 	cwd: string,
 	input?: string,
+	io: CommandIO = {},
 ): Promise<CommandResult> {
 	requireCommand(executable);
 	const result = Bun.spawn([executable, ...args], {
 		cwd,
-		stdin: input === undefined ? "ignore" : Buffer.from(input),
+		stdin: io.inheritStdin
+			? "inherit"
+			: input === undefined
+				? "ignore"
+				: Buffer.from(input),
 		stdout: "pipe",
-		stderr: "pipe",
+		stderr: io.inheritStderr ? "inherit" : "pipe",
 	});
 	const [code, out, err] = await Promise.all([
 		result.exited,
@@ -46,4 +57,13 @@ export async function commandAsync(
 		new Response(result.stderr).text(),
 	]);
 	return { code, out, err };
+}
+
+export function streamCommand(executable: string, args: string[]) {
+	requireCommand(executable);
+	return Bun.spawn([executable, ...args], {
+		stdin: "pipe",
+		stdout: "pipe",
+		stderr: "inherit",
+	});
 }

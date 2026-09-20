@@ -54,7 +54,7 @@ function screen(
 	const inputs = item.input
 		.map(
 			([trigger, keys]) =>
-				`${trigger} → ${keys.replaceAll("\u001b[C", "→").replaceAll("\u001b[D", "←").replaceAll("\r", "Enter").replaceAll("\u0003", "Ctrl-C")}`,
+				`${trigger} → ${keys.replaceAll("\u001b[A", "↑").replaceAll("\u001b[B", "↓").replaceAll("\u001b[C", "→").replaceAll("\u001b[D", "←").replaceAll("\r", "Enter").replaceAll("\u0003", "Ctrl-C")}`,
 		)
 		.join(" / ");
 	return `<section class="screen"><div class="screen-heading"><h3>${label}</h3><p class="meta">${escapeHtml(item.mode)} · 終了コード ${item.code}</p></div>${inputs ? `<p class="meta">入力: ${escapeHtml(inputs)}</p>` : ""}<div class="terminal"><div class="command">$ ${escapeHtml(item.command)}</div><pre>${final.plain ? rendered : '<span class="empty">（出力なし）</span>'}</pre></div>${item.frames.map((frame, index) => `<details><summary>入力前 ${index + 1}</summary><pre>${terminal(frame).html}</pre></details>`).join("")}</section>`;

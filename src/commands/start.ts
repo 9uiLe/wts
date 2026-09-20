@@ -37,7 +37,7 @@ async function resolveCreation(
 	const task =
 		options.task ??
 		(repo.config.config.naming?.branch || repo.config.config.naming?.worktree
-			? await askText("作業内容 (Enter でスキップ)")
+			? await askText("作業内容")
 			: "");
 	const base = await resolveBaseRef(repo.config.config, options.baseBranch);
 	validateRef(base);

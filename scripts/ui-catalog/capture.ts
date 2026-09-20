@@ -1,5 +1,10 @@
-import { mkdtempSync, mkdirSync, realpathSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import {
+	mkdtempSync,
+	mkdirSync,
+	realpathSync,
+	symlinkSync,
+	writeFileSync,
+} from "node:fs";
 import { dirname, join, resolve } from "node:path";
 
 export interface Capture {
@@ -16,13 +21,18 @@ export interface Capture {
 
 const gitPath = Bun.which("git");
 if (!gitPath) throw new Error("UI 一覧の収録には Git が必要です。");
+const hamioPath = Bun.which("hamio");
+if (!hamioPath) throw new Error("UI 一覧の収録には hamio が必要です。");
 
 export const context = {
-	root: realpathSync(mkdtempSync(join(tmpdir(), "wts-ui-catalog-"))),
+	root: realpathSync(mkdtempSync("/tmp/wts-ui-catalog-")),
 	cli: resolve(import.meta.dir, "../../src/cli.ts"),
 	bun: process.execPath,
 	gitPath,
 };
+const uiBin = join(context.root, "ui-bin");
+mkdirSync(uiBin);
+symlinkSync(realpathSync(hamioPath), join(uiBin, "hamio"));
 
 const fixtureEnv: Record<string, string | undefined> = {
 	...process.env,
@@ -84,6 +94,7 @@ export async function capture(
 ): Promise<Capture> {
 	const command = options.command ?? [context.bun, context.cli, ...args];
 	const env = { ...fixtureEnv, ...options.env };
+	env.PATH = env.PATH ? `${env.PATH}:${uiBin}` : uiBin;
 	const frames: string[] = [];
 	const steps = options.steps ?? [];
 	let raw = "";

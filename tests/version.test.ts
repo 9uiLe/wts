@@ -37,7 +37,14 @@ test("compiled CLI retains the build version regardless of runtime environment",
 			env: { ...process.env, WTS_RELEASE_VERSION: "9.9.9" },
 		});
 		expect(result.exitCode).toBe(0);
-		expect(result.stdout.toString()).toBe("1.2.3-rc.1\n");
+		expect(JSON.parse(result.stdout.toString())).toEqual({
+			apiVersion: 1,
+			status: "ok",
+			blocks: [
+				{ kind: "result", success: true, data: { version: "1.2.3-rc.1" } },
+			],
+		});
+		expect(result.stderr.toString()).toBe("");
 	} finally {
 		await rm(directory, { recursive: true, force: true });
 	}

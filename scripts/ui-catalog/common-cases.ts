@@ -65,8 +65,8 @@ export async function commonCases(): Promise<Capture[]> {
 		await take(`引数エラー: ${args.join(" ")}`, [...args]);
 	await take("doctor 通常", ["doctor"], context.root, 0);
 	for (const [title, keys] of [
-		["肯定", "\r"],
-		["否定", "\u001b[C\r"],
+		["肯定", "\u001b[C\r"],
+		["否定", "\r"],
 		["Ctrl-C", "\u0003"],
 	] as const)
 		await take(

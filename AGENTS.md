@@ -45,13 +45,13 @@ PR は [PR テンプレート](.github/PULL_REQUEST_TEMPLATE.md)の必須項目�
 
 ## 実装・依存・配布の条件
 
-- CLI 名は `wts`。TypeScript、Bun、Commander、`@clack/prompts` を使用し、追加依存には具体的な必要性を求める。
+- CLI 名は `wts`。TypeScript、Bun、Commander を使用し、利用者との入出力は `9uiLe/hamio` に集約する。追加依存には具体的な必要性を求める。
 - 対象は Apple Silicon macOS。Nix は `aarch64-darwin`、Bun のビルドターゲットは `bun-darwin-arm64` とする。
 - Nix Flakes が開発ツール、Bun が JavaScript / TypeScript 依存を管理する。devShell 内の固定 Bun を使い、`flake.lock` と `bun.lock` を Git 管理する。
 - 通常の依存取得は `bun install --frozen-lockfile --ignore-scripts`。未レビューの依存更新、ロックファイル差し替え、インストールスクリプト実行を行わない。追加・更新には [依存の検証](docs/development.md#依存の検証)の調査・両監査と理由の記録を必須とする。
 - TypeScript・JSON は `biome.json` の既定の整形と recommended lint を使う。型は `tsc --noEmit` で検証し、Bun の実行や lint で代替しない。
 - 外部入力はシェル文字列へ連結せず、引数配列か安全な API で渡す。対話のキャンセルは正常終了として扱う。
-- 配布バイナリは実行時の Nix・Bun・Node.js・ソースファイルを要求しない。操作ごとの Git・gh・設定・コピーリスト・命名スクリプトの要件は README と設定資料に従う。外部要件の追加時は README・ビルド情報を更新し、欠落時の振る舞いを検証する。
+- 配布バイナリは実行時の Nix・Bun・Node.js・ソースファイルを要求しない。全コマンドで PATH 上の `hamio` を使用し、操作ごとの Git・gh・設定・コピーリスト・命名スクリプトの要件は README と設定資料に従う。外部要件の追加時は README・ビルド情報を更新し、欠落時の振る舞いを検証する。
 - `dist/` と `release/` は Git 管理せず、バイナリ・SHA-256・`BUILD_INFO` を一組として検証する。秘密情報をログ・成果物へ含めない。
 - CI アクションはコミット SHA に固定し、最小権限にする。通常検証とリリース公開を分離する。
 - ビルド出力は検証用とする。正式公開には [正式リリースの条件](docs/development.md#正式リリースの条件)をすべて満たす必要がある。最低 macOS、署名・公証の採否、対象環境の検証が未確定のまま正式公開しない。

@@ -8,7 +8,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { cliEnvironment, runCli } from "./helpers/cli";
+import { cliEnvironment, linkHamio, runCli } from "./helpers/cli";
 import { gitWithEnv } from "./helpers/git";
 
 function fixture(baseBranch?: string) {
@@ -223,6 +223,7 @@ test("cleanup reports missing gh without deleting candidates", () => {
 		const bin = join(f.dir, "git-only");
 		mkdirSync(bin);
 		symlinkSync(gitPath, join(bin, "git"));
+		linkHamio(bin);
 		const result = f.run({ yes: true }, { PATH: bin });
 		expect(result.code).not.toBe(0);
 		expect(result.text).toContain("gh コマンドが見つかりません");

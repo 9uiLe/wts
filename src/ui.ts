@@ -1,32 +1,28 @@
-import { colors, terminal } from "./terminal";
-import ora from "ora";
+import { type Block, render, task } from "./hamio";
 
-function write(stream: NodeJS.WriteStream, message: string): void {
-	stream.write(terminal(stream) ? message : Bun.stripANSI(message));
-}
-
-function status(
-	message: string,
-	symbol: string,
-	kind: "green" | "cyan" | "yellow" | "red",
-	stream: NodeJS.WriteStream,
-	prefix = "",
-) {
-	const chalk = colors(stream);
-	write(
-		stream,
-		`${terminal(stream) ? `  ${chalk[kind](symbol)} ${message.replaceAll("\n", "\n    ")}` : `${prefix}${message}`}\n`,
-	);
-}
-
-export function stdoutStyling(
+// hamio API v1 の文字列4096 bytes・表示32 blocksに従う。
+function messages(
 	text: string,
-	role: "title" | "command" | "option",
-): string {
-	const chalk = colors(process.stdout);
-	if (role === "title") return chalk.bold(text);
-	if (role === "command") return chalk.cyan(text);
-	return chalk.green(text);
+	level: "info" | "success" | "warning" | "error",
+): void {
+	const blocks: Block[] = [];
+	for (const line of text.split("\n")) {
+		let part = "";
+		let bytes = 0;
+		for (const character of line) {
+			const size = Buffer.byteLength(character);
+			if (bytes + size > 4096) {
+				blocks.push({ kind: "message", level, text: part });
+				part = "";
+				bytes = 0;
+			}
+			part += character;
+			bytes += size;
+		}
+		blocks.push({ kind: "message", level, text: part });
+	}
+	for (let index = 0; index < blocks.length; index += 32)
+		render(blocks.slice(index, index + 32));
 }
 
 export function commandLine(args: readonly string[]): string {
@@ -41,76 +37,49 @@ export function commandLine(args: readonly string[]): string {
 
 export const ui = {
 	heading(command: string): void {
-		if (!terminal(process.stdout)) return;
-		const chalk = colors(process.stdout);
-		process.stdout.write(
-			`\n  ${chalk.bold.cyan("wts")} ${chalk.bold(command)}\n\n`,
-		);
+		messages(`wts ${command}`, "info");
 	},
 	success(message: string): void {
-		status(message, "✓", "green", process.stdout);
+		messages(message, "success");
 	},
 	info(message: string): void {
-		status(message, "•", "cyan", process.stdout);
+		messages(message, "info");
 	},
 	warn(message: string): void {
-		status(message, "!", "yellow", process.stderr, "警告: ");
+		messages(message, "warning");
 	},
 	error(message: string): void {
-		status(message, "✗", "red", process.stderr, "エラー: ");
+		messages(message, "error");
 	},
 	detail(label: string, value: string): void {
-		const chalk = colors(process.stdout);
-		write(
-			process.stdout,
-			`${terminal(process.stdout) ? "    " : ""}${chalk.dim(label)}  ${value}\n`,
-		);
+		ui.details([[label, value]]);
 	},
 	details(rows: readonly (readonly [string, string])[]): void {
-		const width = Math.max(0, ...rows.map(([label]) => Bun.stringWidth(label)));
-		for (const [label, value] of rows) {
-			ui.detail(
-				terminal(process.stdout)
-					? label + " ".repeat(width - Bun.stringWidth(label))
-					: label,
-				value,
-			);
-		}
+		// hamio API v1 の key-value は1 blockあたり200項目。
+		for (let index = 0; index < rows.length; index += 200)
+			render([
+				{
+					kind: "key-value",
+					items: rows
+						.slice(index, index + 200)
+						.map(([label, value]) => ({ label, value })),
+				},
+			]);
 	},
 	plan(message: string): void {
-		status(message, "→", "cyan", process.stdout);
+		messages(message, "info");
 	},
 	cancel(): void {
-		status("キャンセルしました。", "−", "yellow", process.stdout);
+		messages("キャンセルしました。", "info");
 	},
 	line(message: string): void {
-		const indent = terminal(process.stdout) ? "  " : "";
-		write(
-			process.stdout,
-			`${message
-				.split("\n")
-				.map((line) => `${indent}${line}`)
-				.join("\n")}\n`,
-		);
+		messages(message, "info");
+	},
+	result(data: Extract<Block, { kind: "result" }>["data"]): void {
+		render([{ kind: "result", success: true, data }]);
 	},
 	check(ok: boolean, message: string): void {
-		const chalk = colors(process.stdout);
-		ui.line(`${ok ? chalk.green("OK") : chalk.red("NG")}: ${message}`);
+		messages(`${ok ? "OK" : "NG"}: ${message}`, ok ? "success" : "error");
 	},
-	async task<T>(message: string, action: () => Promise<T>): Promise<T> {
-		if (!terminal(process.stderr)) return action();
-		const spinner = ora({
-			text: message,
-			stream: process.stderr,
-			color: colors(process.stderr).level > 0 ? "cyan" : false,
-			discardStdin: false,
-			hideCursor: true,
-			indent: 2,
-		}).start();
-		try {
-			return await action();
-		} finally {
-			spinner.stop();
-		}
-	},
+	task,
 };

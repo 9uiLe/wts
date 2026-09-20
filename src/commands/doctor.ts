@@ -28,10 +28,7 @@ export async function doctor({
 	}
 
 	ui.heading("doctor");
-	if (
-		!(await confirmAction("起動環境を表示しますか？", { initialValue: true }))
-	)
-		return;
+	if (!(await confirmAction("起動環境を表示しますか？"))) return;
 
 	ui.success(`${process.platform} / ${process.arch}`);
 }

@@ -101,7 +101,7 @@ test("dry-run preserves refs, checkout and lease without fetching", () => {
 	const remote = git(f.origin, "show-ref");
 	const result = run(f.worktree, ["--dry-run"]);
 	expect(result.code).toBe(0);
-	expect(result.out).toContain("--atomic");
+	expect(result.text).toContain("--atomic");
 	expect(git(f.main, "show-ref")).toBe(before);
 	expect(git(f.origin, "show-ref")).toBe(remote);
 	expect(git(f.worktree, "branch", "--show-current")).toBe(f.root);
@@ -112,7 +112,7 @@ test("conflict recovery keeps original leases and atomic push rejects remote cha
 	const f = fixture(true);
 	const stopped = run(f.worktree);
 	expect(stopped.code).toBe(1);
-	expect(stopped.err).toContain("--push-only");
+	expect(stopped.text).toContain("--push-only");
 	const lease = readFileSync(join(f.gitDir, "restack-lease"), "utf8");
 	expect(existsSync(join(f.gitDir, "rebase-merge"))).toBe(true);
 	writeFileSync(join(f.worktree, "shared"), "resolved\n");
@@ -122,7 +122,7 @@ test("conflict recovery keeps original leases and atomic push rejects remote cha
 	const remote = git(f.origin, "show-ref");
 	const rejected = run(f.worktree, ["--push-only"]);
 	expect(rejected.code).toBe(1);
-	expect(rejected.err).toContain("stale info");
+	expect(rejected.text).toContain("stale info");
 	expect(git(f.origin, "show-ref")).toBe(remote);
 	expect(readFileSync(join(f.gitDir, "restack-lease"), "utf8")).toBe(lease);
 	const oldRoot = lease.split("\n")[0]?.split(" ")[1];
@@ -136,11 +136,11 @@ test("restack refuses checked-out siblings and nonlinear stacks before changing 
 	const f = fixture();
 	const other = join(`${f.main}-worktrees`, "other");
 	git(f.main, "worktree", "add", other, f.next);
-	expect(run(f.worktree).err).toContain("別の worktree");
+	expect(run(f.worktree).text).toContain("別の worktree");
 	git(f.main, "worktree", "remove", other);
 	git(f.main, "branch", "-f", f.next, "main");
 	const before = git(f.main, "show-ref");
-	expect(run(f.worktree).err).toContain("非線形");
+	expect(run(f.worktree).text).toContain("非線形");
 	expect(git(f.main, "show-ref")).toBe(before);
 	expect(existsSync(join(f.gitDir, "restack-lease"))).toBe(false);
 });
@@ -157,7 +157,7 @@ for (const noChanges of [false, true]) {
 		writeFileSync(join(f.gitDir, "restack-lease"), "unchanged");
 		const result = runCli(f.worktree, ["restack"]);
 		expect(result.code).not.toBe(0);
-		expect(result.err).toContain("--push");
+		expect(result.text).toContain("--push");
 		expect(git(f.main, "show-ref")).toBe(refs);
 		expect(readFileSync(join(f.gitDir, "restack-lease"), "utf8")).toBe(
 			"unchanged",

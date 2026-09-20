@@ -36,7 +36,9 @@ jobs:
           ./scripts/setup.sh
           nix develop --no-update-lock-file --command bun run verify:deps
           ./scripts/check.sh
-          test "$(./release/wts-macos-arm64 --version)" = "$WTS_RELEASE_VERSION"
+          hamio_path="$(nix develop --no-update-lock-file --command bash -c 'command -v hamio')"
+          export PATH="$(dirname "$hamio_path"):$PATH"
+          test "$(./release/wts-macos-arm64 --format json --version | /usr/bin/plutil -extract blocks.0.data.version raw -o - -)" = "$WTS_RELEASE_VERSION"
           ./release/wts-macos-arm64 --help
           ./release/wts-macos-arm64 doctor
           test -z "$(git status --porcelain)"
@@ -56,6 +58,7 @@ jobs:
           最低対応 macOS は未確定です。macOS 15 ARM64 の GitHub Actions で起動検証しています。
           Developer ID 署名・公証は行っていません。Gatekeeper によって起動が制限される場合があります。
           正式配布およびダウンロード後の Gatekeeper 許可手順の検証は完了していません。
+          実行には PATH 上の hamio v0.1.0 が必要です。導入手順: https://github.com/9uiLe/hamio/blob/dd8c86c6923f692ef183152958147bf095e85daa/docs/distribution.md
 
           同じ Release のバイナリ・SHA-256・BUILD_INFO を取得し、以下で整合性を確認してください。
           `shasum -a 256 -c wts-macos-arm64.sha256`

@@ -1,6 +1,11 @@
 #!/usr/bin/env bun
-import "./terminal";
-import { Command, Option } from "commander";
+import { Command, CommanderError, Option } from "commander";
+import {
+	configureHamio,
+	ensureHamio,
+	HamioError,
+	reportHamioFailure,
+} from "./hamio";
 import { cleanupSessionBranches } from "./commands/cleanup";
 import { checkConfig } from "./commands/config";
 import { discardSession } from "./commands/discard";
@@ -12,22 +17,34 @@ import { getSkill, installSkill } from "./commands/skills";
 import { startStackBranch } from "./commands/stack";
 import { startWorktreeSession } from "./commands/start";
 import { Cancelled } from "./prompts";
-import { stdoutStyling, ui } from "./ui";
+import { ui } from "./ui";
 import { version } from "./version";
 
 const program = new Command()
 	.name("wts")
 	.description("Git Worktree Session")
-	.configureHelp({
-		styleTitle: (text) => stdoutStyling(text, "title"),
-		styleCommandText: (text) => stdoutStyling(text, "command"),
-		styleOptionText: (text) => stdoutStyling(text, "option"),
-	})
+	.addOption(
+		new Option(
+			"--format <format>",
+			"出力形式（既定: stderr が TTY なら human、それ以外は json）",
+		).choices(["human", "json"]),
+	)
 	.configureOutput({
+		writeOut: (message) =>
+			message === `${version}\n`
+				? ui.result({ version })
+				: ui.line(message.trimEnd()),
+		writeErr: (message) => ui.line(message.trimEnd()),
 		outputError: (message) =>
 			ui.error(message.replace(/^error: /, "").trimEnd()),
 	})
+	.exitOverride()
+	.hook("preAction", () => {
+		ensureHamio();
+	})
 	.version(version);
+
+configureHamio(() => program.opts().format);
 
 program
 	.command("doctor")
@@ -171,6 +188,17 @@ dryRun(
 try {
 	await program.parseAsync();
 } catch (error) {
-	if (!(error instanceof Cancelled))
-		program.error(error instanceof Error ? error.message : String(error));
+	if (error instanceof CommanderError) process.exitCode = error.exitCode;
+	else if (!(error instanceof Cancelled)) {
+		process.exitCode = 1;
+		if (error instanceof HamioError) reportHamioFailure(error);
+		else {
+			try {
+				ui.error(error instanceof Error ? error.message : String(error));
+			} catch (failure) {
+				if (failure instanceof HamioError) reportHamioFailure(failure);
+				else throw failure;
+			}
+		}
+	}
 }

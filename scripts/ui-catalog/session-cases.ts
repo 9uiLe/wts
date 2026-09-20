@@ -68,7 +68,8 @@ export async function sessionCases(): Promise<Capture[]> {
 	await cap("start: dry-run", [...base, "--dry-run"], 0);
 	await cap("start: タスクとベースを対話入力", ["start", "--dry-run"], 0, p, {
 		steps: [
-			["作業内容", "preview\r"],
+			["作業内容", "\u001b[B\r"],
+			["作業内容を入力", "preview\r"],
 			["ベースブランチ", "\r"],
 		],
 	});
@@ -185,7 +186,8 @@ export async function sessionCases(): Promise<Capture[]> {
 	await cap("stack: dry-run", [...stack, "--dry-run"], 0, wt);
 	await cap("stack: タスクと番号を対話入力", ["stack", "--dry-run"], 0, wt, {
 		steps: [
-			["作業内容", "next\r"],
+			["作業内容", "\u001b[B\r"],
+			["作業内容を入力", "next\r"],
 			["スタック番号", "\r"],
 		],
 	});
@@ -303,7 +305,7 @@ export async function sessionCases(): Promise<Capture[]> {
 		0,
 		["cleanup"],
 		{},
-		{ steps: [["これらを削除しますか", "y\r"]] },
+		{ steps: [["これらを削除しますか", "\u001b[C\r"]] },
 	);
 	git(c, "branch", "tree");
 	const tree = join(cd, "repo-worktrees", "tree");

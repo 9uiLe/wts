@@ -86,7 +86,7 @@ for (const source of ["config", "environment", "option"] as const) {
 			},
 		);
 		expect(result.code).toBe(0);
-		expect(git(createdPath(result.out), "rev-parse", "HEAD")).toBe(
+		expect(git(createdPath(result.text), "rev-parse", "HEAD")).toBe(
 			git(main, "rev-parse", source === "config" ? "origin/master" : "main"),
 		);
 	});
@@ -117,14 +117,14 @@ test("worktree creation copies glob entries from base worktree and protects .git
 		baseBranch: "feature",
 	});
 	expect(result.code).toBe(0);
-	const target = createdPath(result.out);
+	const target = createdPath(result.text);
 	expect(
 		readFileSync(join(target, "settings", "person", "config"), "utf8"),
 	).toBe("latest");
 	expect(readFileSync(join(target, ".git"), "utf8")).toStartWith("gitdir:");
 	expect(existsSync(join(target, "safe", "link"))).toBe(false);
 	expect(readFileSync(join(outside, "secret"), "utf8")).toBe("unchanged");
-	expect(result.err).toContain(".git");
+	expect(result.text).toContain(".git");
 	expect(git(target, "rev-parse", "HEAD")).toBe(git(base, "rev-parse", "HEAD"));
 });
 
@@ -137,8 +137,8 @@ test("dry-run leaves branches and worktrees unchanged; invalid base fails", () =
 		dryRun: true,
 	});
 	expect(result.code).toBe(0);
-	expect(result.out).toContain("dry-run");
-	expect(existsSync(createdPath(result.out))).toBe(false);
+	expect(result.text).toContain("dry-run");
+	expect(existsSync(createdPath(result.text))).toBe(false);
 	expect(git(main, "show-ref")).toBe(before);
 	expect(
 		run(main, "startWorktreeSession", { task: "", baseBranch: "--help" }).code,
@@ -155,7 +155,7 @@ test("stack creation stays in worktree and rejects duplicate numbers, dirty stat
 		baseBranch: "main",
 	});
 	expect(started.code).toBe(0);
-	const wt = createdPath(started.out);
+	const wt = createdPath(started.text);
 	const root = git(wt, "branch", "--show-current");
 	const before = git(wt, "rev-parse", "HEAD");
 	const dry = run(wt, "startStackBranch", {
@@ -175,7 +175,7 @@ test("stack creation stays in worktree and rejects duplicate numbers, dirty stat
 	);
 	expect(git(wt, "rev-parse", "HEAD")).toBe(before);
 	expect(
-		run(wt, "startStackBranch", { task: "", prNumber: "02" }).err,
+		run(wt, "startStackBranch", { task: "", prNumber: "02" }).text,
 	).toContain("既に");
 	expect(
 		run(wt, "startStackBranch", { task: "", prNumber: "1" }).code,
@@ -187,7 +187,7 @@ test("stack creation stays in worktree and rejects duplicate numbers, dirty stat
 	rmSync(join(wt, "dirty"));
 	git(wt, "checkout", root);
 	expect(
-		run(wt, "startStackBranch", { task: "", prNumber: "3" }).err,
+		run(wt, "startStackBranch", { task: "", prNumber: "3" }).text,
 	).toContain("先端");
 	expect(
 		run(main, "startStackBranch", { task: "", prNumber: "2" }).code,
@@ -206,7 +206,7 @@ test("explicit copy source overrides base worktree", () => {
 		copyFrom: copy,
 	});
 	expect(result.code).toBe(0);
-	expect(readFileSync(join(createdPath(result.out), "config"), "utf8")).toBe(
+	expect(readFileSync(join(createdPath(result.text), "config"), "utf8")).toBe(
 		"explicit",
 	);
 });
@@ -235,8 +235,8 @@ test("default worktree naming supports consecutive creations without invoking Cl
 		}),
 	);
 	for (const result of results) expect(result.code).toBe(0);
-	expect(createdPath(results[0]?.out ?? "")).not.toBe(
-		createdPath(results[1]?.out ?? ""),
+	expect(createdPath(results[0]?.text ?? "")).not.toBe(
+		createdPath(results[1]?.text ?? ""),
 	);
 	expect(existsSync(marker)).toBe(false);
 });
@@ -261,7 +261,7 @@ test("custom branch and worktree scripts receive task and prompt and determine s
 		baseBranch: "main",
 	});
 	expect(result.code).toBe(0);
-	const target = createdPath(result.out);
+	const target = createdPath(result.text);
 	expect(target).toBe(`${main}-worktrees/custom-directory`);
 	expect(git(target, "branch", "--show-current")).toBe("feature/custom");
 	for (const kind of ["branch", "worktree"]) {
@@ -311,7 +311,7 @@ test("branch and target collisions are rejected even on dry-run", () => {
 			task: "",
 			baseBranch: "main",
 			dryRun: true,
-		}).err,
+		}).text,
 	).toContain("既に");
 	writeFileSync(
 		script,
@@ -323,7 +323,7 @@ test("branch and target collisions are rejected even on dry-run", () => {
 			task: "",
 			baseBranch: "main",
 			dryRun: true,
-		}).err,
+		}).text,
 	).toContain("既に");
 	expect(git(main, "branch", "--format=%(refname:short)")).toBe("main");
 });
@@ -339,7 +339,7 @@ test("manually created worktrees are rejected as unmanaged sessions", () => {
 	]) {
 		const result = runCli(target, args);
 		expect(result.code).toBe(1);
-		expect(result.err).toContain("セッション");
+		expect(result.text).toContain("セッション");
 	}
 	expect(git(main, "show-ref")).toBe(before);
 });
@@ -350,7 +350,7 @@ test("unreadable copy list fails before creating a branch or worktree", () => {
 	const refs = git(main, "show-ref");
 	const result = runCli(main, ["start", "--base-branch", "main"]);
 	expect(result.code).not.toBe(0);
-	expect(result.err).toContain("コピーリスト");
+	expect(result.text).toContain("コピーリスト");
 	expect(git(main, "show-ref")).toBe(refs);
 	expect(existsSync(`${main}-worktrees`)).toBe(false);
 });
@@ -370,7 +370,7 @@ test("copy dry-run and execution reject symlinks, special files and boundaries c
 	expect(dry.code).toBe(0);
 	const actual = runCli(main, ["start", "--base-branch", "main"]);
 	expect(actual.code).toBe(0);
-	const target = createdPath(actual.out);
+	const target = createdPath(actual.text);
 	for (const entry of [
 		"inside-link",
 		"outside-link",
@@ -378,8 +378,8 @@ test("copy dry-run and execution reject symlinks, special files and boundaries c
 		".git",
 		"../outside",
 	]) {
-		expect(dry.err).toContain(`本実行で拒否: ${entry}`);
-		expect(actual.err).toContain(`コピーをスキップ: ${entry}`);
+		expect(dry.text).toContain(`本実行で拒否: ${entry}`);
+		expect(actual.text).toContain(`コピーをスキップ: ${entry}`);
 	}
 	for (const entry of ["inside-link", "outside-link", "special"])
 		expect(existsSync(join(target, entry))).toBe(false);
@@ -399,10 +399,10 @@ test("session recording failure reports created worktree and branch without roll
 	git(main, "config", "core.hooksPath", hooks);
 	const result = runCli(main, ["start", "--base-branch", "main"]);
 	expect(result.code).not.toBe(0);
-	const target = createdPath(result.out);
+	const target = createdPath(result.text);
 	expect(existsSync(target)).toBe(true);
-	expect(result.out).toContain("Worktree");
-	expect(result.out).toContain("作成済み");
-	expect(result.out).toMatch(/セッション記録\s+未作成/);
+	expect(result.text).toContain("Worktree");
+	expect(result.text).toContain("作成済み");
+	expect(result.text).toMatch(/セッション記録\s+未作成/);
 	expect(git(target, "branch", "--show-current")).not.toBe("main");
 });
